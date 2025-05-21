@@ -1,0 +1,305 @@
+/* ...existing code... */
+
+.banner {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(180deg, 
+#FFFFFF 0%, 
+#F4F7FA 100%);
+}
+
+.banner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.background-sky {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.background-sky img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.8;
+}
+
+.mountains {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 45%;
+  pointer-events: none;
+}
+
+.mountain-back {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: auto;
+  opacity: 0.95;
+}
+
+.mountain-right {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  height: auto;
+  width: 40%;
+  opacity: 0.95;
+  transform: translateY(0);
+  transition: transform 0.5s ease-out;
+}
+
+.mountain-left {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: auto;
+  width: 40%;
+  opacity: 0.95;
+  transform: translateY(0);
+  transition: transform 0.5s ease-out;
+}
+
+.banner:hover .mountain-right {
+  transform: translateY(-5px);
+}
+
+.banner:hover .mountain-left {
+  transform: translateY(-3px);
+}
+
+.birds {
+  position: absolute;
+  top: 22%;
+  right: 18%;
+  z-index: 2;
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+  100% { transform: translateY(0px); }
+}
+
+.birds img {
+  width: 80px;
+  height: auto;
+  opacity: 0.7;
+}
+
+.banner-content {
+  position: relative;
+  z-index: 2;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-top: 140px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.banner-title {
+  font-size: 4rem;
+  font-weight: 700;
+  color: #000;
+  margin-bottom: 16px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  animation: fadeInDown 1s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.banner-subtitle {
+  font-size: 1.25rem;
+  color: #333;
+  margin-bottom: 32px;
+  font-weight: 400;
+  max-width: 600px;
+  animation: fadeIn 1s ease-out 0.3s both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.banner-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 8px;
+  animation: fadeIn 1s ease-out 0.6s both;
+}
+
+.banner-btn {
+  padding: 14px 32px;
+  border-radius: 30px;
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.banner-btn.primary {
+  background: #FFD2BF;
+  color: #000;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.banner-btn.primary:hover {
+  background: #FFE4DC;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.banner-btn.secondary {
+  background: transparent;
+  color: #333;
+  border: 2px solid #333;
+}
+
+.banner-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #5A70B7;
+  border-color: #5A70B7;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 1024px) {
+  .banner-content {
+    padding-top: 120px;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .banner-title {
+    font-size: 3.5rem;
+  }
+
+  .banner-subtitle {
+    font-size: 1.125rem;
+  }
+
+  .birds {
+    right: 10%;
+  }
+  
+  .birds img {
+    width: 70px;
+  }
+
+  .mountains {
+    height: 40%;
+  }
+}
+
+@media (max-width: 768px) {
+  .banner-content {
+    padding: 100px 24px 0;
+  }
+
+  .banner-title {
+    font-size: 2.75rem;
+  }
+
+  .banner-subtitle {
+    font-size: 1rem;
+    max-width: 100%;
+  }
+
+  .banner-actions {
+    flex-direction: column;
+    width: 100%;
+    max-width: 320px;
+    gap: 12px;
+  }
+
+  .banner-btn {
+    width: 100%;
+    text-align: center;
+    padding: 16px;
+  }
+
+  .birds {
+    top: 15%;
+    right: 5%;
+  }
+
+  .birds img {
+    width: 55px;
+  }
+
+  .mountains {
+    height: 35%;
+  }
+
+  .mountain-right,
+  .mountain-left {
+    width: 45%;
+  }
+}
+
+@media (max-width: 480px) {
+  .banner {
+    height: 90vh;
+  }
+
+  .banner-content {
+    padding: 80px 20px 0;
+  }
+
+  .banner-title {
+    font-size: 2.25rem;
+  }
+
+  .banner-subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 24px;
+  }
+
+  .birds {
+    top: 10%;
+    right: 3%;
+  }
+  
+  .birds img {
+    width: 45px;
+  }
+
+  .mountains {
+    height: 30%;
+  }
+
+  .mountain-right,
+  .mountain-left {
+    width: 50%;
+  }
+}

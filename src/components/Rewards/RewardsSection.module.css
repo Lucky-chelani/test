@@ -1,0 +1,544 @@
+.rewardsSection {
+  width: 100%;
+  background: #000000 url('../../assets/images/map-pattren.png');
+  background-size: cover;
+  background-repeat: repeat;
+  background-position: center;
+  padding: 100px 0 140px 0;
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+}
+
+.rewardsSection::before {
+  display: none;
+}
+
+.xpLevelUpSection {
+  position: relative;
+  max-width: 1400px;
+  margin: 0 auto 120px auto;
+  padding: 80px 40px 60px 40px;
+  background: none;
+  border-radius: 40px;
+  color: #fff;
+  box-shadow: none;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.xpLevelUpSection h2 {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+.xpLevelUpSection p {
+  font-size: 1.3rem;
+  margin-bottom: 48px;
+  opacity: 0.92;
+  text-align: center;
+}
+
+.xpCards {
+  display: flex;
+  gap: 64px;
+  justify-content: center;
+  align-items: stretch;
+  margin-bottom: 70px;
+  flex-wrap: wrap;
+}
+
+.xpCard {
+  background: #fff;
+  color: #000;
+  border-radius: 32px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.18);
+  padding: 48px 40px 40px 40px;
+  min-width: 340px;
+  max-width: 420px;
+  flex: 1 1 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+  position: relative;
+}
+
+.xpCardTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.xpCardDesc {
+  font-size: 1.2rem;
+  opacity: 0.7;
+  margin-bottom: 22px;
+}
+
+.xpCardReward {
+  background: rgba(75, 102, 188, 0.17);
+  border-radius: 24px;
+  box-shadow: 0 4px 7px rgba(75, 102, 188, 0.18);
+  padding: 16px 32px;
+  font-size: 1.2rem;
+  color: #25633B;
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.progressSection {
+  margin-top: 50px;
+  background: #fff;
+  border-radius: 40px;
+  padding: 48px 64px 36px 64px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.18);
+  color: #000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.progressHeader {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+.progressXP {
+  color: #3B82F6;
+}
+
+.progressBarWrapper {
+  margin-bottom: 18px;
+  width: 100%;
+}
+
+.progressBar {
+  width: 100%;
+  height: 22px;
+  background: linear-gradient(90deg, #42A05B 0%, #E26B1B 36%, #CECECE 62%);
+  border-radius: 22px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #42A05B 0%, #E26B1B 36%, #CECECE 62%);
+  border-radius: 22px 0 0 22px;
+}
+
+.progressLevels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.2rem;
+  color: #000;
+  opacity: 0.7;
+  margin-top: 2px;
+  width: 100%;
+}
+
+.progressDetails {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 28px;
+  font-size: 1.2rem;
+  color: #000;
+  opacity: 0.85;
+  flex-wrap: wrap;
+  gap: 24px;
+  width: 100%;
+}
+
+.progressDetails span {
+  min-width: 160px;
+  text-align: center;
+}
+
+.achievementSection {
+  position: relative;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 80px 40px 60px 40px;
+  background: none;
+  border-radius: 40px;
+  box-shadow: none;
+  z-index: 2;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.achievementHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.achievementHeader h2 {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  text-align: center;
+}
+
+.birds {
+  width: 80px;
+  height: auto;
+  opacity: 0.7;
+}
+
+.badgesGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 64px;
+  justify-content: center;
+  margin: 48px 0 32px 0;
+}
+
+.badgeUnlocked, .badgeLocked {
+  background: #fff;
+  border-radius: 32px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.18);
+  padding: 40px 32px;
+  min-width: 340px;
+  max-width: 340px;
+  flex: 1 1 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #000;
+  position: relative;
+}
+
+.badgeLocked {
+  opacity: 0.5;
+}
+
+.badgeIcon {
+  width: 64px;
+  height: 64px;
+  background: #EAF7EC;
+  border-radius: 50%;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.badgeLabel {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.badgeStatus {
+  font-size: 1.1rem;
+  opacity: 0.8;
+  color: #42A05B;
+}
+
+.unlockBtn {
+  margin-top: 32px;
+  background: #224C2A;
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 21px;
+  padding: 20px 64px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  transition: background 0.2s;
+}
+
+.unlockBtn:hover {
+  background: #42A05B;
+}
+
+@media (max-width: 1400px) {
+  .xpLevelUpSection, .achievementSection {
+    max-width: 98vw;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .xpCard, .badgeUnlocked, .badgeLocked {
+    min-width: 260px;
+    max-width: 320px;
+    padding: 24px 12px;
+  }
+}
+@media (max-width: 900px) {
+  .xpCards, .badgesGrid, .progressDetails {
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+  .xpCard, .badgeUnlocked, .badgeLocked {
+    min-width: 220px;
+    max-width: 320px;
+  }
+}
+@media (max-width: 600px) {
+  .rewardsSection {
+    padding: 20px 0 60px 0;
+  }
+  .xpLevelUpSection, .achievementSection {
+    padding: 16px 2px 10px 2px;
+    border-radius: 18px;
+  }
+  .xpLevelUpSection h2, .achievementHeader h2 {
+    font-size: 1.3rem;
+  }
+  .badgesGrid {
+    gap: 12px;
+  }
+  .badgeUnlocked, .badgeLocked {
+    min-width: 120px;
+    padding: 12px 6px;
+  }
+  .badgeIcon {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* Membership Levels Section */
+.membershipSection {
+  background: #101010;
+  padding: 80px 0 60px 0;
+  color: #fff;
+  text-align: center;
+}
+.membershipTitle {
+  font-size: 2.4rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.membershipSubtitle {
+  font-size: 1.2rem;
+  opacity: 0.85;
+  margin-bottom: 48px;
+}
+.membershipCards {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+.membershipCard {
+  background: #181818;
+  border-radius: 24px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  padding: 40px 32px 32px 32px;
+  min-width: 220px;
+  max-width: 270px;
+  flex: 1 1 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #fff;
+  margin-bottom: 24px;
+}
+.membershipIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  margin-bottom: 18px;
+  border: 3px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.bronze {
+  background: linear-gradient(135deg, #c97b4d 60%, #fff0e0 100%);
+  border-color: #c97b4d;
+}
+.silver {
+  background: linear-gradient(135deg, #bfc6ce 60%, #f4f6fa 100%);
+  border-color: #bfc6ce;
+}
+.gold {
+  background: linear-gradient(135deg, #ffd700 60%, #fffbe0 100%);
+  border-color: #ffd700;
+}
+.pro {
+  background: linear-gradient(135deg, #b47ddb 60%, #f3e6ff 100%);
+  border-color: #b47ddb;
+}
+.membershipLevel {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.membershipCard ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+}
+.membershipCard li {
+  font-size: 1rem;
+  margin-bottom: 8px;
+  opacity: 0.85;
+}
+
+/* Leaderboard Section */
+.leaderboardSection {
+  background: #fff;
+  color: #222;
+  padding: 0 0 60px 0;
+  display: flex;
+  justify-content: center;
+}
+.leaderboardContent {
+  max-width: 700px;
+  width: 100%;
+  background: #f7f7f7;
+  border-radius: 24px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+  padding: 36px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+.leaderboardContent h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.leaderboardContent p {
+  font-size: 1.1rem;
+  opacity: 0.85;
+  margin-bottom: 0;
+}
+.leaderboardBtn {
+  background: #224C2A;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 16px;
+  padding: 18px 38px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  transition: background 0.2s;
+  margin-left: 24px;
+}
+.leaderboardBtn:hover {
+  background: #42A05B;
+}
+
+/* FAQ Section */
+.faqSection {
+  background: #181818 url('../../assets/images/mountains-bottom-art.png') bottom center no-repeat;
+  background-size: cover;
+  color: #fff;
+  padding: 100px 0 120px 0;
+  text-align: center;
+  position: relative;
+}
+.faqHeader h2 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.faqHeader p {
+  font-size: 1.1rem;
+  opacity: 0.85;
+  margin-bottom: 48px;
+}
+.faqList {
+  max-width: 700px;
+  margin: 0 auto;
+  text-align: left;
+}
+.faqItem {
+  background: #232323;
+  border-radius: 18px;
+  margin-bottom: 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+.faqItem.open {
+  box-shadow: 0 4px 24px rgba(66,160,91,0.18);
+}
+.faqQuestion {
+  width: 100%;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 22px 28px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.faqToggle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-left: 18px;
+}
+.faqAnswer {
+  padding: 0 28px 22px 28px;
+  font-size: 1rem;
+  color: #e0e0e0;
+  opacity: 0.95;
+}
+
+@media (max-width: 900px) {
+  .membershipCards {
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+  .leaderboardContent {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+  }
+}
+@media (max-width: 600px) {
+  .membershipSection, .faqSection {
+    padding: 32px 0 32px 0;
+  }
+  .membershipCards {
+    gap: 8px;
+  }
+  .membershipCard {
+    min-width: 120px;
+    padding: 16px 8px;
+  }
+  .leaderboardContent {
+    padding: 18px 8px;
+  }
+  .faqHeader h2 {
+    font-size: 1.1rem;
+  }
+  .faqHeader p {
+    font-size: 0.95rem;
+  }
+  .faqList {
+    padding: 0 4px;
+  }
+} 

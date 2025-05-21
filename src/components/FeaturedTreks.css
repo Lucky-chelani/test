@@ -1,0 +1,167 @@
+.featured-treks-section {
+  background: #0a0a1a;
+  position: relative;
+  padding: 80px 0 60px 0;
+  overflow: hidden;
+  width: 100vw;
+  min-height: 100vh;
+}
+.pattern-bg {
+  position: absolute;
+  inset: 0;
+  opacity: 0.18;
+  background: url('/src/assets/images/mountain-pattern.svg');
+  background-size: cover;
+  background-repeat: repeat;
+  pointer-events: none;
+  z-index: 0;
+}
+.featured-treks-content {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+.heading {
+  text-align: center;
+  color: #fff;
+  margin-bottom: 48px;
+}
+.heading h2 {
+  font-size: 2.8rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.18);
+}
+.separator {
+  width: 65px;
+  height: 6px;
+  background: #fff;
+  margin: 0 auto 16px auto;
+  border-radius: 4px;
+}
+.heading p {
+  font-size: 1.1rem;
+  color: #fff;
+  opacity: 0.9;
+}
+.treks-list {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.trek-card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  overflow: hidden;
+  width: 350px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.trek-card:hover {
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.22);
+}
+.trek-image {
+  height: 200px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+.trek-tags {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  gap: 8px;
+}
+.trek-tags .country,
+.trek-tags .difficulty {
+  background: #fff;
+  color: #222;
+  font-size: 0.85rem;
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.trek-tags .difficulty {
+  background: #ffd2bf;
+  color: #222;
+}
+.trek-info {
+  padding: 24px 20px 20px 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.trek-info h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+}
+.trek-rating {
+  color: #222;
+  font-size: 0.95rem;
+  opacity: 0.7;
+}
+.trek-meta {
+  display: flex;
+  justify-content: space-between;
+  color: #222;
+  font-size: 1rem;
+  opacity: 0.8;
+}
+.view-trek-btn {
+  margin-top: 16px;
+  background: #ffd2bf;
+  color: #222;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 0;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.view-trek-btn:hover {
+  background: #ffbfa3;
+  color: #111;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .treks-list {
+    gap: 24px;
+  }
+  .trek-card {
+    width: 300px;
+  }
+}
+@media (max-width: 900px) {
+  .treks-list {
+    flex-direction: column;
+    align-items: center;
+  }
+  .trek-card {
+    width: 90%;
+    max-width: 400px;
+  }
+}
+@media (max-width: 600px) {
+  .featured-treks-section {
+    padding: 40px 0 30px 0;
+  }
+  .heading h2 {
+    font-size: 1.5rem;
+  }
+  .trek-info {
+    padding: 16px 10px 14px 10px;
+  }
+} 

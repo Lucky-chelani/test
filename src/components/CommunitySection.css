@@ -1,0 +1,277 @@
+/* ...existing code... */
+
+/* Add responsive improvements */
+.community-section {
+  padding: 80px 0;
+  background: #f7f9fc;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.section-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: #111;
+}
+
+.section-subtitle {
+  font-size: 1.1rem;
+  color: #555;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.community-rooms {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 30px;
+}
+
+.community-room {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.community-room:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+.room-banner {
+  height: 160px;
+  overflow: hidden;
+  position: relative;
+}
+
+.room-banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.community-room:hover .room-banner img {
+  transform: scale(1.05);
+}
+
+.room-content {
+  padding: 24px;
+}
+
+.room-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.community-group {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #111;
+}
+
+.community-online {
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  gap: 6px;
+}
+
+.online-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #42A05B;
+  border-radius: 50%;
+  margin-right: 4px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(66, 160, 91, 0.7);
+  }
+  
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(66, 160, 91, 0);
+  }
+  
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(66, 160, 91, 0);
+  }
+}
+
+.community-users {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.community-user {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.user-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-top: 2px;
+}
+
+.user-info {
+  flex: 1;
+}
+
+.user-name-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #222;
+  font-size: 1rem;
+}
+
+.user-level {
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 2px 10px;
+  margin-left: 2px;
+}
+
+.user-msg {
+  color: #222;
+  font-size: 0.98rem;
+  opacity: 0.6;
+}
+
+.join-room-btn {
+  margin-top: 8px;
+  background: #295a30;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 0;
+  width: 100%;
+  font-weight: 700;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(44, 80, 180, 0.08);
+}
+
+.join-room-btn:hover {
+  background: #1f4525;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(44, 80, 180, 0.12);
+}
+
+.join-room-btn:active {
+  transform: translateY(0);
+}
+
+/* Responsive styles */
+@media (max-width: 1200px) {
+  .community-rooms {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .community-section {
+    padding: 60px 0;
+  }
+  
+  .section-title {
+    font-size: 2rem;
+  }
+  
+  .section-subtitle {
+    font-size: 1rem;
+  }
+  
+  .community-rooms {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  
+  .room-content {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 600px) {
+  .community-section {
+    padding: 40px 0;
+  }
+  
+  .section-title {
+    font-size: 1.8rem;
+  }
+  
+  .community-rooms {
+    grid-template-columns: 1fr;
+  }
+  
+  .room-banner {
+    height: 140px;
+  }
+  
+  .room-content {
+    padding: 16px;
+  }
+  
+  .community-group {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .section-header {
+    margin-bottom: 32px;
+  }
+  
+  .section-title {
+    font-size: 1.6rem;
+  }
+  
+  .section-subtitle {
+    font-size: 0.9rem;
+  }
+  
+  .join-room-btn {
+    padding: 10px 0;
+    font-size: 1rem;
+  }
+}
