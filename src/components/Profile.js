@@ -1,7 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import Navbar from './Navbar';
-import profileImg from '../assets/images/trek1.png'; // Placeholder
+import profileImg from '../assets/images/trek1.png'; // Placeholder, can be dynamic if stored
+import { useNavigate } from 'react-router-dom';
+import { auth, db } from '../firebase'; // Import Firebase
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 
 const Page = styled.div`
   background: #000;
@@ -40,6 +44,12 @@ const Email = styled.div`
   font-size: 1.1rem;
   margin-bottom: 12px;
 `;
+
+const DobText = styled(Email)` // Re-using Email styles for DOB
+  font-size: 1rem;
+  color: #ccc; // Slightly different color for DOB if desired
+`;
+
 const EditButton = styled.button`
   background: #FF4B1F;
   color: #fff;
@@ -53,6 +63,13 @@ const EditButton = styled.button`
   transition: background 0.18s;
   &:hover { background: #d13a13; }
 `;
+
+const LogoutButton = styled(EditButton)`
+  background: #dc3545; // A common red for logout/delete actions
+  margin-top: 20px;
+  &:hover { background: #c82333; }
+`;
+
 const StatsGrid = styled.div`
   display: flex;
   gap: 32px;
@@ -96,42 +113,122 @@ const Badge = styled.div`
   font-weight: 700;
 `;
 
-const badges = ['🥾','🏔️','🌄','🎒','🏅'];
+const badges = ['🥾','🏔️','🌄','🎒','🏅']; // Placeholder badges
 
-const Profile = () => (
-  <Page>
-    <Navbar active="profile" />
-    <Container>
-      <ProfileHeader>
-        <Avatar src={profileImg} alt="Profile" />
-        <Info>
-          <Name>Jane Doe</Name>
-          <Email>jane.doe@email.com</Email>
-          <EditButton>Edit Profile</EditButton>
-        </Info>
-      </ProfileHeader>
-      <StatsGrid>
-        <StatCard>
-          <StatValue>8</StatValue>
-          <StatLabel>Treks</StatLabel>
-        </StatCard>
-        <StatCard>
-          <StatValue>258 km</StatValue>
-          <StatLabel>Total Distance</StatLabel>
-        </StatCard>
-        <StatCard>
-          <StatValue>14,856 m</StatValue>
-          <StatLabel>Elevation Gain</StatLabel>
-        </StatCard>
-      </StatsGrid>
-      <h3 style={{color:'#FFD700', marginBottom:12}}>Badges</h3>
-      <BadgesGrid>
-        {badges.map((badge, idx) => (
-          <Badge key={idx}>{badge}</Badge>
-        ))}
-      </BadgesGrid>
-    </Container>
-  </Page>
-);
+const LoadingText = styled.p`
+  text-align: center;
+  font-size: 1.2rem;
+  margin-top: 50px;
+`;
 
-export default Profile; 
+const Profile = () => {
+  const navigate = useNavigate();
+  const [authUser, setAuthUser] = useState(null); // For Firebase Auth user object
+  const [userData, setUserData] = useState(null); // For Firestore user data
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setAuthUser(currentUser);
+        // Fetch additional user data from Firestore
+        const userDocRef = doc(db, "users", currentUser.uid);
+        try {
+          const userDocSnap = await getDoc(userDocRef);
+          if (userDocSnap.exists()) {
+            setUserData(userDocSnap.data());
+          } else {
+            console.log("No such user document in Firestore!");
+            // Optionally, you could create a document here if it's missing
+            // or handle it as an incomplete profile.
+          }
+        } catch (error) {
+          console.error("Error fetching user data from Firestore:", error);
+        }
+      } else {
+        setAuthUser(null);
+        setUserData(null);
+        navigate('/login'); // Redirect to login if not authenticated
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe(); // Cleanup subscription on unmount
+  }, [navigate]);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate('/login'); // Redirect to login page after logout
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Handle logout error (e.g., display a message)
+    }
+  };
+
+  if (loading) {
+    return (
+      <Page>
+        <Navbar active="profile" />
+        <Container>
+          <LoadingText>Loading profile...</LoadingText>
+        </Container>
+      </Page>
+    );
+  }
+
+  if (!authUser) {
+    // This case should ideally be handled by the redirect in onAuthStateChanged,
+    // but it's good practice for robustness.
+    return null; 
+  }
+
+  // Determine name: Firestore data takes precedence, then Auth display name, then a fallback.
+  const displayName = userData?.name || authUser.displayName || 'User Name';
+  const displayEmail = authUser.email || 'No email provided';
+  const displayDob = userData?.dob || 'Not set';
+  const avatarUrl = authUser.photoURL || profileImg; // Use Firebase photoURL or fallback
+
+  return (
+    <Page>
+      <Navbar active="profile" />
+      <Container>
+        <ProfileHeader>
+          <Avatar src={avatarUrl} alt="Profile" />
+          <Info>
+            <Name>{displayName}</Name>
+            <Email>{displayEmail}</Email>
+            {userData?.dob && <DobText>Date of Birth: {displayDob}</DobText>}
+            <EditButton onClick={() => alert('Edit profile functionality to be implemented!')}>
+              Edit Profile
+            </EditButton>
+          </Info>
+        </ProfileHeader>
+        <StatsGrid>
+          {/* Replace with actual user stats if available */}
+          <StatCard>
+            <StatValue>8</StatValue>
+            <StatLabel>Treks</StatLabel>
+          </StatCard>
+          <StatCard>
+            <StatValue>258 km</StatValue>
+            <StatLabel>Total Distance</StatLabel>
+          </StatCard>
+          <StatCard>
+            <StatValue>14,856 m</StatValue>
+            <StatLabel>Elevation Gain</StatLabel>
+          </StatCard>
+        </StatsGrid>
+        <h3 style={{color:'#FFD700', marginBottom:12}}>Badges</h3>
+        <BadgesGrid>
+          {badges.map((badge, idx) => (
+            <Badge key={idx}>{badge}</Badge>
+          ))}
+        </BadgesGrid>
+        <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
+      </Container>
+    </Page>
+  );
+};
+
+export default Profile;

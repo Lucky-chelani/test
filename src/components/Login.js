@@ -2,8 +2,16 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import Navbar from './Navbar';
 import { useNavigate } from 'react-router-dom';
-import mapPattern from '../assets/images/map-pattren.png';
+import mapPattern from '../assets/images/map-pattren.png'; // Ensure this path is correct
+import { auth } from '../firebase'; // Import Firebase auth
+import { signInWithEmailAndPassword } from "firebase/auth";
 
+// Styled components (assuming they are defined above as in your provided code)
+// Page, Form, Title, WelcomeText, SubText, SocialButtons, SocialButton, SocialIcon,
+// Divider, Line, InputGroup, Input, InputIcon, PasswordDots, Dot, RememberMe,
+// Checkbox, LoginButton, SignupLink
+
+// ... (Your existing styled-components code from Login.js should be here)
 const Page = styled.div`
   background: #000 url(${mapPattern});
   background-size: cover;
@@ -214,6 +222,10 @@ const PasswordDots = styled.div`
   display: flex;
   gap: 5px;
   margin-left: 20px;
+  position: absolute; // Added for better positioning if needed
+  right: 20px;      // Added for better positioning
+  top: 50%;
+  transform: translateY(-50%);
 `;
 
 const Dot = styled.div`
@@ -230,11 +242,17 @@ const RememberMe = styled.div`
   margin: 24px 0;
 `;
 
-const Checkbox = styled.input`
-  width: 29px;
-  height: 25px;
-  border: 1px solid rgba(0, 0, 0, 0.25);
-  border-radius: 7px;
+const Checkbox = styled.input.attrs({ type: 'checkbox' })`
+  width: 20px; // Adjusted for better visual consistency
+  height: 20px;
+  accent-color: #42A04B;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  background-color: rgba(255,255,255,0.1);
+  &:checked {
+    background-color: #42A04B;
+  }
 `;
 
 const LoginButton = styled.button`
@@ -260,6 +278,11 @@ const LoginButton = styled.button`
     transform: translateY(0);
     box-shadow: 0 2px 8px rgba(66, 160, 75, 0.2);
   }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
   
   @media (max-width: 768px) {
     padding: 18px;
@@ -283,40 +306,62 @@ const SignupLink = styled.p`
     color: #42A04B;
     text-decoration: none;
     font-weight: 600;
+    &:hover {
+      text-decoration: underline;
+    }
   }
 `;
 
+const ErrorMessage = styled.p`
+  color: #ff4d4d; /* Red color for errors */
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+`;
+
+
 const Login = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    rememberMe: false
-  });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false); // Firebase handles session persistence
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
     try {
-      // Here you would typically make an API call to your backend
-      console.log('Login attempt with:', formData);
-      // For now, we'll just navigate to the profile page
-      navigate('/profile');
-    } catch (error) {
-      console.error('Login failed:', error);
+      await signInWithEmailAndPassword(auth, email, password);
+      setLoading(false);
+      navigate('/profile'); // Navigate to profile page after successful login
+    } catch (err) {
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        setError('Invalid email or password. Please try again.');
+      } else if (err.code === 'auth/invalid-email') {
+        setError('Please enter a valid email address.');
+      } else {
+        setError('Failed to log in. Please try again later.');
+      }
+      console.error('Login failed:', err.message, err.code);
+      setLoading(false);
     }
   };
 
   const handleSocialLogin = (provider) => {
-    // Here you would implement social login logic
+    setError('');
+    // Implement Firebase social login (e.g., GoogleAuthProvider, FacebookAuthProvider)
     console.log(`Logging in with ${provider}`);
+    // Example for Google (you'd need to import GoogleAuthProvider from 'firebase/auth'):
+    // const socialProvider = new GoogleAuthProvider();
+    // signInWithPopup(auth, socialProvider)
+    //   .then((result) => navigate('/profile'))
+    //   .catch((err) => {
+    //      setError(err.message);
+    //      console.error(`${provider} login failed:`, err);
+    //   });
   };
 
   return (
@@ -327,17 +372,19 @@ const Login = () => {
         <WelcomeText>Welcome back, Explorer!</WelcomeText>
         <SubText>Continue your adventure with Trovia</SubText>
 
+        {error && <ErrorMessage>{error}</ErrorMessage>}
+
         <SocialButtons>
           <SocialButton type="button" onClick={() => handleSocialLogin('Google')}>
-            <SocialIcon src="/google-icon.png" alt="Google" />
+            <SocialIcon src="/google-icon.png" alt="Google" /> {/* Ensure you have these icons */}
             <span>Google</span>
           </SocialButton>
           <SocialButton type="button" onClick={() => handleSocialLogin('Apple')}>
-            <SocialIcon src="/apple-icon.png" alt="Apple" />
+            <SocialIcon src="/apple-icon.png" alt="Apple" /> {/* Ensure you have these icons */}
             <span>Apple</span>
           </SocialButton>
           <SocialButton type="button" onClick={() => handleSocialLogin('Facebook')}>
-            <SocialIcon src="/facebook-icon.png" alt="Facebook" />
+            <SocialIcon src="/facebook-icon.png" alt="Facebook" /> {/* Ensure you have these icons */}
             <span>Facebook</span>
           </SocialButton>
         </SocialButtons>
@@ -349,52 +396,57 @@ const Login = () => {
         </Divider>
 
         <InputGroup>
-          <InputIcon src="/mail-icon.png" alt="Email" />
+          <InputIcon src="/mail-icon.png" alt="Email" /> {/* Ensure you have these icons */}
           <Input 
             type="email" 
             name="email"
-            value={formData.email}
-            onChange={handleInputChange}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="your.email@example.com" 
             required
           />
         </InputGroup>
 
         <InputGroup>
-          <InputIcon src="/lock-icon.png" alt="Password" />
+          <InputIcon src="/lock-icon.png" alt="Password" /> {/* Ensure you have these icons */}
           <Input 
             type="password" 
             name="password"
-            value={formData.password}
-            onChange={handleInputChange}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••••••" 
             required
           />
+          {/* PasswordDots can be removed or kept for styling, Firebase handles password visibility */}
+          {/* 
           <PasswordDots>
             {[...Array(8)].map((_, i) => (
               <Dot key={i} />
             ))}
-          </PasswordDots>
+          </PasswordDots> 
+          */}
         </InputGroup>
 
         <RememberMe>
           <Checkbox 
             type="checkbox" 
             name="rememberMe"
-            checked={formData.rememberMe}
-            onChange={handleInputChange}
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
           />
           <span>Remember me</span>
         </RememberMe>
 
-        <LoginButton type="submit">Log In</LoginButton>
+        <LoginButton type="submit" disabled={loading}>
+          {loading ? 'Logging In...' : 'Log In'}
+        </LoginButton>
 
         <SignupLink>
-          New here? <a href="/signup">Join Now</a>
+          New here? <a href="/signup" onClick={(e) => { e.preventDefault(); navigate('/signup'); }}>Join Now</a>
         </SignupLink>
       </Form>
     </Page>
   );
 };
 
-export default Login; 
+export default Login;
