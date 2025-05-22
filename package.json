@@ -12,7 +12,7 @@
     "react-circular-progressbar": "^2.2.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^6.30.0",
-    "react-scripts": "^3.0.1",
+    "react-scripts": "^5.0.0",
     "styled-components": "^6.1.18",
     "web-vitals": "^2.1.4"
   },
@@ -41,6 +41,7 @@
     ]
   },
   "devDependencies": {
+    "@babel/preset-react": "^7.27.1",
     "cross-env": "^7.0.3"
   }
 }
