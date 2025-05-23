@@ -1,167 +1,568 @@
 .featured-treks-section {
   background: #0a0a1a;
   position: relative;
-  padding: 80px 0 60px 0;
+  padding: 100px 0 120px 0;
   overflow: hidden;
   width: 100vw;
   min-height: 100vh;
 }
+
 .pattern-bg {
   position: absolute;
   inset: 0;
-  opacity: 0.18;
+  opacity: 0.2;
   background: url('/src/assets/images/mountain-pattern.svg');
   background-size: cover;
   background-repeat: repeat;
   pointer-events: none;
   z-index: 0;
+  animation: breathe 15s infinite ease-in-out;
 }
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
 .featured-treks-content {
   position: relative;
   z-index: 1;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 50px;
 }
+
 .heading {
   text-align: center;
   color: #fff;
-  margin-bottom: 48px;
+  margin-bottom: 60px;
 }
+
 .heading h2 {
-  font-size: 2.8rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-  text-shadow: 0 2px 16px rgba(0,0,0,0.18);
+  font-size: 3.5rem;
+  font-weight: 800;
+  margin-bottom: 16px;
+  text-shadow: 0 5px 20px rgba(0,0,0,0.3);
+  background: linear-gradient(to right, #fff 0%, #ccc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
 }
+
 .separator {
-  width: 65px;
+  width: 80px;
   height: 6px;
-  background: #fff;
-  margin: 0 auto 16px auto;
-  border-radius: 4px;
+  background: linear-gradient(to right, #ffd2bf, #ffbfa3);
+  margin: 0 auto 24px auto;
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
 }
+
+.separator::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
 .heading p {
-  font-size: 1.1rem;
-  color: #fff;
-  opacity: 0.9;
+  font-size: 1.3rem;
+  color: rgba(255, 255, 255, 0.9);
+  opacity: 0.95;
+  max-width: 700px;
+  margin: 0 auto;
+  line-height: 1.6;
+  letter-spacing: 0.5px;
 }
+
+.treks-list-container {
+  position: relative;
+  width: 100%;
+  margin-bottom: 30px;
+}
+
 .treks-list {
   display: flex;
-  gap: 40px;
-  justify-content: center;
-  flex-wrap: wrap;
+  gap: 30px;
+  justify-content: flex-start;
+  padding: 30px 10px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  perspective: 1000px;
 }
-.trek-card {
-  background: #fff;
-  border-radius: 18px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-  overflow: hidden;
-  width: 350px;
+
+.treks-list::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 1.5rem;
   display: flex;
-  flex-direction: column;
-  transition: transform 0.2s, box-shadow 0.2s;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
 }
+
+.nav-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+}
+
+.nav-button:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.nav-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.prev-button {
+  left: -27px;
+}
+
+.next-button {
+  right: -27px;
+}
+
+.trek-card {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 24px;
+  overflow: hidden;
+  min-width: 380px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
+  flex-shrink: 0;
+  transform-style: preserve-3d;
+}
+
 .trek-card:hover {
-  transform: translateY(-8px) scale(1.03);
-  box-shadow: 0 16px 48px rgba(0,0,0,0.22);
+  transform: translateY(-15px) rotateX(5deg);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 210, 191, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
 }
+
+.trek-image-wrapper {
+  position: relative;
+  height: 220px;
+  overflow: hidden;
+}
+
 .trek-image {
-  height: 200px;
+  height: 100%;
+  width: 100%;
   background-size: cover;
   background-position: center;
   position: relative;
+  transition: transform 0.8s cubic-bezier(0.33, 1, 0.68, 1);
 }
+
+.trek-image::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.7));
+  pointer-events: none;
+}
+
+.trek-card:hover .trek-image {
+  transform: scale(1.08);
+}
+
+.image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.4) 100%);
+  z-index: 1;
+}
+
 .trek-tags {
   position: absolute;
   top: 16px;
   left: 16px;
   display: flex;
   gap: 8px;
+  z-index: 2;
 }
-.trek-tags .country,
-.trek-tags .difficulty {
-  background: #fff;
-  color: #222;
-  font-size: 0.85rem;
-  padding: 4px 12px;
-  border-radius: 8px;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-.trek-tags .difficulty {
-  background: #ffd2bf;
-  color: #222;
-}
-.trek-info {
-  padding: 24px 20px 20px 20px;
-  flex: 1;
+
+.tag {
+  background: #F7FAFF;
+  color: #181828;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 12px;
+  padding: 6px 18px;
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
-.trek-info h3 {
-  font-size: 1.2rem;
+
+.tag.difficulty {
+  background: #FFD2BF;
+  color: #181828;
   font-weight: 700;
-  margin: 0;
 }
-.trek-rating {
-  color: #222;
-  font-size: 0.95rem;
-  opacity: 0.7;
+
+.tag.difficulty svg {
+  color: #d06830;
 }
-.trek-meta {
+
+.tag svg {
+  color: #666;
+}
+
+.tag.location {
+  animation: float 5s infinite ease-in-out;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.trek-info {
+  padding: 28px 25px;
+  background: rgba(255, 255, 255, 0.97);
+  color: #111;
+  position: relative;
+}
+
+.trek-info::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20px;
+  right: 20px;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.1), transparent);
+}
+
+.trek-info h3 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #181828;
+  margin: 0 0 12px 0;
+  position: relative;
+  display: inline-block;
+  line-height: 1.3;
+}
+
+.trek-info h3::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 40px;
+  height: 3px;
+  background: #FFD2BF;
+  border-radius: 2px;
+}
+
+.info-row {
   display: flex;
   justify-content: space-between;
-  color: #222;
+  margin-bottom: 16px;
+  color: #444;
   font-size: 1rem;
-  opacity: 0.8;
+  flex-wrap: wrap;
+  align-items: center;
 }
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #555;
+}
+
+.info-item svg {
+  color: #FFD2BF;
+}
+
+.trek-price {
+  color: #181828;
+  font-size: 1.5rem;
+  font-weight: 800;
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.trek-price span {
+  font-size: 0.9rem;
+  color: #777;
+  font-weight: normal;
+  margin-bottom: 3px;
+}
+
+.rating-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding-top: 16px;
+}
+
+.star-container {
+  display: flex;
+  align-items: center;
+}
+
+.star {
+  color: #FFD700;
+  font-size: 1.1rem;
+}
+
+.review-count {
+  color: #777;
+  font-weight: 400;
+  font-size: 0.9rem;
+}
+
+.action-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .view-trek-btn {
-  margin-top: 16px;
-  background: #ffd2bf;
-  color: #222;
+  background: linear-gradient(135deg, #FFD2BF 0%, #ffbfa3 100%);
+  color: #181828;
   border: none;
   border-radius: 12px;
-  padding: 12px 0;
+  padding: 14px 36px;
   font-weight: 700;
   font-size: 1rem;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 15px rgba(24, 24, 40, 0.1);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
+
 .view-trek-btn:hover {
-  background: #ffbfa3;
-  color: #111;
+  background: linear-gradient(135deg, #ffbfa3 0%, #ffa889 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(255, 210, 191, 0.4);
+}
+    
+.view-trek-btn:active {
+  transform: translateY(-1px);
+}
+
+.view-trek-btn svg {
+  transition: transform 0.3s ease;
+}
+
+.view-trek-btn:hover svg {
+  transform: translateX(4px);
+}
+
+.scroll-indicators {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.scroll-indicator {
+  height: 8px;
+  border-radius: 10px;
+  transition: all 0.3s ease, transform 0.3s ease;
+  cursor: pointer;
+}
+
+.scroll-indicator.active {
+  width: 24px;
+  background: linear-gradient(to right, #FFD2BF, #ffbfa3);
+  box-shadow: 0 2px 8px rgba(255, 210, 191, 0.3);
+}
+
+.scroll-indicator:not(.active) {
+  width: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.scroll-indicator:hover {
+  transform: scale(1.2);
+}
+
+.scroll-indicator.active:hover {
+  transform: scale(1.1);
+}
+
+.scroll-indicator:not(.active):hover {
+  background: rgba(255, 255, 255, 0.4);
 }
 
 /* Responsive */
-@media (max-width: 1100px) {
-  .treks-list {
-    gap: 24px;
-  }
+@media (max-width: 1200px) {
   .trek-card {
-    width: 300px;
+    min-width: 340px;
   }
 }
-@media (max-width: 900px) {
-  .treks-list {
-    flex-direction: column;
-    align-items: center;
-  }
+
+@media (max-width: 1000px) {
   .trek-card {
-    width: 90%;
-    max-width: 400px;
+    min-width: 300px;
   }
 }
-@media (max-width: 600px) {
+
+@media (max-width: 768px) {
   .featured-treks-section {
-    padding: 40px 0 30px 0;
+    padding: 70px 0 90px 0;
+    min-height: auto;
   }
+  
+  .featured-treks-content {
+    padding: 0 30px;
+  }
+  
   .heading h2 {
-    font-size: 1.5rem;
+    font-size: 2.8rem;
   }
+  
+  .heading p {
+    font-size: 1.1rem;
+    margin-bottom: 40px;
+  }
+  
+  .treks-list {
+    gap: 20px;
+    padding: 20px 5px;
+  }
+  
+  .trek-card {
+    min-width: 80%;
+    max-width: 80%;
+  }
+  
+  .trek-card:hover {
+    transform: translateY(-8px) rotateX(3deg);
+  }
+  
+  .trek-image-wrapper {
+    height: 200px;
+  }
+  
   .trek-info {
-    padding: 16px 10px 14px 10px;
+    padding: 22px 20px;
   }
-} 
+  
+  .trek-info h3 {
+    font-size: 1.3rem;
+  }
+  
+  .view-trek-btn {
+    padding: 12px 30px;
+    font-size: 0.95rem;
+  }
+  
+  .nav-button {
+    width: 45px;
+    height: 45px;
+    font-size: 1.2rem;
+  }
+  
+  .prev-button {
+    left: -15px;
+  }
+  
+  .next-button {
+    right: -15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .featured-treks-section {
+    padding: 50px 0 70px 0;
+  }
+  
+  .featured-treks-content {
+    padding: 0 20px;
+  }
+  
+  .heading h2 {
+    font-size: 2.2rem;
+  }
+  
+  .heading p {
+    font-size: 1rem;
+    margin-bottom: 30px;
+  }
+  
+  .trek-card {
+    min-width: 90%;
+    max-width: 90%;
+  }
+  
+  .trek-info {
+    padding: 18px 16px;
+  }
+  
+  .trek-info h3 {
+    font-size: 1.2rem;
+  }
+  
+  .tag {
+    font-size: 0.8rem;
+    padding: 5px 14px;
+  }
+  
+  .view-trek-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .nav-button {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  
+  .prev-button {
+    left: -10px;
+  }
+  
+  .next-button {
+    right: -10px;
+  }
+}
