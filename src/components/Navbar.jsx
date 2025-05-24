@@ -58,6 +58,7 @@ const NavbarWrapper = styled.nav`
   @media (max-width: 768px) {
     padding: 0 16px;
     height: 70px;
+    justify-content: space-between;
   }
   
   @media (max-width: 480px) {
@@ -75,6 +76,7 @@ const Logo = styled.div`
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
   z-index: 5;
+  cursor: pointer;
 
   &:hover { 
     transform: scale(1.05); 
@@ -181,7 +183,6 @@ const NavLinks = styled.div`
   }
 
   @media (max-width: 768px) {
-    display: ${({ $isOpen }) => ($isOpen ? 'flex' : 'none')};
     position: fixed;
     top: 70px;
     left: 0;
@@ -191,13 +192,16 @@ const NavLinks = styled.div`
     padding: 30px 20px;
     gap: 12px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    transform: ${({ $isOpen }) => ($isOpen ? 'translateY(0)' : 'translateY(-10px)')};
-    opacity: ${({ $isOpen }) => ($isOpen ? '1' : '0')};
-    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.4s ease;
     max-height: calc(100vh - 70px);
     overflow-y: auto;
     backdrop-filter: blur(15px);
-    z-index: 200;
+    z-index: 99;
+    
+    /* Animation and visibility */
+    visibility: ${({ $isOpen }) => ($isOpen ? 'visible' : 'hidden')};
+    opacity: ${({ $isOpen }) => ($isOpen ? '1' : '0')};
+    transform: ${({ $isOpen }) => ($isOpen ? 'translateY(0)' : 'translateY(-20px)')};
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 
     a {
       padding: 16px;
@@ -235,7 +239,6 @@ const NavActions = styled.div`
   align-items: center;
 
   @media (max-width: 768px) {
-    display: ${({ $isOpen }) => ($isOpen ? 'flex' : 'none')};
     position: fixed;
     bottom: 0;
     left: 0;
@@ -244,13 +247,16 @@ const NavActions = styled.div`
     background: rgba(12, 20, 39, 0.98);
     padding: 20px;
     gap: 14px;
-    transform: ${({ $isOpen }) => ($isOpen ? 'translateY(0)' : 'translateY(10px)')};
-    opacity: ${({ $isOpen }) => ($isOpen ? '1' : '0')};
-    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.4s ease;
     backdrop-filter: blur(15px);
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
-    z-index: 200;
+    z-index: 99;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
+    
+    /* Animation and visibility */
+    visibility: ${({ $isOpen }) => ($isOpen ? 'visible' : 'hidden')};
+    opacity: ${({ $isOpen }) => ($isOpen ? '1' : '0')};
+    transform: ${({ $isOpen }) => ($isOpen ? 'translateY(0)' : 'translateY(20px)')};
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   }
 `;
 
@@ -428,7 +434,6 @@ const AccountCircle = styled.div`
 `;
 
 const Overlay = styled.div`
-  display: ${({ $isOpen }) => ($isOpen ? 'block' : 'none')};
   position: fixed;
   top: 0;
   left: 0;
@@ -436,9 +441,16 @@ const Overlay = styled.div`
   bottom: 0;
   background: rgba(0, 0, 0, 0.7);
   z-index: 90;
-  opacity: ${({ $isOpen }) => ($isOpen ? '1' : '0')};
-  transition: opacity 0.4s ease;
   backdrop-filter: blur(4px);
+  
+  /* Show/hide based on menu state */
+  visibility: ${({ $isOpen }) => ($isOpen ? 'visible' : 'hidden')};
+  opacity: ${({ $isOpen }) => ($isOpen ? '1' : '0')};
+  transition: all 0.3s ease;
+  
+  @media (min-width: 769px) {
+    display: none;
+  }
 `;
 
 const toastAnimation = keyframes`
@@ -499,7 +511,6 @@ const MenuButton = styled.button`
   border: none;
   color: #fff;
   padding: 10px;
-  margin-left: auto;
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -629,8 +640,15 @@ const Navbar = ({ active, transparent = true }) => {
   }, []);
 
   const toggleMenu = () => {
-    setIsOpen(!isOpen);
-    document.body.style.overflow = !isOpen ? 'hidden' : 'visible';
+    const newIsOpen = !isOpen;
+    setIsOpen(newIsOpen);
+    
+    // Prevent body scroll when menu is open
+    if (newIsOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'visible';
+    }
   };
 
   const handleUpcomingFeature = e => {
@@ -648,6 +666,7 @@ const Navbar = ({ active, transparent = true }) => {
   const handleAccountClick = () => {
     navigate('/profile');
     setIsOpen(false);
+    document.body.style.overflow = 'visible';
   };
   
   const handleSignOut = async () => {
@@ -655,6 +674,7 @@ const Navbar = ({ active, transparent = true }) => {
       await signOut(auth);
       navigate('/');
       setIsOpen(false);
+      document.body.style.overflow = 'visible';
     } catch (error) {
       console.error("Sign out error:", error);
     }
@@ -674,15 +694,7 @@ const Navbar = ({ active, transparent = true }) => {
         <Logo onClick={() => navigate('/')}>
           <img src={require('../assets/images/logo.png')} alt="Trek Explorer" />
         </Logo>
-        <MenuButton 
-          onClick={toggleMenu} 
-          aria-label="Toggle menu" 
-          aria-expanded={isOpen}
-        >
-          <HamburgerIcon $isOpen={isOpen}>
-            <span /><span /><span />
-          </HamburgerIcon>
-        </MenuButton>
+        
         <NavLinks $isOpen={isOpen}>
           <Link to="/" className={location.pathname==='/' || active==='home' ? 'active-link':''}>
             Discover
@@ -713,6 +725,7 @@ const Navbar = ({ active, transparent = true }) => {
             Our Story
           </Link>
         </NavLinks>
+        
         <NavActions $isOpen={isOpen}>
           {!user ? (
             <>
@@ -750,9 +763,20 @@ const Navbar = ({ active, transparent = true }) => {
             </AccountIconWrapper>
           )}
         </NavActions>
+
+        <MenuButton 
+          onClick={toggleMenu} 
+          aria-label="Toggle menu" 
+          aria-expanded={isOpen}
+        >
+          <HamburgerIcon $isOpen={isOpen}>
+            <span /><span /><span />
+          </HamburgerIcon>
+        </MenuButton>
       </NavbarWrapper>
 
       <Overlay $isOpen={isOpen} onClick={toggleMenu} />
+      
       <Toast $show={showToast}>
         <span>Coming Soon!</span> We're crafting something extraordinary for you <span className="toast-emoji">✨</span>
       </Toast>
