@@ -467,19 +467,49 @@ const InfoItem = styled.div`
   }
 `;
 
+const ActionRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+`;
+
 const Price = styled.div`
   color: #181828;
   font-size: 1.5rem;
   font-weight: 800;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 5px;
+  white-space: nowrap;
   
   span {
     font-size: 0.9rem;
     color: #777;
     font-weight: normal;
-    margin-bottom: 3px;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 1.3rem;
+    
+    span {
+      font-size: 0.8rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 1.2rem;
+    justify-content: center;
+    
+    span {
+      font-size: 0.75rem;
+    }
   }
 `;
 
@@ -508,12 +538,6 @@ const ReviewCount = styled.span`
   font-size: 0.9rem;
 `;
 
-const ActionRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-
 const ViewButton = styled.button`
   background: linear-gradient(135deg, #FFD2BF 0%, #ffbfa3 100%);
   color: #181828;
@@ -527,7 +551,9 @@ const ViewButton = styled.button`
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  min-width: 140px;
   
   &:hover {
     background: linear-gradient(135deg, #ffbfa3 0%, #ffa889 100%);
@@ -548,13 +574,16 @@ const ViewButton = styled.button`
   }
   
   @media (max-width: 768px) {
-    padding: 12px 30px;
+    padding: 12px 24px;
     font-size: 0.95rem;
+    min-width: 120px;
   }
   
   @media (max-width: 480px) {
     width: 100%;
-    justify-content: center;
+    padding: 12px 20px;
+    font-size: 0.9rem;
+    min-width: unset;
   }
 `;
 
