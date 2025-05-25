@@ -202,6 +202,7 @@ const SearchInput = styled.input`
   padding: 12px 0;
   color: #333;
   background: transparent;
+  margin-right: 10px;
   
   &:focus {
     outline: none;
@@ -209,6 +210,23 @@ const SearchInput = styled.input`
   
   &::placeholder {
     color: #aaa;
+  }
+  
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+    margin-right: 5px;
+    
+    &::placeholder {
+      font-size: 0.85rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 0.85rem;
+    
+    &::placeholder {
+      font-size: 0.8rem;
+    }
   }
 `;
 
@@ -239,6 +257,21 @@ const SearchButton = styled.button`
   svg {
     width: 18px;
     height: 18px;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 12px;
+    
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+`;
+
+const ButtonText = styled.span`
+  @media (max-width: 768px) {
+    display: none;
   }
 `;
 
@@ -332,11 +365,7 @@ const CommunityCard = styled.div`
 `;
 
 const CardHeader = styled.div`
-  padding: 25px 25px 15px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding-bottom: 16px;
 `;
 
 const GroupName = styled.span`
@@ -377,15 +406,15 @@ const OnlineUsers = styled.span`
 `;
 
 const UsersContainer = styled.div`
-  padding: 20px 25px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  flex: 1;
+  min-height: 0;
 `;
 
 const UserItem = styled.div`
   display: flex;
-  gap: 14px;
+  gap: 12px;
   align-items: flex-start;
   
   &:nth-child(2) {
@@ -416,7 +445,7 @@ const UserHeader = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 2px;
 `;
 
 const UserName = styled.span`
@@ -449,7 +478,7 @@ const MessageBubble = styled.div`
   font-size: 0.95rem;
   position: relative;
   border-left: ${props => props.isNew ? '3px solid #ffbfa3' : '0'};
-  animation: ${props => props.isNew ? typeAnimation : 'none'} 1.5s steps(40, end);
+  margin-top: 2px;
 `;
 
 const MessageStatus = styled.div`
@@ -462,6 +491,7 @@ const MessageStatus = styled.div`
   
   .status-icon {
     color: ${props => props.isLiked ? '#ff7e5f' : '#888'};
+    cursor: pointer;
   }
   
   .likes {
@@ -470,15 +500,43 @@ const MessageStatus = styled.div`
   }
 `;
 
+const TrekInfo = styled.div`
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.97);
+  color: #111;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 280px;
+  height: 100%;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 20px;
+    right: 20px;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.1), transparent);
+  }
+`;
+
+const ButtonContainer = styled.div`
+  margin-top: auto;
+  padding-top: 20px;
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+`;
+
 const ActionButton = styled.button`
-  margin: 5px 25px 25px;
   background: ${props => props.bg || '#295a30'};
   color: white;
   border: none;
   border-radius: 12px;
-  padding: 14px 0;
+  padding: 10px 24px;
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
@@ -507,6 +565,12 @@ const ActionButton = styled.button`
   
   &:active {
     transform: translateY(-1px);
+  }
+  
+  @media (max-width: 768px) {
+    width: 100%;
+    padding: 12px 0;
+    text-align: center;
   }
 `;
 
@@ -751,7 +815,7 @@ export default function CommunitySection() {
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
-              Search
+              <ButtonText>Search</ButtonText>
             </SearchButton>
           </SearchBar>
         </SearchWrapper>
@@ -783,57 +847,60 @@ export default function CommunitySection() {
                 index={idx}
               >
                 {room.popular && <PopularTag>Popular</PopularTag>}
-                <CardHeader>
-                  <GroupName btnColor={room.btnColor}>
-                    {renderGroupIcon(room.icon)}
-                    {room.group}
-                  </GroupName>
-                  <OnlineUsers>
-                    <span className="online-dot"></span>
-                    {room.online} online
-                  </OnlineUsers>
-                </CardHeader>
-                <UsersContainer>
-                  {room.users.map((user, i) => (
-                    <UserItem key={user.name}>
-                      <UserAvatar 
-                        bg={i===0 ? "#c0cdfa" : "#e99ad7"} 
-                        color={i===0 ? "#295a4a" : "#b0336e"}
-                      >
-                        {user.initials}
-                      </UserAvatar>
-                      <UserInfoWrapper>
-                        <UserHeader>
-                          <UserName>{user.name}</UserName>
-                          <UserLevel bg={user.levelColor} color={user.levelTextColor}>
-                            Level {user.level}
-                          </UserLevel>
-                          <MessageTime>{user.time}</MessageTime>
-                        </UserHeader>
-                        <MessageBubble isNew={user.isNew}>
-                          {user.msg}
-                        </MessageBubble>
-                        <MessageStatus isLiked={likedMessages[`${idx}-${i}`]}>
-                          <span 
-                            className="status-icon" 
-                            onClick={() => handleLikeToggle(idx, i)}
-                            style={{cursor: 'pointer'}}
-                          >
-                            {likedMessages[`${idx}-${i}`] ? "♥" : "♡"}
-                          </span>
-                          <span className="likes">
-                            {likedMessages[`${idx}-${i}`] ? user.likes + 1 : user.likes} likes
-                          </span>
-                          <span>•</span>
-                          <span>Reply</span>
-                        </MessageStatus>
-                      </UserInfoWrapper>
-                    </UserItem>
-                  ))}
-                </UsersContainer>
-                <ActionButton bg={room.btnColor}>
-                  Join Room
-                </ActionButton>
+                <TrekInfo>
+                  <CardHeader>
+                    <GroupName btnColor={room.btnColor}>
+                      {renderGroupIcon(room.icon)}
+                      {room.group}
+                    </GroupName>
+                    <OnlineUsers>
+                      <span className="online-dot"></span>
+                      {room.online} online
+                    </OnlineUsers>
+                  </CardHeader>
+                  <UsersContainer>
+                    {room.users.map((user, i) => (
+                      <UserItem key={user.name}>
+                        <UserAvatar 
+                          bg={i===0 ? "#c0cdfa" : "#e99ad7"} 
+                          color={i===0 ? "#295a4a" : "#b0336e"}
+                        >
+                          {user.initials}
+                        </UserAvatar>
+                        <UserInfoWrapper>
+                          <UserHeader>
+                            <UserName>{user.name}</UserName>
+                            <UserLevel bg={user.levelColor} color={user.levelTextColor}>
+                              Level {user.level}
+                            </UserLevel>
+                            <MessageTime>{user.time}</MessageTime>
+                          </UserHeader>
+                          <MessageBubble isNew={user.isNew}>
+                            {user.msg}
+                          </MessageBubble>
+                          <MessageStatus isLiked={likedMessages[`${idx}-${i}`]}>
+                            <span 
+                              className="status-icon" 
+                              onClick={() => handleLikeToggle(idx, i)}
+                            >
+                              {likedMessages[`${idx}-${i}`] ? "♥" : "♡"}
+                            </span>
+                            <span className="likes">
+                              {likedMessages[`${idx}-${i}`] ? user.likes + 1 : user.likes} likes
+                            </span>
+                            <span>•</span>
+                            <span>Reply</span>
+                          </MessageStatus>
+                        </UserInfoWrapper>
+                      </UserItem>
+                    ))}
+                    <ButtonContainer>
+                      <ActionButton bg={room.btnColor}>
+                        Join Room
+                      </ActionButton>
+                    </ButtonContainer>
+                  </UsersContainer>
+                </TrekInfo>
               </CommunityCard>
             ))
           )}
