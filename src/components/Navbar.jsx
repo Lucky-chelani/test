@@ -21,14 +21,15 @@ const NavbarWrapper = styled.nav`
   left: 0;
   width: 100%;
   z-index: 100;
+  /* Add a stronger background even when transparent is true */
   background: ${({ $scrolled, $transparent }) => 
     $transparent 
       ? $scrolled 
         ? 'rgba(12, 20, 39, 0.85)' 
-        : 'transparent'
+        : 'rgba(12, 20, 39, 0.6)' /* Add semi-transparent dark background */
       : 'rgba(12, 20, 39, 0.98)'};
-  backdrop-filter: ${({ $scrolled }) => ($scrolled ? 'blur(15px)' : 'none')};
-  box-shadow: ${({ $scrolled }) => ($scrolled ? '0 8px 32px rgba(0, 0, 0, 0.12)' : 'none')};
+  backdrop-filter: blur(10px); /* Always apply blur for better readability */
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.15); /* Add shadow for separation */
   transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   display: flex;
   align-items: center;
@@ -138,6 +139,7 @@ const NavLinks = styled.div`
     border-radius: 10px;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     letter-spacing: 0.3px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 
     &::after {
       content: '';
@@ -589,8 +591,8 @@ const UserName = styled.span`
   }
 `;
 
-const Navbar = ({ active, transparent = true }) => {
-  const [scrolled, setScrolled] = useState(false);
+const Navbar = ({ active, transparent = true, initialScrolled = false }) => {
+  const [scrolled, setScrolled] = useState(initialScrolled);
   const [isOpen, setIsOpen] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [user, setUser] = useState(null);
@@ -605,23 +607,17 @@ const Navbar = ({ active, transparent = true }) => {
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
+   useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20 || initialScrolled);
     window.addEventListener('scroll', handleScroll);
 
-    const handleResize = () => {
-      if (window.innerWidth > 768 && isOpen) {
-        setIsOpen(false);
-        document.body.style.overflow = 'visible';
-      }
-    };
-    window.addEventListener('resize', handleResize);
+    // Force initial state based on prop
+    setScrolled(initialScrolled);
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleResize);
     };
-  }, [isOpen]);
+  }, [initialScrolled]);
 
   useEffect(() => { 
     if (isOpen) {

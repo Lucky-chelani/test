@@ -542,87 +542,91 @@ const Signup = () => {
 
   const passwordStrength = getPasswordStrength(password);
 
-  const handleGoogleSignup = async () => {
-    setError('');
-    setLoading(true);
-
-    try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      const userDocRef = doc(db, "users", user.uid);
-      const userDocSnap = await getDoc(userDocRef);
-
-      if (!userDocSnap.exists()) {
-        await setDoc(userDocRef, {
-          uid: user.uid,
-          name: user.displayName || 'Google User',
-          email: user.email,
-          createdAt: new Date().toISOString(),
-          authProvider: 'google',
-        });
-      }
-      
-      setLoading(false);
-      navigate('/profile');
-    } catch (err) {
-      setError('Failed to sign up with Google. Please try again.');
-      console.error('Google signup failed:', err);
-      setLoading(false);
-    }
-  };
+  
 
   const handleSignup = async (e) => {
-    e.preventDefault();
-    setError('');
-    
-    if (!termsAccepted) {
-      setError("Please accept the Terms of Service and Privacy Policy.");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-    if (password.length < 6) {
-      setError("Password should be at least 6 characters.");
-      return;
-    }
-    
-    setLoading(true);
-    
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+  e.preventDefault();
+  setError('');
+  
+  if (!termsAccepted) {
+    setError("Please accept the Terms of Service and Privacy Policy.");
+    return;
+  }
+  if (password !== confirmPassword) {
+    setError("Passwords do not match.");
+    return;
+  }
+  if (password.length < 6) {
+    setError("Password should be at least 6 characters.");
+    return;
+  }
+  
+  setLoading(true);
+  
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
 
-      await updateProfile(user, {
-        displayName: name,
-      });
+    await updateProfile(user, {
+      displayName: name,
+    });
 
-      await setDoc(doc(db, "users", user.uid), {
+    await setDoc(doc(db, "users", user.uid), {
+      uid: user.uid,
+      name: name,
+      email: email,
+      dob: dob,
+      createdAt: new Date().toISOString(),
+      authProvider: 'email',
+    });
+
+    setLoading(false);
+    setError(''); // Ensure error is cleared before navigation
+    navigate('/profile');
+  } catch (err) {
+    if (err.code === 'auth/email-already-in-use') {
+      setError('This email address is already in use. Please try a different email or log in.');
+    } else if (err.code === 'auth/weak-password') {
+      setError('The password is too weak. Please choose a stronger password.');
+    } else {
+      setError(err.message || 'Failed to create an account. Please try again.');
+    }
+    setLoading(false);
+    console.error("Signup failed:", err);
+  }
+};
+
+const handleGoogleSignup = async () => {
+  setError('');
+  setLoading(true);
+
+  try {
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+
+    const userDocRef = doc(db, "users", user.uid);
+    const userDocSnap = await getDoc(userDocRef);
+
+    if (!userDocSnap.exists()) {
+      await setDoc(userDocRef, {
         uid: user.uid,
-        name: name,
-        email: email,
-        dob: dob,
+        name: user.displayName || 'Google User',
+        email: user.email,
         createdAt: new Date().toISOString(),
-        authProvider: 'email',
+        authProvider: 'google',
       });
-
-      setLoading(false);
-      navigate('/profile');
-    } catch (err) {
-      if (err.code === 'auth/email-already-in-use') {
-        setError('This email address is already in use. Please try a different email or log in.');
-      } else if (err.code === 'auth/weak-password') {
-        setError('The password is too weak. Please choose a stronger password.');
-      } else {
-        setError(err.message || 'Failed to create an account. Please try again.');
-      }
-      setLoading(false);
-      console.error("Signup failed:", err);
     }
-  };
+    
+    setLoading(false);
+    setError(''); // Ensure error is cleared
+    navigate('/profile');
+  } catch (err) {
+    setError('Failed to sign up with Google. Please try again.');
+    console.error('Google signup failed:', err);
+    setLoading(false);
+  }
+};
 
   return (
     <Page>

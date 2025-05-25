@@ -15,6 +15,7 @@ import About from './components/About';
 import Profile from './components/Profile';
 import Login from './components/Login';
 import Signup from './components/Signup';
+import ChatRoom from './components/ChatRoom'; // Import the new component
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
           } />
           <Route path="/explore" element={<Explore />} />
           <Route path="/community" element={<Community />} />
+          <Route path="/chat/:roomId" element={<ChatRoom />} /> {/* Add the new route here */}
           <Route path="/blog" element={<Blog />} />
           <Route path="/rewards" element={
             <>

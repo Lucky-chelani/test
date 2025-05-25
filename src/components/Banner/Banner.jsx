@@ -15,7 +15,7 @@ const Banner = () => {
   const bannerRef = useRef(null);
   const contentRef = useRef(null);
 
-  // Parallax effect on scroll
+  // Enhanced scroll effect without mountain animations
   useEffect(() => {
     const handleScroll = () => {
       if (!bannerRef.current) return;
@@ -23,21 +23,24 @@ const Banner = () => {
       const bannerHeight = bannerRef.current.offsetHeight;
       
       if (scrollPosition < bannerHeight) {
-        // Move mountains at different speeds
-        const mountainBack = document.querySelector('.mountain-back');
-        const mountainRight = document.querySelector('.mountain-right');
-        const mountainLeft = document.querySelector('.mountain-left');
+        // Only animate non-mountain elements
         const birds = document.querySelector('.birds');
         const content = contentRef.current;
         const sun = document.querySelector('.sun');
+        const clouds = document.querySelectorAll('.cloud');
         
-        if (mountainBack) mountainBack.style.transform = `translateY(${scrollPosition * 0.05}px)`;
-        if (mountainRight) mountainRight.style.transform = `translateY(${scrollPosition * 0.08}px) translateX(${scrollPosition * 0.02}px)`;
-        if (mountainLeft) mountainLeft.style.transform = `translateY(${scrollPosition * 0.08}px) translateX(-${scrollPosition * 0.02}px)`;
         if (birds) birds.style.transform = `translateY(${scrollPosition * 0.1}px) translateX(${scrollPosition * 0.05}px)`;
-        if (sun) sun.style.transform = `translateY(${scrollPosition * 0.06}px)`;
-        if (content) content.style.transform = `translateY(${scrollPosition * 0.15}px)`;
-        if (content) content.style.opacity = 1 - scrollPosition / (bannerHeight * 0.5);
+        if (sun) sun.style.transform = `translateY(${scrollPosition * 0.03}px) scale(${1 + scrollPosition * 0.0005})`;
+        if (content) {
+          content.style.transform = `translateY(${scrollPosition * 0.12}px)`;
+          content.style.opacity = 1 - scrollPosition / (bannerHeight * 0.5);
+        }
+        
+        // Animate clouds in different directions
+        clouds.forEach((cloud, index) => {
+          const direction = index % 2 === 0 ? 1 : -1;
+          cloud.style.transform = `translateX(${scrollPosition * 0.03 * direction}px)`;
+        });
       }
     };
 
@@ -56,7 +59,8 @@ const Banner = () => {
 
   return (
     <div className="banner" ref={bannerRef}>
-      <Navbar active="home" />
+      {/* Pass initialScrolled=true to make navbar visible initially with background */}
+      <Navbar active="home" transparent={true} initialScrolled={true} />
       
       {/* Background Elements */}
       <div className="banner-overlay">
@@ -64,25 +68,32 @@ const Banner = () => {
           <img src={backgroundSky} alt="sky" />
         </div>
         
-        {/* Sun - new element */}
-        <div className="sun"></div>
+        {/* Enhanced sun with glow effect */}
+        <div className="sun">
+          <div className="sun-glow"></div>
+        </div>
         
-        {/* Clouds - new elements */}
+        {/* Improved clouds with different sizes and opacity */}
         <div className="cloud cloud1"></div>
         <div className="cloud cloud2"></div>
         <div className="cloud cloud3"></div>
+        <div className="cloud cloud4"></div>
+        <div className="cloud cloud5"></div>
         
+        {/* Mountains with no animation but proper layering */}
         <div className="mountains">
           <img src={mountainBack} alt="mountain back" className="mountain-back" />
           <img src={mountainRight} alt="mountain right" className="mountain-right" />
           <img src={mountainLeft} alt="mountain left" className="mountain-left" />
         </div>
+        
+        {/* Birds with enhanced animation */}
         <div className="birds">
           <img src={birds} alt="birds" />
         </div>
       </div>
 
-      {/* Content */}
+      {/* Enhanced Content with better transitions */}
       <div className="banner-content" ref={contentRef}>
         <h1 className="banner-title">
           DISCOVER YOUR NEXT<br />ADVENTURE
@@ -97,10 +108,16 @@ const Banner = () => {
           >
             Explore Treks
           </button>
+          <button 
+            className="banner-btn secondary"
+            onClick={() => navigate('/popular')}
+          >
+            Popular Destinations
+          </button>
         </div>
       </div>
       
-      {/* Scroll Indicator */}
+      {/* Enhanced Scroll Indicator */}
       <div className="scroll-indicator" onClick={handleScrollDown}>
         <span className="scroll-text">Scroll Down</span>
         <div className="scroll-arrow"></div>

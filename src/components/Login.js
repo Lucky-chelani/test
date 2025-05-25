@@ -442,43 +442,45 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      setLoading(false);
-      navigate('/profile');
-    } catch (err) {
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-        setError('Invalid email or password. Please try again.');
-      } else if (err.code === 'auth/invalid-email') {
-        setError('Please enter a valid email address.');
-      } else {
-        setError('Failed to log in. Please try again later.');
-      }
-      console.error('Login failed:', err.message, err.code);
-      setLoading(false);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError('');
+  setLoading(true);
+  
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    setLoading(false);
+    setError(''); // Ensure error is cleared
+    navigate('/profile');
+  } catch (err) {
+    if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+      setError('Invalid email or password. Please try again.');
+    } else if (err.code === 'auth/invalid-email') {
+      setError('Please enter a valid email address.');
+    } else {
+      setError('Failed to log in. Please try again later.');
     }
-  };
+    console.error('Login failed:', err.message, err.code);
+    setLoading(false);
+  }
+};
 
-  const handleGoogleLogin = async () => {
-    setError('');
-    setLoading(true);
-    
-    try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      setLoading(false);
-      navigate('/profile');
-    } catch (err) {
-      setError('Failed to log in with Google. Please try again.');
-      console.error('Google login failed:', err);
-      setLoading(false);
-    }
-  };
+const handleGoogleLogin = async () => {
+  setError('');
+  setLoading(true);
+  
+  try {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+    setLoading(false);
+    setError(''); // Ensure error is cleared
+    navigate('/profile');
+  } catch (err) {
+    setError('Failed to log in with Google. Please try again.');
+    console.error('Google login failed:', err);
+    setLoading(false);
+  }
+};
 
   return (
     <Page>
