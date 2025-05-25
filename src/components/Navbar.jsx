@@ -704,7 +704,7 @@ const Navbar = ({ active, transparent = true }) => {
           </Link>
           <Link to="/community"
             className={location.pathname==='/community'|| active==='community'? 'active-link':''}
-{/*             onClick={handleUpcomingFeature} */}
+
           >
             Community
           </Link>
