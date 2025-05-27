@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import styled, { keyframes,css } from 'styled-components';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
-import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, getDoc, updateDoc, where, deleteDoc, Timestamp, getDocs } from 'firebase/firestore';
 import Navbar from './Navbar';
 import mapPattern from '../assets/images/map-pattren.png';
 import user1 from '../assets/images/trek1.png'; // Placeholder
@@ -452,6 +452,41 @@ const ChatRoom = () => {
     
     fetchRoom();
   }, [roomId, room]);
+
+   useEffect(() => {
+    if (!roomId) return;
+    
+    const handleMessageCleanup = async () => {
+      try {
+        // Calculate timestamp from 8 hours ago
+        const eightHoursAgo = new Date();
+        eightHoursAgo.setHours(eightHoursAgo.getHours() - 8);
+        const cutoffTimestamp = Timestamp.fromDate(eightHoursAgo);
+        
+        // Query for messages older than 8 hours
+        const messagesRef = collection(db, `chatrooms/${roomId}/messages`);
+        const oldMessagesQuery = query(
+          messagesRef,
+          where('timestamp', '<', cutoffTimestamp)
+        );
+        
+        // Delete old messages
+        const snapshot = await getDocs(oldMessagesQuery);
+        const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deletePromises);
+        
+        console.log(`Deleted ${snapshot.docs.length} messages older than 8 hours`);
+      } catch (err) {
+        console.error('Error cleaning up old messages:', err);
+      }
+    };
+        handleMessageCleanup();
+    
+    // Set interval to run cleanup every hour
+    const cleanupInterval = setInterval(handleMessageCleanup, 60 * 60 * 1000);
+    
+    return () => clearInterval(cleanupInterval);
+  }, [roomId]);
   
   // Fetch messages
   useEffect(() => {

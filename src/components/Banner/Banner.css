@@ -89,12 +89,10 @@
   opacity: 0.95;
   filter: brightness(1.1) contrast(1.05);
   transform: translateY(0);
-  transition: transform 8s ease-out;
+  transition: none;
 }
 
-.banner:hover .mountain-back {
-  transform: translateY(-5px) scale(1.01);
-}
+
 
 .mountain-right {
   position: absolute;
@@ -105,7 +103,7 @@
   opacity: 0.98;
   filter: brightness(1.05) contrast(1.05);
   transform: translateY(0);
-  transition: transform 2s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: none;
   z-index: 5;
 }
 
@@ -118,17 +116,11 @@
   opacity: 0.98;
   filter: brightness(1.05) contrast(1.05);
   transform: translateY(0);
-  transition: transform 2s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: none;
   z-index: 5;
 }
 
-.banner:hover .mountain-right {
-  transform: translateY(-8px) translateX(2px);
-}
 
-.banner:hover .mountain-left {
-  transform: translateY(-5px) translateX(-2px);
-}
 
 .birds {
   position: absolute;
@@ -161,6 +153,7 @@
   opacity: 0.9;
   z-index: 4;
   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  filter: blur(0.5px);
 }
 
 .cloud1 {
@@ -168,7 +161,7 @@
   left: 10%;
   width: 180px;
   height: 60px;
-  animation: floatCloud 20s linear infinite;
+  animation: floatCloud1 35s ease-in-out infinite;
 }
 
 .cloud2 {
@@ -176,8 +169,7 @@
   left: 60%;
   width: 120px;
   height: 40px;
-  animation: floatCloud 15s linear infinite;
-  animation-delay: -5s;
+  animation: floatCloud2 42s ease-in-out infinite;
 }
 
 .cloud3 {
@@ -185,8 +177,26 @@
   left: 30%;
   width: 160px;
   height: 50px;
-  animation: floatCloud 25s linear infinite;
-  animation-delay: -12s;
+  animation: floatCloud3 48s ease-in-out infinite;
+}
+.cloud4 {
+  top: 15%;
+  left: 80%;
+  width: 140px;
+  height: 45px;
+  animation: floatCloud2 39s ease-in-out infinite;
+  animation-delay: -15s;
+  opacity: 0.85;
+}
+
+.cloud5 {
+  top: 20%;
+  left: 5%;
+  width: 130px;
+  height: 42px;
+  animation: floatCloud3 45s ease-in-out infinite;
+  animation-delay: -25s;
+  opacity: 0.8;
 }
 
 @keyframes floatCloud {
