@@ -1,6 +1,9 @@
 import React, { useRef, useState, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import trek1 from "../assets/images/trek1.png";
+// import photo1 from "../assets/images/photo1.jpg";
+// import photo2 from "../assets/images/photo2.jpg";    
+// import photo3 from "../assets/images/photo3.jpg";
 import mapPattern from "../assets/images/map-pattren.png";
 import { FiChevronLeft, FiChevronRight, FiClock, FiMapPin, FiCalendar, FiStar, FiArrowRight } from 'react-icons/fi';
 import { FaMountain } from 'react-icons/fa';
@@ -618,36 +621,36 @@ const ScrollIndicator = styled.div`
 const treks = [
   {
     image: trek1,
-    country: "Nepal",
+    country: "India",
     difficulty: "Difficult",
-    title: "Everest Base Camp Trek",
+    title: "Bhrigu Lake Trek",
     rating: 4.8,
     reviews: 124,
-    days: 14,
-    price: "$1,899",
-    location: "Himalayan Range"
+    days: 8,
+    price: "3,850 Rupees",
+    location: "Himachal Pradesh"
   },
   {
     image: trek1,
-    country: "Peru",
+    country: "India",
     difficulty: "Moderate",
-    title: "Inca Trail to Machu Picchu",
+    title: "Valley Of Flowers Trek",
     rating: 5.0,
     reviews: 98,
     days: 7,
-    price: "$1,299",
-    location: "Cusco Region"
+    price: "8,250 Rupees",
+    location: "Uttarakhand Himalayas"
   },
   {
     image: trek1,
-    country: "France",
+    country: "India",
     difficulty: "Moderate",
-    title: "Tour du Mont Blanc",
+    title: "Hampta Pass Trek ",
     rating: 4.2,
     reviews: 87,
-    days: 11,
-    price: "$2,199",
-    location: "Alps"
+    days: 6,
+    price: "6,050 Rupees",
+    location: "Himachal Pradesh"
   },
   {
     image: trek1,
@@ -775,7 +778,7 @@ export default function FeaturedTreks() {
                     </InfoItem>
                     <InfoItem>
                       <FiCalendar />
-                      <span>Year-round</span>
+                      <span>Aug-Sept</span>
                     </InfoItem>
                   </InfoRow>
                   <InfoRow>
