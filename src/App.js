@@ -15,7 +15,8 @@ import About from './components/About';
 import Profile from './components/Profile';
 import Login from './components/Login';
 import Signup from './components/Signup';
-import ChatRoom from './components/ChatRoom'; // Import the new component
+import ChatRoom from './components/ChatRoom';
+import TrekDetails from './components/TreksDetails'; // Import the new component
 
 function App() {
   return (
@@ -46,6 +47,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+            <Route path="/trek/:id" element={<TrekDetails />} />
         </Routes>
       </div>
     </Router>

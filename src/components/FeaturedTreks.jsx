@@ -1,9 +1,9 @@
 import React, { useRef, useState, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
-import trek1 from "../assets/images/trek1.png";
-// import photo1 from "../assets/images/photo1.jpg";
-// import photo2 from "../assets/images/photo2.jpg";    
-// import photo3 from "../assets/images/photo3.jpg";
+import { useNavigate } from "react-router-dom";
+import trek1 from "../assets/images/photo1.jpeg";
+import trek2 from "../assets/images/photo2.jpeg";
+import trek3 from "../assets/images/photo3.jpeg";
 import mapPattern from "../assets/images/map-pattren.png";
 import { FiChevronLeft, FiChevronRight, FiClock, FiMapPin, FiCalendar, FiStar, FiArrowRight } from 'react-icons/fi';
 import { FaMountain } from 'react-icons/fa';
@@ -41,7 +41,7 @@ const Section = styled.section`
   position: relative;
   min-height: 700px;
   padding: 100px 0 120px 0;
-  background-color: #0a0a1a;
+  background-color: #0a1a2f;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -56,21 +56,43 @@ const Section = styled.section`
     padding: 50px 0 70px 0;
   }
 `;
+
+// Enhanced map pattern with higher opacity and blend mode
 const MapPatternBackground = styled.div`
   position: absolute;
   inset: 0;
-  opacity: 0.15; 
   background: url(${mapPattern});
-  background-size: 600px;
+  background-size: 500px;
   background-repeat: repeat;
   pointer-events: none;
-  z-index: 0;
+  z-index: 2;
+  mix-blend-mode: luminosity;
+  filter: brightness(1.5) contrast(1.2);
   animation: breathe 15s infinite ease-in-out;
   
   @keyframes breathe {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.05); }
   }
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(45deg, rgba(92, 188, 226, 0.1) 0%, rgba(79, 172, 254, 0.1) 100%);
+    z-index: 1;
+  }
+`;
+
+// Lighter overlay to make map pattern more visible
+const Overlay = styled.div`
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top right, 
+    rgba(10, 26, 47, 0.6) 0%, 
+    rgba(8, 22, 48, 0.85) 100%);
+  z-index: 1;
+  pointer-events: none;
 `;
 
 const SectionContent = styled.div`
@@ -89,6 +111,7 @@ const SectionContent = styled.div`
   }
 `;
 
+// Enhanced heading with modern gradient
 const Heading = styled.h2`
   color: #fff;
   font-size: 3.5rem;
@@ -96,7 +119,7 @@ const Heading = styled.h2`
   margin-bottom: 0.5rem;
   text-align: center;
   animation: ${fadeIn} 0.6s ease-out;
-  background: linear-gradient(to right, #fff 0%, #bbb 100%);
+  background: linear-gradient(to right, #80FFDB 0%, #5390D9 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
@@ -110,10 +133,11 @@ const Heading = styled.h2`
   }
 `;
 
+// Improved underline with animation
 const Underline = styled.div`
   width: 80px;
   height: 6px;
-  background: linear-gradient(to right, #FFD2BF, #ffbfa3);
+  background: linear-gradient(to right, #5390D9, #7400B8);
   border-radius: 6px;
   margin: 0 auto 24px auto;
   animation: ${fadeIn} 0.6s ease-out 0.1s both;
@@ -161,11 +185,12 @@ const ScrollContainer = styled.div`
   margin-bottom: 30px;
 `;
 
+// Enhanced card container with better scrolling
 const TrekListContainer = styled.div`
   display: flex;
   gap: 30px;
   overflow-x: auto;
-  padding: 30px 10px;
+  padding: 30px 15px 50px 15px;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none; /* Firefox */
@@ -177,10 +202,11 @@ const TrekListContainer = styled.div`
   
   @media (max-width: 768px) {
     gap: 20px;
-    padding: 20px 5px;
+    padding: 20px 5px 40px 5px;
   }
 `;
 
+// Enhanced navigation buttons
 const NavigationButton = styled.button`
   position: absolute;
   top: 50%;
@@ -188,9 +214,9 @@ const NavigationButton = styled.button`
   width: 54px;
   height: 54px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(128, 255, 219, 0.1);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(128, 255, 219, 0.3);
   color: white;
   font-size: 1.5rem;
   display: flex;
@@ -202,9 +228,9 @@ const NavigationButton = styled.button`
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
   
   &:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(128, 255, 219, 0.2);
     transform: translateY(-50%) scale(1.1);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(128, 255, 219, 0.4) inset;
   }
   
   &:active {
@@ -253,22 +279,23 @@ const NextButton = styled(NavigationButton)`
   }
 `;
 
+// Enhanced card with glass morphism
 const TrekCard = styled.div`
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 24px;
   overflow: hidden;
   min-width: 380px;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
   transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(128, 255, 219, 0.1);
   backdrop-filter: blur(5px);
   flex-shrink: 0;
   transform-style: preserve-3d;
   
   &:hover {
     transform: translateY(-15px) rotateX(5deg);
-    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 210, 191, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), 0 0 30px rgba(83, 144, 217, 0.2);
+    border-color: rgba(128, 255, 219, 0.2);
   }
   
   @media (max-width: 1200px) {
@@ -323,23 +350,15 @@ const TrekImage = styled.div`
     transform: scale(1.08);
   }
 `;
-const Overlay = styled.div`
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at top right, 
-    rgba(10, 10, 40, 0.7) 0%, 
-    rgba(0, 0, 0, 0.95) 100%);
-  z-index: 1;
-  pointer-events: none;
-`;
 
+// Enhanced image overlay
 const ImageOverlay = styled.div`
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.4) 100%);
+  background: radial-gradient(circle at center, transparent 30%, rgba(10, 26, 47, 0.5) 100%);
   z-index: 1;
 `;
 
@@ -352,6 +371,7 @@ const TrekTags = styled.div`
   z-index: 2;
 `;
 
+// Modern clean card info section
 const TrekInfo = styled.div`
   padding: 28px 25px;
   background: rgba(255, 255, 255, 0.97);
@@ -393,7 +413,7 @@ const TrekTitle = styled.h3`
     left: 0;
     width: 40px;
     height: 3px;
-    background: #FFD2BF;
+    background: linear-gradient(to right, #5390D9, #7400B8);
     border-radius: 2px;
   }
   
@@ -435,18 +455,25 @@ const Tag = styled.span`
   }
 `;
 
+// Updated difficulty tag with new color
 const DifficultyTag = styled(Tag)`
-  background: #FFD2BF;
-  color: #181828;
+  background: linear-gradient(to right, #5390D9, #7400B8);
+  color: white;
   font-weight: 700;
   
   svg {
-    color: #d06830;
+    color: rgba(255, 255, 255, 0.8);
   }
 `;
 
 const LocationTag = styled(Tag)`
   animation: ${floatAnimation} 5s infinite ease-in-out;
+  background: rgba(128, 255, 219, 0.2);
+  border: 1px solid rgba(128, 255, 219, 0.3);
+  
+  svg {
+    color: #5390D9;
+  }
 `;
 
 const InfoRow = styled.div`
@@ -466,7 +493,7 @@ const InfoItem = styled.div`
   color: #555;
   
   svg {
-    color: #FFD2BF;
+    color: #5390D9;
   }
 `;
 
@@ -531,7 +558,7 @@ const StarContainer = styled.div`
 `;
 
 const Star = styled.span`
-  color: #FFD700;
+  color: #5390D9;
   font-size: 1.1rem;
 `;
 
@@ -541,16 +568,17 @@ const ReviewCount = styled.span`
   font-size: 0.9rem;
 `;
 
+// Enhanced button with new gradient
 const ViewButton = styled.button`
-  background: linear-gradient(135deg, #FFD2BF 0%, #ffbfa3 100%);
-  color: #181828;
+  background: linear-gradient(135deg, #5390D9 0%, #7400B8 100%);
+  color: white;
   border: none;
   border-radius: 12px;
   padding: 14px 36px;
   font-weight: 700;
   font-size: 1rem;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(24, 24, 40, 0.1);
+  box-shadow: 0 4px 15px rgba(83, 144, 217, 0.3);
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   display: flex;
   align-items: center;
@@ -559,9 +587,9 @@ const ViewButton = styled.button`
   min-width: 140px;
   
   &:hover {
-    background: linear-gradient(135deg, #ffbfa3 0%, #ffa889 100%);
+    background: linear-gradient(135deg, #4a81c4 0%, #6600a3 100%);
     transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(255, 210, 191, 0.4);
+    box-shadow: 0 8px 25px rgba(83, 144, 217, 0.4);
   }
       
   &:active {
@@ -590,6 +618,7 @@ const ViewButton = styled.button`
   }
 `;
 
+// Enhanced scroll indicators
 const ScrollIndicatorContainer = styled.div`
   display: flex;
   gap: 10px;
@@ -602,24 +631,47 @@ const ScrollIndicator = styled.div`
   height: 8px;
   border-radius: 10px;
   background: ${props => props.active ? 
-    'linear-gradient(to right, #FFD2BF, #ffbfa3)' : 
+    'linear-gradient(to right, #5390D9, #7400B8)' : 
     'rgba(255, 255, 255, 0.2)'};
   transition: all 0.3s ease, transform 0.3s ease;
   cursor: pointer;
   box-shadow: ${props => props.active ? 
-    '0 2px 8px rgba(255, 210, 191, 0.3)' : 
+    '0 2px 8px rgba(83, 144, 217, 0.3)' : 
     '0 1px 3px rgba(0, 0, 0, 0.2)'};
   
   &:hover {
     transform: ${props => props.active ? 'scale(1.1)' : 'scale(1.2)'};
     background: ${props => props.active ? 
-      'linear-gradient(to right, #FFD2BF, #ffbfa3)' : 
+      'linear-gradient(to right, #5390D9, #7400B8)' : 
       'rgba(255, 255, 255, 0.4)'};
+  }
+`;
+
+// Add floating elements to enhance the UI
+const FloatingElement = styled.div`
+  position: absolute;
+  width: ${props => props.size || '30px'};
+  height: ${props => props.size || '30px'};
+  background: ${props => props.color || 'rgba(128, 255, 219, 0.1)'};
+  border-radius: 50%;
+  top: ${props => props.top || '20%'};
+  left: ${props => props.left || 'auto'};
+  right: ${props => props.right || 'auto'};
+  z-index: 1;
+  filter: blur(2px);
+  animation: float-${props => props.index} 15s infinite ease-in-out;
+  
+  @keyframes float-${props => props.index} {
+    0%, 100% { transform: translate(0, 0); }
+    25% { transform: translate(${props => props.xMove || '10px'}, ${props => props.yMove || '10px'}); }
+    50% { transform: translate(${props => props.xMove2 || '0'}, ${props => props.yMove2 || '20px'}); }
+    75% { transform: translate(${props => props.xMove3 || '-10px'}, ${props => props.yMove3 || '10px'}); }
   }
 `;
 
 const treks = [
   {
+    id: "bhrigu-lake",
     image: trek1,
     country: "India",
     difficulty: "Difficult",
@@ -631,7 +683,8 @@ const treks = [
     location: "Himachal Pradesh"
   },
   {
-    image: trek1,
+    id: "valley-of-flowers",
+    image: trek2,
     country: "India",
     difficulty: "Moderate",
     title: "Valley Of Flowers Trek",
@@ -642,7 +695,8 @@ const treks = [
     location: "Uttarakhand Himalayas"
   },
   {
-    image: trek1,
+    id: "hampta-pass",
+    image: trek3,
     country: "India",
     difficulty: "Moderate",
     title: "Hampta Pass Trek ",
@@ -652,31 +706,11 @@ const treks = [
     price: "6,050 Rupees",
     location: "Himachal Pradesh"
   },
-  {
-    image: trek1,
-    country: "USA",
-    difficulty: "Easy",
-    title: "Pacific Crest Trail",
-    rating: 4.7,
-    reviews: 152,
-    days: 21,
-    price: "$2,499",
-    location: "California"
-  },
-  {
-    image: trek1,
-    country: "New Zealand",
-    difficulty: "Moderate",
-    title: "Milford Track",
-    rating: 4.9,
-    reviews: 110,
-    days: 5,
-    price: "$1,699",
-    location: "Fiordland"
-  }
+ 
 ];
 
 export default function FeaturedTreks() {
+  const navigate = useNavigate();
   const scrollRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -719,6 +753,9 @@ export default function FeaturedTreks() {
       setTimeout(() => setIsScrolling(false), 500);
     }
   };
+    const navigateToTrekDetails = (trekId) => {
+    navigate(`/trek/${trekId}`);
+  };
 
   // Listen for scroll events to update active index
   useEffect(() => {
@@ -743,8 +780,16 @@ export default function FeaturedTreks() {
 
   return (
     <Section>
-            <MapPatternBackground />
+      {/* Enhanced Map Pattern */}
+      <MapPatternBackground />
       <Overlay />
+      
+      {/* Decorative floating elements */}
+      <FloatingElement size="60px" top="15%" left="10%" color="rgba(128, 255, 219, 0.1)" index="1" xMove="20px" yMove="30px" />
+      <FloatingElement size="100px" top="25%" right="15%" color="rgba(83, 144, 217, 0.08)" index="2" xMove="-30px" yMove="20px" />
+      <FloatingElement size="40px" top="60%" left="20%" color="rgba(116, 0, 184, 0.08)" index="3" xMove="15px" yMove="-25px" />
+      <FloatingElement size="80px" bottom="15%" right="25%" color="rgba(128, 255, 219, 0.06)" index="4" xMove="-20px" yMove="-15px" />
+      
       <SectionContent>
         <Heading>Featured Treks</Heading>
         <Underline />
@@ -799,7 +844,7 @@ export default function FeaturedTreks() {
                     <Price>
                       {trek.price} <span>per person</span>
                     </Price>
-                    <ViewButton>
+  <ViewButton onClick={() => navigateToTrekDetails(trek.id)}>
                       View Trek
                       <FiArrowRight />
                     </ViewButton>
