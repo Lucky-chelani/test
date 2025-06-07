@@ -1,12 +1,13 @@
 import React from 'react';
 import './App.css';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+// import route components eagerly to eliminate Suspense fallback
 import Banner from './components/Banner/Banner';
 import FeaturedTreks from './components/FeaturedTreks';
 import CommunitySection from './components/CommunitySection';
 import HowItWorks from './components/HowItWorks';
 import MountainHero from './components/MountainHero';
 import Footer from './components/Footer';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Explore from './components/Explore';
 import Community from './components/Community';
 import Blog from './components/Blog';
@@ -19,7 +20,7 @@ import ChatRoom from './components/ChatRoom';
 import TrekDetails from './components/TreksDetails'; // Import the new component
 
 function App() {
-  return (
+   return (
     <Router>
       <div className="App">
         <Routes>

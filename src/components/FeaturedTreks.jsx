@@ -66,13 +66,19 @@ const MapPatternBackground = styled.div`
   background-repeat: repeat;
   pointer-events: none;
   z-index: 2;
-  mix-blend-mode: luminosity;
-  filter: brightness(1.5) contrast(1.2);
-  animation: breathe 15s infinite ease-in-out;
+  opacity: 0.2;
+  will-change: transform;
   
-  @keyframes breathe {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
+  /* Removed mix-blend-mode and filter for better performance */
+  
+  /* Only animate on non-mobile devices */
+  @media (min-width: 769px) {
+    animation: breathe 20s infinite ease-in-out;
+    
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+    }
   }
   
   &::before {
@@ -191,13 +197,19 @@ const TrekListContainer = styled.div`
   gap: 30px;
   overflow-x: auto;
   padding: 30px 15px 50px 15px;
-  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none; /* Firefox */
-  perspective: 1000px;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  will-change: scroll-position;
   
   &::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Edge */
+  }
+  
+  /* Optimized for smoother scrolling */
+  > * {
+    scroll-snap-align: start;
   }
   
   @media (max-width: 768px) {
@@ -215,7 +227,6 @@ const NavigationButton = styled.button`
   height: 54px;
   border-radius: 50%;
   background: rgba(128, 255, 219, 0.1);
-  backdrop-filter: blur(10px);
   border: 1px solid rgba(128, 255, 219, 0.3);
   color: white;
   font-size: 1.5rem;
@@ -224,13 +235,14 @@ const NavigationButton = styled.button`
   justify-content: center;
   cursor: pointer;
   z-index: 10;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  will-change: transform, background-color;
+  
+  /* Removed backdrop-filter for better performance */
   
   &:hover {
     background: rgba(128, 255, 219, 0.2);
-    transform: translateY(-50%) scale(1.1);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(128, 255, 219, 0.4) inset;
   }
   
   &:active {
@@ -279,23 +291,25 @@ const NextButton = styled(NavigationButton)`
   }
 `;
 
-// Enhanced card with glass morphism
+// Enhanced card with optimized animation
 const TrekCard = styled.div`
   background: rgba(255, 255, 255, 0.05);
   border-radius: 24px;
   overflow: hidden;
   min-width: 380px;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
-  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
   border: 1px solid rgba(128, 255, 219, 0.1);
-  backdrop-filter: blur(5px);
   flex-shrink: 0;
-  transform-style: preserve-3d;
+  /* Removed backdrop-filter and transform-style for better performance */
+  will-change: transform;
   
-  &:hover {
-    transform: translateY(-15px) rotateX(5deg);
-    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), 0 0 30px rgba(83, 144, 217, 0.2);
-    border-color: rgba(128, 255, 219, 0.2);
+  @media (min-width: 769px) {
+    &:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      border-color: rgba(128, 255, 219, 0.2);
+    }
   }
   
   @media (max-width: 1200px) {
@@ -311,7 +325,7 @@ const TrekCard = styled.div`
     max-width: 80%;
     
     &:hover {
-      transform: translateY(-8px) rotateX(3deg);
+      transform: translateY(-5px);
     }
   }
   
@@ -333,7 +347,8 @@ const TrekImage = styled.div`
   background-size: cover;
   background-position: center;
   position: relative;
-  transition: transform 0.8s cubic-bezier(0.33, 1, 0.68, 1);
+  transition: transform 0.3s ease;
+  will-change: transform;
   
   &::after {
     content: '';
@@ -346,8 +361,10 @@ const TrekImage = styled.div`
     pointer-events: none;
   }
   
-  ${TrekCard}:hover & {
-    transform: scale(1.08);
+  @media (min-width: 769px) {
+    ${TrekCard}:hover & {
+      transform: scale(1.05);
+    }
   }
 `;
 
@@ -467,12 +484,16 @@ const DifficultyTag = styled(Tag)`
 `;
 
 const LocationTag = styled(Tag)`
-  animation: ${floatAnimation} 5s infinite ease-in-out;
   background: rgba(128, 255, 219, 0.2);
   border: 1px solid rgba(128, 255, 219, 0.3);
   
   svg {
     color: #5390D9;
+  }
+  
+  /* Only animate on non-mobile devices */
+  @media (min-width: 769px) {
+    animation: ${floatAnimation} 5s infinite ease-in-out;
   }
 `;
 
@@ -568,7 +589,7 @@ const ReviewCount = styled.span`
   font-size: 0.9rem;
 `;
 
-// Enhanced button with new gradient
+// Enhanced button with simplified animations
 const ViewButton = styled.button`
   background: linear-gradient(135deg, #5390D9 0%, #7400B8 100%);
   color: white;
@@ -579,29 +600,29 @@ const ViewButton = styled.button`
   font-size: 1rem;
   cursor: pointer;
   box-shadow: 0 4px 15px rgba(83, 144, 217, 0.3);
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   min-width: 140px;
+  will-change: transform;
   
   &:hover {
     background: linear-gradient(135deg, #4a81c4 0%, #6600a3 100%);
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(83, 144, 217, 0.4);
+    transform: translateY(-2px);
   }
       
   &:active {
-    transform: translateY(-1px);
+    transform: translateY(0);
   }
   
   svg {
-    transition: transform 0.3s ease;
+    transition: transform 0.2s ease;
   }
   
   &:hover svg {
-    transform: translateX(4px);
+    transform: translateX(3px);
   }
   
   @media (max-width: 768px) {
@@ -644,28 +665,6 @@ const ScrollIndicator = styled.div`
     background: ${props => props.active ? 
       'linear-gradient(to right, #5390D9, #7400B8)' : 
       'rgba(255, 255, 255, 0.4)'};
-  }
-`;
-
-// Add floating elements to enhance the UI
-const FloatingElement = styled.div`
-  position: absolute;
-  width: ${props => props.size || '30px'};
-  height: ${props => props.size || '30px'};
-  background: ${props => props.color || 'rgba(128, 255, 219, 0.1)'};
-  border-radius: 50%;
-  top: ${props => props.top || '20%'};
-  left: ${props => props.left || 'auto'};
-  right: ${props => props.right || 'auto'};
-  z-index: 1;
-  filter: blur(2px);
-  animation: float-${props => props.index} 15s infinite ease-in-out;
-  
-  @keyframes float-${props => props.index} {
-    0%, 100% { transform: translate(0, 0); }
-    25% { transform: translate(${props => props.xMove || '10px'}, ${props => props.yMove || '10px'}); }
-    50% { transform: translate(${props => props.xMove2 || '0'}, ${props => props.yMove2 || '20px'}); }
-    75% { transform: translate(${props => props.xMove3 || '-10px'}, ${props => props.yMove3 || '10px'}); }
   }
 `;
 
@@ -715,66 +714,86 @@ export default function FeaturedTreks() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
 
+  // Optimized scrolling with requestAnimationFrame
   const handleScroll = (direction) => {
     if (scrollRef.current && !isScrolling) {
       setIsScrolling(true);
       const { scrollLeft, clientWidth } = scrollRef.current;
-      const scrollTo = direction === 'left' 
-        ? scrollLeft - clientWidth / 1.5
-        : scrollLeft + clientWidth / 1.5;
+      const cardWidth = clientWidth / 2; // Scroll by half a view width
       
-      scrollRef.current.scrollTo({
-        left: scrollTo,
-        behavior: 'smooth'
-      });
-
+      const scrollTo = direction === 'left' 
+        ? scrollLeft - cardWidth
+        : scrollLeft + cardWidth;
+      
+      // Use standard scrollTo for smoother scrolling
+      scrollRef.current.style.scrollBehavior = 'smooth';
+      scrollRef.current.scrollLeft = scrollTo;
+      
       setTimeout(() => {
         if (scrollRef.current) {
-          const newIndex = Math.round(scrollRef.current.scrollLeft / (scrollRef.current.scrollWidth / treks.length));
-          setActiveIndex(Math.min(Math.max(newIndex, 0), treks.length - 1));
+          const totalWidth = scrollRef.current.scrollWidth - scrollRef.current.clientWidth;
+          const progress = Math.min(Math.max(scrollRef.current.scrollLeft / totalWidth, 0), 1);
+          const newIndex = Math.min(
+            Math.floor(progress * treks.length),
+            treks.length - 1
+          );
+          setActiveIndex(newIndex);
           setIsScrolling(false);
         }
-      }, 500);
+      }, 300); // Reduced timeout for better responsiveness
     }
   };
 
   const handleIndicatorClick = (index) => {
     if (scrollRef.current && !isScrolling) {
       setIsScrolling(true);
-      const cardWidth = scrollRef.current.scrollWidth / treks.length;
-      const scrollTo = cardWidth * index;
+      const totalWidth = scrollRef.current.scrollWidth - scrollRef.current.clientWidth;
+      const scrollTo = (index / (treks.length - 1)) * totalWidth;
       
-      scrollRef.current.scrollTo({
-        left: scrollTo,
-        behavior: 'smooth'
-      });
+      scrollRef.current.style.scrollBehavior = 'smooth';
+      scrollRef.current.scrollLeft = scrollTo;
       
       setActiveIndex(index);
-      setTimeout(() => setIsScrolling(false), 500);
+      setTimeout(() => setIsScrolling(false), 300);
     }
   };
-    const navigateToTrekDetails = (trekId) => {
+  
+  const navigateToTrekDetails = (trekId) => {
     navigate(`/trek/${trekId}`);
   };
 
-  // Listen for scroll events to update active index
+  // Optimized scroll event handler with debounce effect
   useEffect(() => {
+    let scrollTimeout;
+    
     const handleScrollUpdate = () => {
-      if (scrollRef.current && !isScrolling) {
-        const { scrollLeft, scrollWidth } = scrollRef.current;
-        const cardWidth = scrollWidth / treks.length;
-        const newIndex = Math.round(scrollLeft / cardWidth);
-        
-        if (newIndex !== activeIndex) {
-          setActiveIndex(Math.min(Math.max(newIndex, 0), treks.length - 1));
-        }
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
       }
+      
+      scrollTimeout = setTimeout(() => {
+        if (scrollRef.current && !isScrolling) {
+          const totalWidth = scrollRef.current.scrollWidth - scrollRef.current.clientWidth;
+          const progress = Math.min(Math.max(scrollRef.current.scrollLeft / totalWidth, 0), 1);
+          const newIndex = Math.min(
+            Math.floor(progress * treks.length),
+            treks.length - 1
+          );
+          
+          if (newIndex !== activeIndex) {
+            setActiveIndex(newIndex);
+          }
+        }
+      }, 50);
     };
 
     const ref = scrollRef.current;
     if (ref) {
-      ref.addEventListener('scroll', handleScrollUpdate);
-      return () => ref.removeEventListener('scroll', handleScrollUpdate);
+      ref.addEventListener('scroll', handleScrollUpdate, { passive: true });
+      return () => {
+        if (scrollTimeout) clearTimeout(scrollTimeout);
+        ref.removeEventListener('scroll', handleScrollUpdate);
+      };
     }
   }, [activeIndex, isScrolling]);
 
@@ -784,11 +803,7 @@ export default function FeaturedTreks() {
       <MapPatternBackground />
       <Overlay />
       
-      {/* Decorative floating elements */}
-      <FloatingElement size="60px" top="15%" left="10%" color="rgba(128, 255, 219, 0.1)" index="1" xMove="20px" yMove="30px" />
-      <FloatingElement size="100px" top="25%" right="15%" color="rgba(83, 144, 217, 0.08)" index="2" xMove="-30px" yMove="20px" />
-      <FloatingElement size="40px" top="60%" left="20%" color="rgba(116, 0, 184, 0.08)" index="3" xMove="15px" yMove="-25px" />
-      <FloatingElement size="80px" bottom="15%" right="25%" color="rgba(128, 255, 219, 0.06)" index="4" xMove="-20px" yMove="-15px" />
+      {/* Removed decorative floating elements */}
       
       <SectionContent>
         <Heading>Featured Treks</Heading>
@@ -799,6 +814,7 @@ export default function FeaturedTreks() {
           <PrevButton 
             onClick={() => handleScroll('left')}
             disabled={activeIndex === 0 || isScrolling}
+            aria-label="Previous treks"
           >
             <FiChevronLeft />
           </PrevButton>
@@ -844,7 +860,7 @@ export default function FeaturedTreks() {
                     <Price>
                       {trek.price} <span>per person</span>
                     </Price>
-  <ViewButton onClick={() => navigateToTrekDetails(trek.id)}>
+                    <ViewButton onClick={() => navigateToTrekDetails(trek.id)}>
                       View Trek
                       <FiArrowRight />
                     </ViewButton>
@@ -857,6 +873,7 @@ export default function FeaturedTreks() {
           <NextButton 
             onClick={() => handleScroll('right')}
             disabled={activeIndex === treks.length - 1 || isScrolling}
+            aria-label="Next treks"
           >
             <FiChevronRight />
           </NextButton>
@@ -868,6 +885,7 @@ export default function FeaturedTreks() {
               key={idx} 
               active={idx === activeIndex}
               onClick={() => handleIndicatorClick(idx)}
+              aria-label={`Go to trek ${idx + 1}`}
             />
           ))}
         </ScrollIndicatorContainer>
