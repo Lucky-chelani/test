@@ -6,6 +6,7 @@ import { FiChevronLeft, FiChevronRight, FiClock, FiMapPin, FiCalendar, FiArrowRi
 import { FaMountain } from 'react-icons/fa';
 import { db } from "../firebase";
 import { collection, getDocs } from "firebase/firestore";
+import { getValidImageUrl } from "../utils/images";
 
 const shimmer = keyframes`
   0% {
@@ -669,9 +670,6 @@ const ScrollIndicator = styled.div`
 `;
 
 // Treks will be fetched from Firebase
-
-// Import the image utilities
-import { getValidImageUrl } from "../utils/images";
 
 export default function FeaturedTreks() {
   const navigate = useNavigate();
