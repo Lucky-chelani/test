@@ -497,22 +497,16 @@ const About = () => {
 
   const team = [
     {
-      name: 'Mike Patel',
+      name: 'Harsh Gupta',
       role: 'CEO',
       quote: 'Our goal is to make trekking more than just reaching a destination - it\'s about the connections we forge along the way.',
       initial: 'MP'
     },
     {
-      name: 'Alex Chen',
+      name: 'Lucky Chelani',
       role: 'Co-founder & CTO',
       quote: 'Technology should enhance the trekking experience, not complicate it. We bring smart solutions that bring people together.',
       initial: 'AC'
-    },
-    {
-      name: 'Sarah Mitchell',
-      role: 'Co-founder & COO',
-      quote: 'Our goal is to make trekking more than just reaching a destination - it\'s about the experiences we forge along the way.',
-      initial: 'SM'
     }
   ];
 

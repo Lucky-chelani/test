@@ -50,6 +50,7 @@ const NavbarWrapper = styled.nav`
   z-index: 100;  
   background: linear-gradient(to top, rgba(10, 12, 20, 0.95), rgba(17, 21, 38, 0.92));
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px); /* Safari support */
   box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.7), 0 -3px 12px rgba(255, 107, 107, 0.25);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -57,6 +58,12 @@ const NavbarWrapper = styled.nav`
   padding: 0 max(20px, 5%);
   height: 65px;
   animation: ${fadeIn} 0.6s ease-out;
+  
+  /* Safari-specific fixes */
+  ${({ $isSafari }) => $isSafari && css`
+    transform: translateZ(0); /* Helps with rendering on Safari */
+    will-change: transform; /* Performance optimization */
+  `}
   
   /* Modern glass morphism effect */
   &::before {
@@ -87,17 +94,29 @@ const NavbarWrapper = styled.nav`
         : 'transparent'};
     opacity: 0.8;
   }
+  
   @media (max-width: 768px) {
     padding: 0;
     height: 60px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
   }
   
   @media (max-width: 480px) {
     height: 58px;
   }
   
+  /* Ensure proper size on smaller screens */
   @media (max-height: 600px) {
     height: 55px;
+  }
+  
+  /* Fix for iPhone and iOS devices with home indicator */
+  @supports (padding: max(0px)) {
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+    height: calc(60px + env(safe-area-inset-bottom, 0px));
   }
 `;
 
@@ -196,6 +215,18 @@ const NavLinks = styled.div`
         animation: ${buttonFlare} 3s infinite ease-in-out;
         height: 3px;
       }
+      
+      /* Enhanced mobile active state */
+      @media (max-width: 480px) {
+        &::after {
+          width: 70%;
+          height: 3.5px;
+        }
+        
+        svg {
+          filter: drop-shadow(0 0 12px rgba(255, 131, 131, 0.9)) drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+        }
+      }
         
       span {
         font-weight: 600;
@@ -236,17 +267,43 @@ const NavLinks = styled.div`
       transform: scale(0.92);
       transition: transform 0.1s ease;
     }
+    
+    /* Mobile-specific touch feedback */
+    &.touch-active {
+      transform: scale(0.95);
+      transition: transform 0.1s ease;
+    }
+    
+    &.touch-end {
+      transform: scale(1);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
   }
 
   @media (max-width: 420px) {
     a {
+      padding: 8px 0;
+      
       span {
         font-size: 0.6rem;
       }
       
       svg {
-        font-size: 1.25rem;
+        font-size: 1.35rem;
+        margin-bottom: 4px;
       }
+
+      /* Increase tap target size for mobile */
+      &::after {
+        height: 3px;
+      }
+    }
+  }
+
+  /* Improve touch targets */
+  @media (max-width: 360px) {
+    a {
+      padding: 6px 2px;
     }
   }
 `;
@@ -345,14 +402,34 @@ const UserButton = styled.div`
     transition: transform 0.1s ease;
   }
   
+  /* Mobile-specific touch feedback */
+  &.touch-active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+  }
+  
+  &.touch-end {
+    transform: scale(1);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  
   @media (max-width: 420px) {
+    padding: 8px 0;
+    
     span {
       font-size: 0.6rem;
     }
     
     svg {
-      font-size: 1.25rem;
+      font-size: 1.35rem;
+      margin-bottom: 4px;
     }
+  }
+  
+  /* Increase tap target for small screens */
+  @media (max-width: 360px) {
+    padding: 6px 2px;
+    min-width: 44px; /* Minimum recommended touch target size */
   }
 `;
 
@@ -424,17 +501,98 @@ const Toast = styled.div`
     padding: 12px 24px;
     font-size: 0.9rem;
     border-radius: 20px;
+    bottom: 75px; /* Move up a bit on mobile to avoid bottom nav overlap */
   }
 `;
+
+// Custom hook for touch feedback
+const useTouchFeedback = (navbarRef) => {
+  useEffect(() => {
+    if (!navbarRef.current) return;
+    
+    const navbar = navbarRef.current;
+    const links = navbar.querySelectorAll('a, div[role="button"]');
+    
+    const addTouchClass = (e) => {
+      e.currentTarget.classList.add('touch-active');
+    };
+    
+    const removeTouchClass = (e) => {
+      e.currentTarget.classList.add('touch-end');
+      setTimeout(() => {
+        e.currentTarget.classList.remove('touch-active', 'touch-end');
+      }, 300);
+    };
+    
+    links.forEach(link => {
+      if (link instanceof Element) {
+        // Add touch feedback
+        link.addEventListener('touchstart', addTouchClass, { passive: true });
+        link.addEventListener('touchend', removeTouchClass, { passive: true });
+        link.addEventListener('touchcancel', removeTouchClass, { passive: true });
+        
+        // Make link accessible
+        if (link.tagName.toLowerCase() !== 'a') {
+          link.setAttribute('role', 'button');
+          link.setAttribute('tabindex', '0');
+        }
+      }
+    });
+    
+    return () => {
+      links.forEach(link => {
+        if (link instanceof Element) {
+          link.removeEventListener('touchstart', addTouchClass);
+          link.removeEventListener('touchend', removeTouchClass);
+          link.removeEventListener('touchcancel', removeTouchClass);
+        }
+      });
+    };
+  }, [navbarRef]);
+};
 
 const BottomNavbar = ({ active, transparent = false }) => {
   const [user, setUser] = useState(null);
   const [scrolled, setScrolled] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [isSafari, setIsSafari] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const toastTimeoutRef = useRef(null);
   const navbarRef = useRef(null);
+  
+  // Detect Safari browser for specific fixes
+  useEffect(() => {
+    const isSafariBrowser = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    setIsSafari(isSafariBrowser);
+    
+    // Add utility class for iOS devices
+    if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+      document.body.classList.add('ios-device');
+    }
+  }, []);
+
+  // Track scroll position with improved performance
+  useEffect(() => {
+    // Use requestAnimationFrame for better performance
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          setScrolled(scrollTop > 20);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Apply touch feedback for mobile devices
+  useTouchFeedback(navbarRef);
 
   // Handle auth state changes
   useEffect(() => {
@@ -442,16 +600,6 @@ const BottomNavbar = ({ active, transparent = false }) => {
       setUser(currentUser);
     });
     return () => unsubscribe();
-  }, []);
-  // Track scroll position (removed progress calculation)
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      setScrolled(scrollTop > 20);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const handleUpcomingFeature = e => {
@@ -481,12 +629,14 @@ const BottomNavbar = ({ active, transparent = false }) => {
       behavior: 'smooth'
     });
   };
+  
   return (
     <>
       <NavbarWrapper 
         ref={navbarRef} 
         $scrolled={scrolled} 
         $transparent={transparent}
+        $isSafari={isSafari}
       >
         <NavLinks>
           <Link 
@@ -517,23 +667,6 @@ const BottomNavbar = ({ active, transparent = false }) => {
             <FaUsers />
             <span>Community</span>
           </Link>
-          
-          {/* <Link 
-            to="/blog"
-            className={location.pathname === '/blog' || active === 'blog' ? 'active-link' : ''}
-          >
-            <FaBook />
-            <span>Journal</span>
-          </Link> */}
-          
-          {/* <Link 
-            to="/rewards"
-            className={location.pathname === '/rewards' || active === 'rewards' ? 'active-link' : ''}
-            onClick={handleUpcomingFeature}
-          >
-            <FaMedal />
-            <span>Rewards</span>
-          </Link> */}
           
           <Link 
             to="/about"

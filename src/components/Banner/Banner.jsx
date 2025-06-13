@@ -115,11 +115,7 @@ const Banner = () => {
         </div>
       </div>
       
-      {/* Enhanced Scroll Indicator */}
-      <div className="scroll-indicator" onClick={handleScrollDown}>
-        <span className="scroll-text">Scroll Down</span>
-        <div className="scroll-arrow"></div>
-      </div>
+
     </div>
   );
 };

@@ -402,7 +402,7 @@ const TrekCategoryAdmin = () => {
   const [saving, setSaving] = useState({});
   
   // Admin emails that are allowed access
-  const ADMIN_EMAILS = ['luckychelani950@gmail.com', 'test@example.com', 'youremail@example.com'];
+  const ADMIN_EMAILS = ['luckychelani950@gmail.com', 'harsh68968@gmail.com', 'youremail@example.com'];
   
   // Check authentication
   useEffect(() => {
