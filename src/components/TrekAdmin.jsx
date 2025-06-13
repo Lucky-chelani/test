@@ -465,7 +465,7 @@ const TrekAdmin = () => {
   const [authLoading, setAuthLoading] = useState(true);
   const [loginError, setLoginError] = useState('');
     // Admin emails that are allowed access
-  const ADMIN_EMAILS = ['luckychelani950@gmail.com', 'test@example.com', 'youremail@example.com']; // Replace with your actual email
+  const ADMIN_EMAILS = ['luckychelani950@gmail.com', 'harsh68968@gmail.com', 'youremail@example.com']; // Replace with your actual email
   
   // Form state for adding/editing trek
   const [formData, setFormData] = useState({
