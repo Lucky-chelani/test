@@ -93,7 +93,7 @@ const NavbarWrapper = styled.nav`
         ? 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent)' 
         : 'transparent'};
     opacity: 0.8;
-  }
+  } 
   
   @media (max-width: 768px) {
     padding: 0;
