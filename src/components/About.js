@@ -502,7 +502,7 @@ const About = () => {
       quote: 'Our goal is to make trekking more than just reaching a destination - it\'s about the connections we forge along the way.',
       initial: 'MP'
     },
-    {
+    { 
       name: 'Lucky Chelani',
       role: 'Co-founder & CTO',
       quote: 'Technology should enhance the trekking experience, not complicate it. We bring smart solutions that bring people together.',
