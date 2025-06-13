@@ -1,7 +1,8 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, collection, getDocs, setDoc, doc } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -22,4 +23,38 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-export { auth, db };
+// Helper function to ensure collections exist with error handling
+export const ensureCollectionExists = async (collectionName) => {
+  try {
+    // Try to get the collection
+    const collectionRef = collection(db, collectionName);
+    await getDocs(collectionRef);
+    console.log(`Collection ${collectionName} exists`);
+    return { success: true };
+  } catch (error) {
+    try {
+      // If there's an error, create a placeholder document
+      await setDoc(doc(db, collectionName, "placeholder"), {
+        note: "This is a placeholder document to ensure the collection exists",
+        created: new Date().toISOString()
+      });
+      console.log(`Created placeholder in ${collectionName} collection`);
+      return { success: true };
+    } catch (createError) {
+      console.error(`Failed to create ${collectionName} collection:`, createError);
+      return { 
+        success: false, 
+        error: createError,
+        message: `Permission error: ${createError.message}. Please ensure you have proper Firestore permissions.` 
+      };
+    }
+  }
+};
+
+// Ensure treks collection exists when app initializes
+ensureCollectionExists("treks").catch(err => console.error("Failed to initialize treks collection:", err));
+
+// Initialize Firebase Storage
+const storage = getStorage(app);
+
+export { auth, db, storage };

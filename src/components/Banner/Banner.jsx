@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Banner.css';
-import Navbar from '../Navbar';
+// Removed Navbar import since we're using BottomNavbar in App.js now
 
 // Import images
 import backgroundSky from '../../assets/images/background-sky.png';
@@ -56,11 +56,9 @@ const Banner = () => {
       behavior: 'smooth'
     });
   };
-
   return (
     <div className="banner" ref={bannerRef}>
-      {/* Pass initialScrolled=true to make navbar visible initially with background */}
-      <Navbar active="home" transparent={true} initialScrolled={true} />
+      {/* Navbar removed - using BottomNavbar from App.js */}
       
       {/* Background Elements */}
       <div className="banner-overlay">

@@ -25,7 +25,7 @@ const FooterContainer = styled.footer`
   width: 100%;
   background: linear-gradient(0deg, #000000 0%, #121212 100%);
   position: relative;
-  padding: 80px 0 40px;
+  padding: 80px 0 80px; /* Increased bottom padding to account for bottom navbar */
   overflow: hidden;
   box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.2);
 
@@ -39,12 +39,27 @@ const FooterContainer = styled.footer`
     z-index: 0;
   }
   
+  /* Enhanced gradient overlay with multiple color points */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      circle at 50% 0%, 
+      rgba(255, 210, 191, 0.1) 0%, 
+      rgba(76, 201, 240, 0.05) 45%, 
+      rgba(0, 0, 0, 0) 85%
+    );
+    z-index: 0;
+    pointer-events: none;
+  }
+  
   @media (max-width: 768px) {
-    padding: 60px 0 30px;
+    padding: 60px 0 80px; /* Increased bottom padding to account for bottom navbar */
   }
   
   @media (max-width: 480px) {
-    padding: 40px 0 20px;
+    padding: 40px 0 80px; /* Increased bottom padding to account for bottom navbar */
   }
 `;
 
@@ -288,19 +303,54 @@ const SocialLink = styled.a`
 const FooterBottom = styled.div`
   max-width: 1200px;
   margin: 60px auto 0;
-  padding: 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 28px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 20px;
+  position: relative;
+  
+  /* Enhanced gradient line with improved colors */
+  &::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, 
+      transparent, 
+      rgba(255, 210, 191, 0.35), 
+      rgba(76, 201, 240, 0.35),
+      transparent
+    );
+    opacity: 0.8;
+  }
+  
+  /* Add subtle shadow for depth */
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 5%;
+    right: 5%;
+    height: 6px;
+    background: linear-gradient(180deg, 
+      rgba(0, 0, 0, 0.1),
+      transparent
+    );
+    opacity: 0.3;
+  }
   
   @media (max-width: 768px) {
     justify-content: center;
     flex-direction: column;
     text-align: center;
     margin-top: 40px;
+    padding-top: 24px;
+    padding-bottom: 24px;
   }
 `;
 
@@ -321,7 +371,7 @@ const BottomLinks = styled.div`
 `;
 
 const BottomLink = styled(Link)`
-  color: rgba(255, 255, 255, 0.5);
+  color: rgb(255, 255, 255);
   text-decoration: none;
   font-size: 0.95rem;
   transition: color 0.3s;
@@ -335,19 +385,52 @@ const NewsletterSection = styled.div`
   grid-column: 1 / -1;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 16px;
-  padding: 30px;
-  margin-bottom: 20px;
+  padding: 40px;
+  margin-bottom: 30px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   opacity: 0;
   animation: ${fadeIn} 0.8s forwards;
+  position: relative;
+  overflow: hidden;
+  
+  /* Enhanced gradient overlay with improved color blending */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, 
+      rgba(255, 210, 191, 0.1) 0%, 
+      rgba(0, 0, 0, 0) 50%,
+      rgba(76, 201, 240, 0.1) 100%);
+    z-index: -1;
+  }
+  
+  /* Add subtle shimmer effect to borders */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(45deg,
+      transparent 20%,
+      rgba(255, 255, 255, 0.05) 40%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0.05) 60%,
+      transparent 80%
+    );
+    background-size: 200% 100%;
+    animation: ${shimmer} 8s infinite linear;
+    z-index: -1;
+    border-radius: 16px;
+    opacity: 0.4;
+  }
   
   @media (max-width: 768px) {
-    padding: 20px;
+    padding: 30px 25px;
   }
 `;
 
@@ -439,35 +522,83 @@ const BackToTopButton = styled.button`
   position: absolute;
   right: 30px;
   bottom: 30px;
-  width: 48px;
-  height: 48px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
-  background: #FFD2BF;
+  background: linear-gradient(135deg, #FFD2BF 0%, #ffbfa3 100%);
   color: #222;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
   cursor: pointer;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   z-index: 5;
+  overflow: hidden;
+  
+  /* Enhanced top highlight */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.4) 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      transparent 100%
+    );
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+    border-radius: 50%;
+  }
+  
+  /* Add subtle inner border */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    opacity: 0.3;
+    transition: opacity 0.3s ease;
+  }
   
   &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(255, 210, 191, 0.3);
+    background: linear-gradient(135deg, #FFD2BF 0%, #ffbfa3 70%, #ffe0d3 100%);
+    
+    &::before {
+      opacity: 0.8;
+    }
+    
+    &::after {
+      opacity: 0.6;
+    }
+    
+    svg {
+      transform: translateY(-3px);
+    }
+  }
+  
+  &:active {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(255, 210, 191, 0.4);
   }
   
   svg {
     width: 20px;
     height: 20px;
+    transition: transform 0.3s ease;
+    position: relative;
+    z-index: 2;
   }
   
   @media (max-width: 768px) {
     right: 20px;
     bottom: 20px;
-    width: 42px;
-    height: 42px;
+    width: 45px;
+    height: 45px;
   }
 `;
 
@@ -609,17 +740,15 @@ const Footer = () => {
             <FooterLink to="/help">Help Center</FooterLink>
           </LinksWrapper>
         </FooterSection>
-      </FooterContent>
-
-      <FooterBottom>
+      </FooterContent>      <FooterBottom>
         <Copyright>
           © {new Date().getFullYear()} Trovia. All rights reserved.
         </Copyright>
-        <BottomLinks>
-          <BottomLink to="/terms">Terms of Service</BottomLink>
+        <BottomLinks>          <BottomLink to="/terms">Terms of Service</BottomLink>
           <BottomLink to="/privacy">Privacy Policy</BottomLink>
           <BottomLink to="/cookies">Cookie Policy</BottomLink>
           <BottomLink to="/accessibility">Accessibility</BottomLink>
+          <BottomLink to="/admin/simple" style={{ opacity: 0.4 }}>Admin</BottomLink>
         </BottomLinks>
       </FooterBottom>
       

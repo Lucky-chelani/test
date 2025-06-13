@@ -1,12 +1,10 @@
 import React from 'react';
 import styles from './RewardsHero.module.css';
 import mountainBg from '../../assets/images/mountain-bg.png';
-import Navbar from '../Navbar';
 
-export default function RewardsHero() {
-  return (
+export default function RewardsHero() {  return (
     <section className={styles.heroSection} style={{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${mountainBg})` }}>
-      <Navbar active="rewards" />
+      {/* Removed Navbar - using BottomNavbar from App.js */}
       <div className={styles.content}>
         <h1 className={styles.title}>Your Journey, Your Rewards</h1>
         <p className={styles.subtitle}>

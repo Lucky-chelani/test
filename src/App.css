@@ -17,6 +17,25 @@ body {
   min-height: 100vh;
   width: 100%;
   overflow-x: hidden; /* Prevent horizontal scroll */
+  padding-bottom: 90px; /* Space for the enhanced bottom navbar with extra margin */
+}
+
+@media (max-width: 768px) {
+  .App {
+    padding-bottom: 75px;
+  }
+}
+
+@media (max-width: 480px) {
+  .App {
+    padding-bottom: 70px;
+  }
+}
+
+@media (max-height: 600px) {
+  .App {
+    padding-bottom: 65px;
+  }
 }
 
 body, html {

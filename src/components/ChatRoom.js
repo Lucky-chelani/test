@@ -3,7 +3,6 @@ import styled, { keyframes,css } from 'styled-components';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, getDoc, updateDoc, where, deleteDoc, Timestamp, getDocs } from 'firebase/firestore';
-import Navbar from './Navbar';
 import mapPattern from '../assets/images/map-pattren.png';
 import user1 from '../assets/images/trek1.png'; // Placeholder
 
@@ -259,6 +258,14 @@ const MessageText = styled.div`
   `}
 `;
 
+const MessageExpiration = styled.div`
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 4px;
+  text-align: right;
+  font-style: italic;
+`;
+
 const EmptyMessagesState = styled.div`
   display: flex;
   flex-direction: column;
@@ -382,25 +389,39 @@ const UserActivity = styled.div`
   animation: ${fadeIn} 0.3s ease-out forwards;
 `;
 
-// Helper to format dates
+// Format date for message groups
 const formatDate = (timestamp) => {
-  if (!timestamp) return '';
+  if (!timestamp) return 'Unknown';
   
-  const date = timestamp.toDate();
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
+  const date = timestamp.toDate ? timestamp.toDate() : timestamp;
+  return new Intl.DateTimeFormat('en-US', { 
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric'
+  }).format(date);
+};
+
+// Calculate remaining time before message expiration
+const getExpirationTimeLeft = (expiresAt) => {
+  if (!expiresAt || !expiresAt.toDate) return null;
   
-  if (date.toDateString() === today.toDateString()) {
-    return 'Today';
-  } else if (date.toDateString() === yesterday.toDateString()) {
-    return 'Yesterday';
+  const now = new Date();
+  const expDate = expiresAt.toDate();
+  const diffMs = expDate - now;
+  
+  if (diffMs <= 0) return "Expiring soon...";
+  
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+  
+  if (hours > 0) {
+    return `Expires in ${hours}h ${minutes}m`;
   } else {
-    return date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+    return `Expires in ${minutes} minutes`;
   }
 };
 
-// Helper to format time
+// Format time for individual messages
 const formatTime = (timestamp) => {
   if (!timestamp) return '';
   
@@ -451,42 +472,74 @@ const ChatRoom = () => {
     };
     
     fetchRoom();
-  }, [roomId, room]);
-
-   useEffect(() => {
+  }, [roomId, room]);   useEffect(() => {
     if (!roomId) return;
-    
-    const handleMessageCleanup = async () => {
+      const handleMessageCleanup = async () => {
       try {
-        // Calculate timestamp from 8 hours ago
+        // Calculate current timestamp
+        const now = new Date();
+        const currentTimestamp = Timestamp.fromDate(now);
+        
+        // Query for messages where expiresAt has passed OR messages older than 8 hours
+        const messagesRef = collection(db, `chatrooms/${roomId}/messages`);
+        
+        // First try to get messages with expiresAt field that have expired
+        const expiredMessagesQuery = query(
+          messagesRef,
+          where('expiresAt', '<', currentTimestamp)
+        );
+        
+        // Also get messages without expiresAt field but older than 8 hours
         const eightHoursAgo = new Date();
         eightHoursAgo.setHours(eightHoursAgo.getHours() - 8);
         const cutoffTimestamp = Timestamp.fromDate(eightHoursAgo);
         
-        // Query for messages older than 8 hours
-        const messagesRef = collection(db, `chatrooms/${roomId}/messages`);
         const oldMessagesQuery = query(
           messagesRef,
           where('timestamp', '<', cutoffTimestamp)
         );
+          // Delete expired messages based on expiresAt field
+        const expiredSnapshot = await getDocs(expiredMessagesQuery);
+        const expiredPromises = expiredSnapshot.docs.map(doc => deleteDoc(doc.ref));
         
-        // Delete old messages
-        const snapshot = await getDocs(oldMessagesQuery);
-        const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
-        await Promise.all(deletePromises);
+        // Delete old messages based on timestamp
+        const oldSnapshot = await getDocs(oldMessagesQuery);
+        const oldPromises = oldSnapshot.docs.map(doc => deleteDoc(doc.ref));
         
-        console.log(`Deleted ${snapshot.docs.length} messages older than 8 hours`);
+        // Combine and execute all delete operations
+        await Promise.all([...expiredPromises, ...oldPromises]);
+        
+        const totalDeleted = expiredSnapshot.docs.length + oldSnapshot.docs.length;
+        
+        if (totalDeleted > 0) {
+          console.log(`Deleted ${totalDeleted} messages (${expiredSnapshot.docs.length} expired + ${oldSnapshot.docs.length} old)`);
+          
+          // Update message count in the room document after deletion
+          if (room?.docId) {
+            // Get current message count
+            const currentMessagesQuery = query(
+              collection(db, `chatrooms/${roomId}/messages`)
+            );
+            const currentSnapshot = await getDocs(currentMessagesQuery);
+            
+            updateDoc(doc(db, 'chatrooms', room.docId), {
+              messageCount: currentSnapshot.size
+            }).catch(err => console.error('Error updating message count after cleanup:', err));
+          }
+        }
       } catch (err) {
         console.error('Error cleaning up old messages:', err);
       }
     };
-        handleMessageCleanup();
+    
+    // Run cleanup immediately when entering the room
+    handleMessageCleanup();
     
     // Set interval to run cleanup every hour
     const cleanupInterval = setInterval(handleMessageCleanup, 60 * 60 * 1000);
     
     return () => clearInterval(cleanupInterval);
-  }, [roomId]);
+  }, [roomId, room]);
   
   // Fetch messages
   useEffect(() => {
@@ -537,15 +590,20 @@ const ChatRoom = () => {
     
     setLocalMessages(prev => [...prev, tempMessage]);
     setNewMessage('');
-    
-    try {
+      try {
+      // Calculate expiration time (8 hours from now)
+      const expirationTime = new Date();
+      expirationTime.setHours(expirationTime.getHours() + 8);
+      
       // Send to Firestore
       await addDoc(collection(db, `chatrooms/${roomId}/messages`), {
         text: tempMessage.text,
         userId: auth.currentUser.uid,
         userName: auth.currentUser.displayName || 'Anonymous',
         userPhoto: auth.currentUser.photoURL || null,
-        timestamp: serverTimestamp()
+        timestamp: serverTimestamp(),
+        expiresAt: Timestamp.fromDate(expirationTime), // Add expiration timestamp
+        ttl: '8 hours' // Add readable TTL for UI purposes
       });
       
       // Remove local message once it's saved
@@ -576,7 +634,7 @@ const ChatRoom = () => {
   
   return (
     <Page>
-      <Navbar active="community" />
+      {/* Removed Navbar - using BottomNavbar from App.js */}
       <ChatContainer>
         <ChatHeader>
           <BackButton onClick={() => navigate('/community')}>
@@ -640,7 +698,11 @@ const ChatRoom = () => {
                         isSending={msg.isLocal}
                       >
                         {msg.text}
-                      </MessageText>
+                      </MessageText>                      {msg.expiresAt && (
+                        <MessageExpiration>
+                          {getExpirationTimeLeft(msg.expiresAt)}
+                        </MessageExpiration>
+                      )}
                     </MessageContent>
                   </Message>
                 ))}

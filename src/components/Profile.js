@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import styled, { keyframes } from 'styled-components';
-import Navbar from './Navbar';
-import profileImg from '../assets/images/trek1.png';
-import mapPattern from '../assets/images/map-pattren.png'; // Import map pattern
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { motion } from 'framer-motion';
+import { FaEnvelope, FaBirthdayCake, FaEdit, FaSignOutAlt, FaMapMarkerAlt, FaMountain, FaClock } from 'react-icons/fa';
+import profileImg from '../assets/images/trek1.png';
+import mapPattern from '../assets/images/map-pattren.png';
 
 // Animations
 const fadeInUp = keyframes`
@@ -30,6 +30,12 @@ const shimmer = keyframes`
   }
 `;
 
+const buttonFlare = keyframes`
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+`;
+
 const float = keyframes`
   0%, 100% {
     transform: translateY(0px);
@@ -45,9 +51,13 @@ const pulse = keyframes`
 `;
 
 const loading = keyframes`
-  0% { opacity: 0.3; }
+  0%, 100% { opacity: 0.3; }
   50% { opacity: 1; }
-  100% { opacity: 0.3; }
+`;
+
+const rotate = keyframes`
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 `;
 
 // Styled Components
@@ -62,6 +72,7 @@ const Page = styled.div`
   flex-direction: column;
   align-items: center;
   position: relative;
+  padding-bottom: 100px; /* Added space for bottom navbar */
 
   &::before {
     content: '';
@@ -70,7 +81,7 @@ const Page = styled.div`
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0.8) 100%);
+    background: linear-gradient(135deg, rgba(20, 30, 48, 0.92) 0%, rgba(0, 0, 0, 0.85) 100%);
     pointer-events: none;
   }
 
@@ -95,12 +106,12 @@ const ProfileHeader = styled.div`
   gap: 40px;
   margin-bottom: 50px;
   padding: 48px 40px;
-  background: rgba(30, 30, 35, 0.8);
+  background: rgba(25, 28, 35, 0.85);
   backdrop-filter: blur(20px);
   border-radius: 32px;
   box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.3),
-    0 2px 16px rgba(255, 255, 255, 0.05),
+    0 4px 16px rgba(255, 255, 255, 0.05),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.1);
   position: relative;
@@ -114,6 +125,19 @@ const ProfileHeader = styled.div`
     right: 0;
     height: 1px;
     background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, #4CC9F0, #FF6B6B, #FFD166, #4CC9F0);
+    background-size: 300% 100%;
+    animation: ${buttonFlare} 6s infinite ease-in-out;
+    opacity: 0.6;
   }
   
   @media (max-width: 768px) {
@@ -133,25 +157,35 @@ const AvatarContainer = styled.div`
   &::after {
     content: '';
     position: absolute;
-    top: -8px;
-    left: -8px;
-    right: -8px;
-    bottom: -8px;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #ffffff, #a0a0a0);
+    background: linear-gradient(135deg, #4CC9F0, #FF6B6B);
     z-index: -1;
-    opacity: 0.5;
+    opacity: 0.6;
     animation: ${pulse} 4s infinite alternate;
   }
 `;
 
 const Avatar = styled.img`
-  width: 140px;
-  height: 140px;
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
   object-fit: cover;
   border: 4px solid rgba(255, 255, 255, 0.8);
   box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+  transition: transform 0.3s ease;
+  
+  &:hover {
+    transform: scale(1.05);
+  }
+  
+  @media (max-width: 480px) {
+    width: 130px;
+    height: 130px;
+  }
 `;
 
 const Info = styled.div`
@@ -162,15 +196,33 @@ const Info = styled.div`
 const Name = styled.h2`
   font-size: 2.4rem;
   font-weight: 700;
-  margin-bottom: 10px;
+  margin-bottom: 14px;
   background: linear-gradient(to right, #ffffff, #e0e0e0);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow: 0 2px 10px rgba(255, 255, 255, 0.2);
   animation: ${float} 3s ease-in-out infinite;
+  position: relative;
+  display: inline-block;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, #4CC9F0, #FF6B6B);
+    border-radius: 2px;
+  }
   
   @media (max-width: 768px) {
     font-size: 2.2rem;
+    
+    &::after {
+      left: 50%;
+      transform: translateX(-50%);
+    }
   }
   
   @media (max-width: 480px) {
@@ -185,10 +237,9 @@ const Email = styled.div`
   display: flex;
   align-items: center;
   
-  &::before {
-    content: '✉️';
+  svg {
     margin-right: 8px;
-    font-size: 1rem;
+    color: #4CC9F0;
   }
   
   @media (max-width: 768px) {
@@ -203,10 +254,9 @@ const DobText = styled.div`
   display: flex;
   align-items: center;
   
-  &::before {
-    content: '🎂';
+  svg {
     margin-right: 8px;
-    font-size: 1rem;
+    color: #FF6B6B;
   }
   
   @media (max-width: 768px) {
@@ -217,17 +267,25 @@ const DobText = styled.div`
 const ButtonGroup = styled.div`
   display: flex;
   gap: 15px;
-  margin-top: 15px;
+  margin-top: 20px;
   
   @media (max-width: 768px) {
     justify-content: center;
+  }
+  
+  @media (max-width: 480px) {
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 200px;
+    margin: 20px auto 0;
   }
 `;
 
 const Button = styled.button`
   border: none;
   border-radius: 16px;
-  padding: 18px 26px;
+  padding: 16px 24px;
   font-weight: 600;
   font-size: 1rem;
   cursor: pointer;
@@ -262,15 +320,27 @@ const Button = styled.button`
     padding: 14px 22px;
     font-size: 0.95rem;
   }
+  
+  @media (max-width: 480px) {
+    width: 100%;
+  }
 `;
 
 const EditButton = styled(Button)`
-  background: linear-gradient(to right, #4a4a4a, #707070);
+  background: linear-gradient(to right, #4CC9F0, #4361EE);
   color: #fff;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 15px rgba(76, 201, 240, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  
+  svg {
+    font-size: 1.2rem;
+  }
   
   &:hover {
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 8px 25px rgba(76, 201, 240, 0.4);
   }
 `;
 
@@ -278,6 +348,14 @@ const LogoutButton = styled(Button)`
   background: linear-gradient(to right, #d32f2f, #ff5252);
   color: #fff;
   box-shadow: 0 4px 15px rgba(211, 47, 47, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  
+  svg {
+    font-size: 1.2rem;
+  }
   
   &:hover {
     box-shadow: 0 8px 25px rgba(211, 47, 47, 0.4);
@@ -286,10 +364,22 @@ const LogoutButton = styled(Button)`
 
 const SectionTitle = styled.h3`
   color: #ffffff;
-  font-size: 1.5rem;
-  margin: 35px 0 20px;
+  font-size: 1.6rem;
+  margin: 40px 0 25px;
   position: relative;
   display: inline-block;
+  padding-left: 15px;
+  
+  &:before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(to bottom, #4CC9F0, #FF6B6B);
+    border-radius: 2px;
+  }
   
   &:after {
     content: '';
@@ -297,7 +387,7 @@ const SectionTitle = styled.h3`
     bottom: -8px;
     left: 0;
     width: 100%;
-    height: 3px;
+    height: 2px;
     background: linear-gradient(to right, #ffffff, transparent);
     border-radius: 2px;
   }
@@ -305,13 +395,17 @@ const SectionTitle = styled.h3`
 
 const StatsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 25px;
   margin-bottom: 40px;
+  
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
 `;
 
 const StatCard = styled(motion.div)`
-  background: rgba(30, 30, 35, 0.8);
+  background: rgba(25, 28, 35, 0.85);
   backdrop-filter: blur(20px);
   border-radius: 24px;
   padding: 30px;
@@ -326,6 +420,7 @@ const StatCard = styled(motion.div)`
   border: 1px solid rgba(255, 255, 255, 0.1);
   position: relative;
   overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   
   &::before {
     content: '';
@@ -333,8 +428,20 @@ const StatCard = styled(motion.div)`
     top: 0;
     left: 0;
     right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    height: 4px;
+    background: linear-gradient(90deg, #4CC9F0, #FF6B6B);
+    opacity: 0.8;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background: linear-gradient(to top, rgba(76, 201, 240, 0.05), transparent);
+    pointer-events: none;
   }
   
   &:hover {
@@ -350,20 +457,34 @@ const StatValue = styled.div`
   color: #ffffff;
   font-size: 2.5rem;
   font-weight: 700;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
   animation: ${float} 3s ease-in-out infinite;
+  background: linear-gradient(to right, #ffffff, #e0e0e0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 `;
 
 const StatLabel = styled.div`
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.9);
   font-size: 1.1rem;
   text-transform: uppercase;
   letter-spacing: 1px;
+  font-weight: 500;
+  
+  &::after {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.3);
+    margin: 8px auto 0;
+    border-radius: 1px;
+  }
 `;
 
 const BadgesSection = styled.div`
-  background: rgba(30, 30, 35, 0.8);
+  background: rgba(25, 28, 35, 0.85);
   backdrop-filter: blur(20px);
   border-radius: 24px;
   padding: 40px 30px;
@@ -382,8 +503,20 @@ const BadgesSection = styled.div`
     top: 0;
     left: 0;
     right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    height: 4px;
+    background: linear-gradient(90deg, #4CC9F0, #FF6B6B);
+    opacity: 0.8;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 40%;
+    background: linear-gradient(to top, rgba(76, 201, 240, 0.05), transparent);
+    pointer-events: none;
   }
 `;
 
@@ -392,21 +525,26 @@ const BadgesGrid = styled.div`
   gap: 25px;
   flex-wrap: wrap;
   justify-content: center;
+  
+  @media (max-width: 480px) {
+    gap: 15px;
+  }
 `;
 
 const Badge = styled(motion.div)`
-  background: linear-gradient(135deg, #ffffff, #a0a0a0);
-  color: #111;
+  background: linear-gradient(135deg, #4CC9F0, #FF6B6B);
+  color: white;
   border-radius: 50%;
-  width: 70px;
-  height: 70px;
+  width: 80px;
+  height: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  font-size: 2.2rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3), 0 0 15px rgba(76, 201, 240, 0.3);
   position: relative;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
   
   &:after {
     content: '';
@@ -418,54 +556,60 @@ const Badge = styled(motion.div)`
     border-radius: 50%;
     border: 2px solid rgba(255, 255, 255, 0.2);
     pointer-events: none;
+    opacity: 0;
+    transition: all 0.3s ease;
   }
   
   &:hover {
-    transform: scale(1.1);
-    box-shadow: 0 12px 30px rgba(255, 255, 255, 0.15);
+    transform: scale(1.1) translateY(-5px);
+    box-shadow: 0 12px 30px rgba(76, 201, 240, 0.3), 0 0 20px rgba(255, 107, 107, 0.4);
+    
+    &:after {
+      opacity: 1;
+      top: -8px;
+      left: -8px;
+      right: -8px;
+      bottom: -8px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    width: 70px;
+    height: 70px;
+    font-size: 1.8rem;
   }
 `;
 
 const BadgeTooltip = styled.div`
   position: absolute;
-  bottom: -40px;
-  background: rgba(0, 0, 0, 0.8);
+  bottom: -45px;
+  background: rgba(10, 15, 25, 0.95);
   color: white;
-  padding: 5px 10px;
-  border-radius: 8px;
-  font-size: 0.8rem;
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-size: 0.85rem;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: all 0.3s;
   pointer-events: none;
   white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 0 5px rgba(76, 201, 240, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  transform: translateY(10px);
+  z-index: 5;
   
   ${Badge}:hover & {
     opacity: 1;
+    transform: translateY(0);
   }
 `;
 
-const LoadingText = styled.div`
-  text-align: center;
-  font-size: 1.5rem;
-  margin-top: 100px;
-  color: #ffffff;
-  
-  &:after {
-    content: '...';
-    display: inline-block;
-    animation: ${loading} 1.5s infinite;
-  }
-`;
-
-// Badge data
+// Badge data with added color gradients
 const badges = [
-  { emoji: '🥾', name: 'First Hike' },
-  { emoji: '🏔️', name: 'Mountain Climber' },
-  { emoji: '🌄', name: 'Sunrise Trekker' },
-  { emoji: '🎒', name: 'Backpacker Pro' },
-  { emoji: '🏅', name: 'Elite Trekker' }
+  { emoji: '🥾', name: 'First Hike', gradient: 'linear-gradient(135deg, #4CC9F0, #06D6A0)' },
+  { emoji: '🏔️', name: 'Mountain Climber', gradient: 'linear-gradient(135deg, #F72585, #B5179E)' },
+  { emoji: '🌄', name: 'Sunrise Trekker', gradient: 'linear-gradient(135deg, #FFD166, #F79824)' },
+  { emoji: '🎒', name: 'Backpacker Pro', gradient: 'linear-gradient(135deg, #4361EE, #3A0CA3)' },
+  { emoji: '🏅', name: 'Elite Trekker', gradient: 'linear-gradient(135deg, #FF6B6B, #FFD166)' }
 ];
 
 const Profile = () => {
@@ -508,13 +652,14 @@ const Profile = () => {
       console.error("Logout failed:", error);
     }
   };
-
   if (loading) {
     return (
       <Page>
-        <Navbar active="profile" />
         <Container>
-          <LoadingText>Loading your profile</LoadingText>
+          <LoadingText>
+            Loading your profile
+            <span className="loading-dots"></span>
+          </LoadingText>
         </Container>
       </Page>
     );
@@ -528,10 +673,8 @@ const Profile = () => {
   const displayEmail = authUser.email || 'No email provided';
   const displayDob = userData?.dob || 'Not set';
   const avatarUrl = authUser.photoURL || profileImg;
-
   return (
     <Page>
-      <Navbar active="profile" />
       <Container>
         <ProfileHeader>
           <AvatarContainer>
@@ -539,13 +682,19 @@ const Profile = () => {
           </AvatarContainer>
           <Info>
             <Name>{displayName}</Name>
-            <Email>{displayEmail}</Email>
-            {userData?.dob && <DobText>Date of Birth: {displayDob}</DobText>}
+            <Email>
+              <FaEnvelope /> {displayEmail}
+            </Email>
+            {userData?.dob && <DobText>
+              <FaBirthdayCake /> Date of Birth: {displayDob}
+            </DobText>}
             <ButtonGroup>
               <EditButton onClick={() => alert('Edit profile functionality to be implemented!')}>
-                Edit Profile
+                <FaEdit /> Edit Profile
               </EditButton>
-              <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
+              <LogoutButton onClick={handleLogout}>
+                <FaSignOutAlt /> Logout
+              </LogoutButton>
             </ButtonGroup>
           </Info>
         </ProfileHeader>
@@ -581,13 +730,39 @@ const Profile = () => {
           </StatCard>
         </StatsGrid>
         
+        <SectionTitle>Recent Trek History</SectionTitle>
+        <TrekHistory>
+          <TrekList>
+            {trekHistory.map((trek, idx) => (
+              <TrekCard 
+                key={trek.id}
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.1 }}
+              >
+                <TrekImage src={trek.image} alt={trek.name} />
+                <TrekInfo>
+                  <TrekName>{trek.name}</TrekName>
+                  <TrekDate>{trek.date}</TrekDate>
+                </TrekInfo>
+                <TrekStats>
+                  <span><FaMapMarkerAlt /> {trek.distance}</span>
+                  <span><FaMountain /> {trek.elevation}</span>
+                  <span><FaClock /> {trek.duration}</span>
+                </TrekStats>
+              </TrekCard>
+            ))}
+          </TrekList>
+        </TrekHistory>
+        
         <BadgesSection>
           <SectionTitle>Achievements</SectionTitle>
           <BadgesGrid>
             {badges.map((badge, idx) => (
               <Badge 
                 key={idx}
-                whileHover={{ scale: 1.1 }}
+                style={{ background: badge.gradient }}
+                whileHover={{ scale: 1.1, y: -5 }}
                 whileTap={{ scale: 0.95 }}
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -605,3 +780,164 @@ const Profile = () => {
 };
 
 export default Profile;
+
+const LoadingText = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  font-size: 1.5rem;
+  margin-top: 100px;
+  color: #ffffff;
+  font-weight: 500;
+  
+  &::before {
+    content: '';
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(76, 201, 240, 0.3);
+    border-top: 3px solid #4CC9F0;
+    border-radius: 50%;
+    margin-bottom: 20px;
+    animation: ${rotate} 1s linear infinite;
+  }
+  
+  .loading-dots {
+    display: inline-block;
+    &::after {
+      content: '...';
+      display: inline-block;
+      animation: ${loading} 1.5s infinite;
+    }
+  }
+`;
+
+// Adding new Trek History component
+const TrekHistory = styled.div`
+  background: rgba(25, 28, 35, 0.85);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 40px 30px;
+  margin-top: 40px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.2),
+    0 2px 16px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #4CC9F0, #FF6B6B);
+    opacity: 0.8;
+  }
+`;
+
+const TrekList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+`;
+
+const TrekCard = styled(motion.div)`
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 15px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
+  }
+  
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+`;
+
+const TrekImage = styled.img`
+  width: 80px;
+  height: 60px;
+  border-radius: 10px;
+  object-fit: cover;
+`;
+
+const TrekInfo = styled.div`
+  flex: 1;
+`;
+
+const TrekName = styled.h4`
+  margin: 0 0 5px;
+  font-size: 1.1rem;
+  color: #ffffff;
+`;
+
+const TrekDate = styled.div`
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+`;
+
+const TrekStats = styled.div`
+  display: flex;
+  gap: 15px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  
+  span {
+    display: flex;
+    align-items: center;
+    
+    svg {
+      margin-right: 5px;
+      color: #4CC9F0;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+`;
+
+// Sample trek data
+const trekHistory = [
+  {
+    id: 1,
+    name: "Himalayan Expedition",
+    date: "May 15, 2025",
+    image: "https://images.unsplash.com/photo-1526772662000-3f88f10405ff?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+    distance: "32 km",
+    elevation: "1,450 m",
+    duration: "2 days"
+  },
+  {
+    id: 2,
+    name: "Alpine Lake Trek",
+    date: "April 3, 2025",
+    image: "https://images.unsplash.com/photo-1455156218388-5e61b526818b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+    distance: "18 km",
+    elevation: "850 m",
+    duration: "1 day"
+  },
+  {
+    id: 3,
+    name: "Rainforest Adventure",
+    date: "February 22, 2025",
+    image: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+    distance: "26 km",
+    elevation: "620 m",
+    duration: "1.5 days"
+  }
+];

@@ -17,5 +17,8 @@
         "destination": "/App.js"
       }
     ]
+  },
+  "storage": {
+    "rules": "storage.rules"
   }
 }

@@ -1,3 +1,4 @@
+// filepath: c:\Users\DELL\Documents\Coders\test\src\components\Explore.js
 import React, { useRef, useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { Link } from 'react-router-dom';
@@ -6,11 +7,12 @@ import trek1 from '../assets/images/trek1.png';
 import Footer from './Footer';
 import groupImg from '../assets/images/trek1.png';
 import eventImg from '../assets/images/trek1.png';
-import Navbar from './Navbar';
-import { FiChevronLeft, FiChevronRight, FiClock, FiMapPin, FiCalendar, FiArrowRight, FiUsers, FiInfo } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiClock, FiMapPin, FiCalendar, FiArrowRight, FiUsers, FiInfo, FiTrendingUp, FiAward } from 'react-icons/fi';
 import { FaMountain, FaStar } from 'react-icons/fa';
 import { RiCommunityFill } from 'react-icons/ri';
 import { MdEventAvailable } from 'react-icons/md';
+import { db } from '../firebase';
+import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 
 // Animations
 const fadeIn = keyframes`
@@ -268,24 +270,75 @@ const RightArrowButton = styled(ArrowButton)`
 `;
 
 // Card Components
+// Enhanced Trek Card 
 const TrekCard = styled.div`
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 24px;
   overflow: hidden;
   min-width: 380px;
   flex: 0 0 380px;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
-  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
-              box-shadow 0.4s ease;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(5px);
+  box-shadow: ${props => props.featured ? 
+    '0 15px 35px rgba(255, 210, 191, 0.3), 0 0 0 2px rgba(255, 210, 191, 0.3)' : 
+    '0 15px 35px rgba(0, 0, 0, 0.3)'};
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: ${props => props.featured ? 
+    '2px solid rgba(255, 210, 191, 0.5)' : 
+    '1px solid rgba(255, 255, 255, 0.1)'};
   scroll-snap-align: start;
-  transform-style: preserve-3d;
+  position: relative;
+  will-change: transform;
+  
+  @media (min-width: 769px) {
+    &:hover {
+      transform: translateY(-10px);
+      box-shadow: ${props => props.featured ? 
+        '0 20px 40px rgba(255, 210, 191, 0.4), 0 0 0 2px rgba(255, 210, 191, 0.5)' : 
+        '0 20px 40px rgba(0, 0, 0, 0.4)'};
+      border-color: ${props => props.featured ? 
+        'rgba(255, 210, 191, 0.6)' : 
+        'rgba(255, 255, 255, 0.2)'};
+    }
+  }
+  
+  ${props => props.featured && `
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255, 210, 191, 0.1) 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 1;
+    }
+  `}
+  
+  @media (max-width: 1200px) {
+    min-width: 340px;
+    flex: 0 0 340px;
+  }
+  
+  @media (max-width: 1000px) {
+    min-width: 300px;
+    flex: 0 0 300px;
+  }
+      
+  @media (max-width: 768px) {
+    min-width: 80%;
+    flex: 0 0 80%;
+  }
+  
+  @media (max-width: 480px) {
+    min-width: 90%;
+    flex: 0 0 90%;
+  }
   
   &:hover {
     transform: translateY(-15px) rotateX(5deg);
-    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 210, 191, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: ${props => props.featured ? 
+      '0 30px 60px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 210, 191, 0.4)' : 
+      '0 30px 60px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 210, 191, 0.1)'};
+    border-color: ${props => props.featured ? 
+      'rgba(255, 210, 191, 0.8)' : 
+      'rgba(255, 255, 255, 0.2)'};
   }
 
   @media (max-width: 1024px) {
@@ -551,19 +604,17 @@ const Difficulty = styled.div`
 const TrekRating = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 20px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
   
   svg {
-    color: #FFD700;
+    color: gold;
+    font-size: 1.1rem;
   }
   
   span {
     font-weight: 700;
-    color: #181828;
-    font-size: 1rem;
+    color: #333;
   }
   
   .reviews {
@@ -574,11 +625,9 @@ const TrekRating = styled.div`
   
   @media (max-width: 480px) {
     margin-bottom: 16px;
-    padding-top: 10px;
-    gap: 6px;
     
-    span {
-      font-size: 0.9rem;
+    svg {
+      font-size: 1rem;
     }
     
     .reviews {
@@ -587,31 +636,32 @@ const TrekRating = styled.div`
   }
 `;
 
-const ActionButton = styled.button`
-  background: linear-gradient(135deg, #FFD2BF 0%, #ffbfa3 100%);
-  color: #181828;
-  border: none;
-  border-radius: 12px;
-  padding: 14px 0;
-  font-weight: 700;
-  font-size: 1rem;
-  width: 100%;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: 0 4px 15px rgba(24, 24, 40, 0.1);
+const ActionButton = styled.a`
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  background: linear-gradient(135deg, #FFD2BF 0%, #ffbfa3 100%);
+  color: #333;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 6px 15px rgba(255, 210, 191, 0.3);
+  width: 100%;
+  text-decoration: none;
   
   svg {
-    transition: transform 0.3s ease;
+    transition: transform 0.3s;
   }
   
   &:hover {
-    background: linear-gradient(135deg, #ffbfa3 0%, #ffa889 100%);
+    background: linear-gradient(135deg, #ffbfa3 0%, #ffb296 100%);
     transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(255, 210, 191, 0.4);
+    box-shadow: 0 10px 25px rgba(255, 210, 191, 0.5);
     
     svg {
       transform: translateX(4px);
@@ -620,374 +670,458 @@ const ActionButton = styled.button`
   
   &:active {
     transform: translateY(-1px);
-  }
-  
-  @media (max-width: 768px) {
-    padding: 12px 0;
-    font-size: 0.95rem;
+    box-shadow: 0 5px 15px rgba(255, 210, 191, 0.4);
   }
   
   @media (max-width: 480px) {
-    padding: 10px 0;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    padding: 10px 18px;
   }
 `;
 
 const EventButton = styled(ActionButton)`
-  background: linear-gradient(135deg, #295a30 0%, #3a7a41 100%);
-  color: white;
+  background: linear-gradient(135deg, #ffe0b2 0%, #ffb74d 100%);
+  box-shadow: 0 6px 15px rgba(255, 183, 77, 0.3);
   
   &:hover {
-    background: linear-gradient(135deg, #3a7a41 0%, #4a8a51 100%);
-    box-shadow: 0 8px 25px rgba(41, 90, 48, 0.4);
+    background: linear-gradient(135deg, #ffb74d 0%, #ffa726 100%);
+    box-shadow: 0 10px 25px rgba(255, 183, 77, 0.5);
+  }
+  
+  &:active {
+    box-shadow: 0 5px 15px rgba(255, 183, 77, 0.4);
   }
 `;
 
 const BadgeTag = styled.span`
-  background: linear-gradient(135deg, #FFD700, #FFC107);
-  color: #222;
-  font-weight: 700;
-  font-size: 1rem;
-  padding: 8px 16px;
-  border-radius: 12px;
   position: absolute;
   top: 16px;
   right: 16px;
+  background: linear-gradient(135deg, #00aeff, #0080ff);
+  color: white;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 6px 14px;
+  border-radius: 10px;
   z-index: 2;
-  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 128, 255, 0.3);
   
   @media (max-width: 480px) {
-    padding: 6px 12px;
-    font-size: 0.9rem;
+    padding: 5px 12px;
+    font-size: 0.8rem;
   }
 `;
 
 const ScrollIndicatorContainer = styled.div`
   display: flex;
-  gap: 10px;
   justify-content: center;
-  margin-top: -20px;
-  margin-bottom: 40px;
-  
-  @media (max-width: 768px) {
-    margin-top: -10px;
-    margin-bottom: 30px;
-  }
+  gap: 10px;
+  margin-top: 30px;
 `;
 
 const ScrollIndicator = styled.div`
-  width: ${props => props.active ? '24px' : '8px'};
+  width: 8px;
   height: 8px;
-  border-radius: 10px;
-  background: ${props => props.active ? 
-    'linear-gradient(to right, #FFD2BF, #ffbfa3)' : 
-    'rgba(255, 255, 255, 0.2)'};
-  transition: all 0.3s ease, transform 0.3s ease;
+  border-radius: 50%;
+  background: ${props => props.active ? '#FFD2BF' : 'rgba(255, 255, 255, 0.2)'};
+  transition: all 0.3s;
   cursor: pointer;
-  box-shadow: ${props => props.active ? 
-    '0 2px 8px rgba(255, 210, 191, 0.3)' : 
-    '0 1px 3px rgba(0, 0, 0, 0.2)'};
   
   &:hover {
-    transform: ${props => props.active ? 'scale(1.1)' : 'scale(1.2)'};
-    background: ${props => props.active ? 
-      'linear-gradient(to right, #FFD2BF, #ffbfa3)' : 
-      'rgba(255, 255, 255, 0.4)'};
+    transform: scale(1.2);
+    background: ${props => props.active ? '#FFD2BF' : 'rgba(255, 255, 255, 0.4)'};
   }
 `;
 
-// Example data
-const recommendedTreks = [
-  {
-    image: trek1,
-    state: 'Uttarakhand',
-    title: 'Kedarnath Trek',
-    location: 'Sankri, Uttarakhand',
-    days: 6,
-    difficulty: 'Moderate',
-    price: '₹12,500',
-    rating: 4.8,
-    reviews: 120,
-  },
-  {
-    image: trek1,
-    state: 'Uttarakhand',
-    title: 'Valley of Flowers',
-    location: 'Govindghat, Uttarakhand',
-    days: 7,
-    difficulty: 'Moderate',
-    price: '₹15,800',
-    rating: 4.9,
-    reviews: 98,
-  },
-  {
-    image: trek1,
-    state: 'Himachal Pradesh',
-    title: 'Hampta Pass Trek',
-    location: 'Manali, Himachal',
-    days: 5,
-    difficulty: 'Moderate',
-    price: '₹14,200',
-    rating: 4.7,
-    reviews: 110,
-  },
-];
+// Loading Placeholder Component
+const LoadingCard = styled(TrekCard)`
+  background: rgba(255, 255, 255, 0.05);
+  min-height: 450px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  
+  &:before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, 
+      rgba(255, 255, 255, 0), 
+      rgba(255, 255, 255, 0.1), 
+      rgba(255, 255, 255, 0)
+    );
+    background-size: 200% 100%;
+    animation: ${shimmer} 1.5s infinite;
+  }
+`;
 
-const popularTreks = [
-  {
-    image: trek1,
-    state: 'Himachal Pradesh',
-    title: 'Triund Trek',
-    location: 'Mcleodganj, Himachal',
-    days: 2,
-    difficulty: 'Easy',
-    price: '₹5,000',
-    rating: 4.6,
-    reviews: 150,
-  },
-  {
-    image: trek1,
-    state: 'Uttarakhand',
-    title: 'RoopKund Trek',
-    location: 'Lohajung, Uttarakhand',
-    days: 8,
-    difficulty: 'Difficult',
-    price: '₹18,000',
-    rating: 4.8,
-    reviews: 115,
-  },
-  {
-    image: trek1,
-    state: 'Himachal Pradesh',
-    title: 'Kheerganga Trek',
-    location: 'Barshaini, Himachal',
-    days: 3,
-    difficulty: 'Moderate',
-    price: '₹6,200',
-    rating: 4.6,
-    reviews: 186,
-  },
-];
+// Error state for treks
+const ErrorState = styled.div`
+  padding: 20px;
+  background: rgba(255, 100, 100, 0.1);
+  border: 1px solid rgba(255, 100, 100, 0.3);
+  border-radius: 12px;
+  color: white;
+  text-align: center;
+  margin-bottom: 40px;
+  width: 80%;
+  max-width: 600px;
+  margin: 0 auto 40px;
+  
+  h3 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+  }
+  
+  button {
+    background: linear-gradient(135deg, #ff5252, #ff1744);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    margin-top: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    
+    &:hover {
+      background: #ff5252;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(255, 0, 0, 0.3);
+    }
+  }
+`;
 
-// Example data for groups and events
+// Empty state component
+const EmptyState = styled.div`
+  padding: 40px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: white;
+  text-align: center;
+  margin-bottom: 40px;
+  width: 80%;
+  max-width: 600px;
+  margin: 0 auto 40px;
+  
+  h3 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+  }
+  
+  p {
+    margin-bottom: 20px;
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  button {
+    background: linear-gradient(135deg, #FFD2BF 0%, #ffbfa3 100%);
+    color: #333;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(255, 210, 191, 0.4);
+    }
+  }
+`;
+
+// Sample data for active groups and events (would come from backend in full app)
 const activeGroups = [
-  { name: 'Himalayan Explorers', members: 128 },
-  { name: 'Patagonia Trekkers', members: 89 },
-  { name: 'Sahyadri Hikers', members: 54 },
-  { name: 'Alpine Adventurers', members: 73 },
+  { name: 'Himalayan Trekkers', members: 250 },
+  { name: 'Weekend Wanderers', members: 180 },
+  { name: 'Mountain Enthusiasts', members: 320 },
+  { name: 'Adventure Seekers', members: 210 }
 ];
 
 const upcomingEvents = [
-  { name: 'Full Moon Trek', date: '12 July 2024' },
-  { name: 'Winter Summit', date: '25 Dec 2024' },
-  { name: 'Spring Valley Hike', date: '15 Mar 2025' },
-  { name: 'Night Forest Walk', date: '2 Feb 2025' },
+  { name: 'Trekking Summit 2023', date: 'Oct 15' },
+  { name: 'Gear Workshop', date: 'Nov 5' },
+  { name: 'Photo Exhibition', date: 'Oct 28' },
+  { name: 'Travel Meetup', date: 'Dec 10' }
 ];
 
-// Enhanced Slider Component
-function SliderWithArrows({ children, data, sectionId }) {
-  const sliderRef = useRef(null);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [isScrolling, setIsScrolling] = useState(false);
+const Explore = () => {
+  const [recommendedTreks, setRecommendedTreks] = useState([]);
+  const [popularTreks, setPopularTreks] = useState([]);
+  const [upcomingTreks, setUpcomingTreks] = useState([]);
+  const [trendingTreks, setTrendingTreks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const handleScroll = (direction) => {
-    if (sliderRef.current && !isScrolling) {
-      setIsScrolling(true);
-      const { scrollLeft, clientWidth } = sliderRef.current;
-      const scrollTo = direction === 'left' 
-        ? scrollLeft - clientWidth / 1.5
-        : scrollLeft + clientWidth / 1.5;
-      
-      sliderRef.current.scrollTo({
-        left: scrollTo,
-        behavior: 'smooth'
-      });
-
-      setTimeout(() => {
-        if (sliderRef.current) {
-          const newIndex = Math.round(sliderRef.current.scrollLeft / (sliderRef.current.scrollWidth / data.length));
-          setActiveIndex(Math.min(Math.max(newIndex, 0), data.length - 1));
-          setIsScrolling(false);
-        }
-      }, 500);
-    }
-  };
-
-  const handleIndicatorClick = (index) => {
-    if (sliderRef.current && !isScrolling) {
-      setIsScrolling(true);
-      const cardWidth = sliderRef.current.scrollWidth / data.length;
-      const scrollTo = cardWidth * index;
-      
-      sliderRef.current.scrollTo({
-        left: scrollTo,
-        behavior: 'smooth'
-      });
-      
-      setActiveIndex(index);
-      setTimeout(() => setIsScrolling(false), 500);
-    }
-  };
-
-  // Listen for scroll events to update active index
   useEffect(() => {
-    const handleScrollUpdate = () => {
-      if (sliderRef.current && !isScrolling) {
-        const { scrollLeft, scrollWidth } = sliderRef.current;
-        const cardWidth = scrollWidth / data.length;
-        const newIndex = Math.round(scrollLeft / cardWidth);
+    const fetchTreks = async () => {
+      try {
+        setLoading(true);
+        const treksCollection = collection(db, "treks");
         
-        if (newIndex !== activeIndex) {
-          setActiveIndex(Math.min(Math.max(newIndex, 0), data.length - 1));
-        }
+        // Fetch all treks
+        const treksSnapshot = await getDocs(treksCollection);
+        const treksData = treksSnapshot.docs
+          .filter(doc => doc.id !== "placeholder" && doc.data().title)
+          .map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            featured: doc.data().featured || false,
+            image: doc.data().image || trek1, // Default image if none provided
+          }));
+
+        // Filter treks by categories
+        setRecommendedTreks(
+          treksData.filter(trek => trek.recommended || trek.rating >= 4.8)
+        );
+        
+        setPopularTreks(
+          treksData.filter(trek => trek.popular || trek.reviews >= 100)
+        );
+        
+        setUpcomingTreks(
+          treksData.filter(trek => trek.upcoming || trek.season === "Upcoming")
+        );
+        
+        setTrendingTreks(
+          treksData.filter(trek => trek.trending || trek.rating >= 4.5)
+        );
+        
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching treks:", err);
+        setError("Failed to load treks. Please try again later.");
+        setLoading(false);
       }
     };
 
-    const ref = sliderRef.current;
-    if (ref) {
-      ref.addEventListener('scroll', handleScrollUpdate);
-      return () => ref.removeEventListener('scroll', handleScrollUpdate);
+    fetchTreks();
+  }, []);
+
+  const renderTrekSection = (sectionTitle, treks, sectionId) => {
+    if (loading) {
+      return (
+        <>
+          <SectionTitleContainer>
+            <SectionTitle>{sectionTitle}</SectionTitle>
+            <SectionUnderline />
+          </SectionTitleContainer>
+          <SliderWrapper>
+            {[1,2,3].map((_, idx) => (
+              <LoadingCard key={idx} />
+            ))}
+          </SliderWrapper>
+        </>
+      );
     }
-  }, [activeIndex, isScrolling, data.length]);
 
-  return (
-    <SliderWrapper>
-      <LeftArrowButton 
-        onClick={() => handleScroll('left')}
-        disabled={activeIndex === 0 || isScrolling}
-        aria-label="Scroll left"
-      >
-        <FiChevronLeft />
-      </LeftArrowButton>
-      
-      <TreksSlider ref={sliderRef} id={sectionId}>
-        {children}
-      </TreksSlider>
-      
-      <RightArrowButton 
-        onClick={() => handleScroll('right')}
-        disabled={activeIndex === data.length - 1 || isScrolling}
-        aria-label="Scroll right"
-      >
-        <FiChevronRight />
-      </RightArrowButton>
-      
-      <ScrollIndicatorContainer>
-        {data.map((_, idx) => (
-          <ScrollIndicator 
-            key={idx} 
-            active={idx === activeIndex}
-            onClick={() => handleIndicatorClick(idx)}
-          />
-        ))}
-      </ScrollIndicatorContainer>
-    </SliderWrapper>
-  );
-}
+    if (error) {
+      return (
+        <>
+          <SectionTitleContainer>
+            <SectionTitle>{sectionTitle}</SectionTitle>
+            <SectionUnderline />
+          </SectionTitleContainer>
+          <ErrorState>
+            <h3>Error Loading Treks</h3>
+            <p>{error}</p>
+          </ErrorState>
+        </>
+      );
+    }
 
-const Explore = () => {
+    if (treks.length === 0) {
+      return (
+        <>
+          <SectionTitleContainer>
+            <SectionTitle>{sectionTitle}</SectionTitle>
+            <SectionUnderline />
+          </SectionTitleContainer>
+          <EmptyState>
+            <h3>No Treks Available</h3>
+            <p>Check back later for exciting new treks!</p>
+          </EmptyState>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <SectionTitleContainer>
+          <SectionTitle>{sectionTitle}</SectionTitle>
+          <SectionUnderline />
+        </SectionTitleContainer>
+        
+        <SliderWithArrows data={treks} sectionId={sectionId}>
+          {treks.map((trek, idx) => (
+            <TrekCard key={idx} featured={trek.featured}>
+              <TrekImageWrapper>
+                <TrekImage style={{ backgroundImage: `url(${trek.image})` }} />
+                <ImageOverlay />
+                <TrekTags>
+                  <Tag><FiMapPin /> {trek.location || trek.state || "India"}</Tag>
+                  <DifficultyTag><FaMountain /> {trek.difficulty || "Moderate"}</DifficultyTag>
+                </TrekTags>
+                <PriceTag>{trek.price || `₹${Math.floor(Math.random() * 10000) + 5000}`}</PriceTag>
+                {trek.featured && (
+                  <BadgeTag style={{
+                    background: "linear-gradient(135deg, #FFD700, #FFA500)",
+                    top: "60px"
+                  }}>
+                    Featured
+                  </BadgeTag>
+                )}
+              </TrekImageWrapper>
+              
+              <TrekInfo>
+                <TrekTitle>{trek.title}</TrekTitle>
+                <TrekLocation>
+                  <FiMapPin />
+                  {trek.location || "India"}
+                </TrekLocation>
+                <MetaRow>
+                  <MetaItem>
+                    <FiClock />
+                    {trek.days || Math.floor(Math.random() * 7) + 2} Days
+                  </MetaItem>
+                  <Difficulty>
+                    <FaMountain />
+                    {trek.difficulty || "Moderate"}
+                  </Difficulty>
+                </MetaRow>
+                <TrekRating>
+                  <FaStar />
+                  <span>{trek.rating || (4 + Math.random()).toFixed(1)}</span>
+                  <span className="reviews">({trek.reviews || Math.floor(Math.random() * 100) + 50} reviews)</span>
+                </TrekRating>
+                <ActionButton as={Link} to={`/trek/${trek.id || trek.title.toLowerCase().replace(/\s+/g, '-')}`}>
+                  View Trek <FiArrowRight />
+                </ActionButton>
+              </TrekInfo>
+            </TrekCard>
+          ))}
+        </SliderWithArrows>
+      </>
+    );  
+  };
+
+  // Enhanced Slider Component
+  function SliderWithArrows({ children, data, sectionId }) {
+    const sliderRef = useRef(null);
+    const [activeIndex, setActiveIndex] = useState(0);
+    const [isScrolling, setIsScrolling] = useState(false);
+
+    const handleScroll = (direction) => {
+      if (sliderRef.current && !isScrolling) {
+        setIsScrolling(true);
+        const { scrollLeft, clientWidth } = sliderRef.current;
+        const scrollTo = direction === 'left' 
+          ? scrollLeft - clientWidth / 1.5
+          : scrollLeft + clientWidth / 1.5;
+        
+        sliderRef.current.scrollTo({
+          left: scrollTo,
+          behavior: 'smooth'
+        });
+
+        setTimeout(() => {
+          if (sliderRef.current) {
+            const newIndex = Math.round(sliderRef.current.scrollLeft / (sliderRef.current.scrollWidth / data.length));
+            setActiveIndex(Math.min(Math.max(newIndex, 0), data.length - 1));
+            setIsScrolling(false);
+          }
+        }, 500);
+      }
+    };
+
+    const handleIndicatorClick = (index) => {
+      if (sliderRef.current && !isScrolling) {
+        setIsScrolling(true);
+        const cardWidth = sliderRef.current.scrollWidth / data.length;
+        const scrollTo = cardWidth * index;
+        
+        sliderRef.current.scrollTo({
+          left: scrollTo,
+          behavior: 'smooth'
+        });
+        
+        setActiveIndex(index);
+        setTimeout(() => setIsScrolling(false), 500);
+      }
+    };
+
+    // Listen for scroll events to update active index
+    useEffect(() => {
+      const handleScrollUpdate = () => {
+        if (sliderRef.current && !isScrolling) {
+          const { scrollLeft, scrollWidth } = sliderRef.current;
+          const cardWidth = scrollWidth / data.length;
+          const newIndex = Math.round(scrollLeft / cardWidth);
+          
+          if (newIndex !== activeIndex) {
+            setActiveIndex(Math.min(Math.max(newIndex, 0), data.length - 1));
+          }
+        }
+      };
+
+      const ref = sliderRef.current;
+      if (ref) {
+        ref.addEventListener('scroll', handleScrollUpdate);
+        return () => ref.removeEventListener('scroll', handleScrollUpdate);
+      }
+    }, [activeIndex, isScrolling, data.length]);
+
+    return (
+      <SliderWrapper>
+        <LeftArrowButton 
+          onClick={() => handleScroll('left')}
+          disabled={activeIndex === 0 || isScrolling}
+          aria-label="Scroll left"
+        >
+          <FiChevronLeft />
+        </LeftArrowButton>
+        
+        <TreksSlider ref={sliderRef} id={sectionId}>
+          {children}
+        </TreksSlider>
+        
+        <RightArrowButton 
+          onClick={() => handleScroll('right')}
+          disabled={activeIndex === data.length - 1 || isScrolling}
+          aria-label="Scroll right"
+        >
+          <FiChevronRight />
+        </RightArrowButton>
+        
+        <ScrollIndicatorContainer>
+          {data.map((_, idx) => (
+            <ScrollIndicator 
+              key={idx} 
+              active={idx === activeIndex}
+              onClick={() => handleIndicatorClick(idx)}
+            />
+          ))}
+        </ScrollIndicatorContainer>
+      </SliderWrapper>
+    );
+  }
+
   return (
     <ExploreSection>
+
       <MapPatternBackground />
       <Overlay />
-      <Navbar />
+      
       <Container>
-        {/* Recommended Treks Section */}
-        <SectionTitleContainer>
-          <SectionTitle>Recommended for You</SectionTitle>
-          <SectionUnderline />
-        </SectionTitleContainer>
+        {/* Render Trek Sections */}
+        {renderTrekSection("Recommended Treks", recommendedTreks, "recommended-treks")}
+        {renderTrekSection("Popular Treks", popularTreks, "popular-treks")}
+        {renderTrekSection("Upcoming Treks", upcomingTreks, "upcoming-treks")}
+        {renderTrekSection("Trending Treks", trendingTreks, "trending-treks")}
         
-        <SliderWithArrows data={recommendedTreks} sectionId="recommended-treks">
-          {recommendedTreks.map((trek, idx) => (
-            <TrekCard key={idx}>
-              <TrekImageWrapper>
-                <TrekImage style={{ backgroundImage: `url(${trek.image})` }} />
-                <ImageOverlay />
-                <TrekTags>
-                  <Tag><FiMapPin /> {trek.state}</Tag>
-                  <DifficultyTag><FaMountain /> {trek.difficulty}</DifficultyTag>
-                </TrekTags>
-                <PriceTag>{trek.price}</PriceTag>
-              </TrekImageWrapper>
-              
-              <TrekInfo>
-                <TrekTitle>{trek.title}</TrekTitle>
-                <TrekLocation>
-                  <FiMapPin />
-                  {trek.location}
-                </TrekLocation>
-                <MetaRow>
-                  <MetaItem>
-                    <FiClock />
-                    {trek.days} Days
-                  </MetaItem>
-                  <Difficulty>
-                    <FaMountain />
-                    {trek.difficulty}
-                  </Difficulty>
-                </MetaRow>
-                <TrekRating>
-                  <FaStar />
-                  <span>{trek.rating}</span>
-                  <span className="reviews">({trek.reviews} reviews)</span>
-                </TrekRating>
-                <ActionButton as={Link} to={`/trek/${trek.title.toLowerCase().replace(/\s+/g, '-')}`}>
-                  View Trek <FiArrowRight />
-                </ActionButton>
-              </TrekInfo>
-            </TrekCard>
-          ))}
-        </SliderWithArrows>
-
-        {/* Popular Treks Section */}
-        <SectionTitleContainer>
-          <SectionTitle>Popular Treks</SectionTitle>
-          <SectionUnderline />
-        </SectionTitleContainer>
-        
-        <SliderWithArrows data={popularTreks} sectionId="popular-treks">
-          {popularTreks.map((trek, idx) => (
-            <TrekCard key={idx}>
-              <TrekImageWrapper>
-                <TrekImage style={{ backgroundImage: `url(${trek.image})` }} />
-                <ImageOverlay />
-                <TrekTags>
-                  <Tag><FiMapPin /> {trek.state}</Tag>
-                  <DifficultyTag><FaMountain /> {trek.difficulty}</DifficultyTag>
-                </TrekTags>
-                <PriceTag>{trek.price}</PriceTag>
-              </TrekImageWrapper>
-              
-              <TrekInfo>
-                <TrekTitle>{trek.title}</TrekTitle>
-                <TrekLocation>
-                  <FiMapPin />
-                  {trek.location}
-                </TrekLocation>
-                <MetaRow>
-                  <MetaItem>
-                    <FiClock />
-                    {trek.days} Days
-                  </MetaItem>
-                  <Difficulty>
-                    <FaMountain />
-                    {trek.difficulty}
-                  </Difficulty>
-                </MetaRow>
-                <TrekRating>
-                  <FaStar />
-                  <span>{trek.rating}</span>
-                  <span className="reviews">({trek.reviews} reviews)</span>
-                </TrekRating>
-                <ActionButton as={Link} to={`/trek/${trek.title.toLowerCase().replace(/\s+/g, '-')}`}>
-                  View Trek <FiArrowRight />
-                </ActionButton>
-              </TrekInfo>
-            </TrekCard>
-          ))}
-        </SliderWithArrows>
-
         {/* Active Groups Section */}
         <SectionTitleContainer>
           <SectionTitle>Active Groups</SectionTitle>
@@ -1034,7 +1168,7 @@ const Explore = () => {
             </TrekCard>
           ))}
         </SliderWithArrows>
-
+        
         {/* Upcoming Events Section */}
         <SectionTitleContainer>
           <SectionTitle>Upcoming Events</SectionTitle>

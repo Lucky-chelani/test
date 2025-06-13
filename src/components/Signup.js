@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import styled, { keyframes } from 'styled-components';
-import Navbar from './Navbar';
 import mapPattern from '../assets/images/map-pattren.png';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
@@ -627,10 +626,9 @@ const handleGoogleSignup = async () => {
     setLoading(false);
   }
 };
-
   return (
     <Page>
-      <Navbar active="signup" />
+      {/* Removed Navbar - using BottomNavbar from App.js */}
       <FormContainer>
         <Container>
           <HeaderSection>

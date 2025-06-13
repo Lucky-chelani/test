@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import styled, { keyframes, css } from 'styled-components';
-import Navbar from './Navbar';
 import mapPattern from '../assets/images/map-pattren.png';
 import mountainBottomArt from '../assets/images/mountains-bottom-art.png';
 import Footer from './Footer';
@@ -531,13 +530,12 @@ const About = () => {
           delay={2}
         />
         <FloatingCircle 
-          style={{ bottom: '20%', left: '20%', width: '80px', height: '80px' }}
-          duration={12}
+          style={{ bottom: '20%', left: '20%', width: '80px', height: '80px' }}          duration={12}
           delay={4}
         />
       </FloatingElements>
       
-      <Navbar active="about" />
+      {/* Removed Navbar - using BottomNavbar from App.js */}
       <Container>
         <Hero>
           <Title>Transforming How The World Experiences Trekking</Title>
@@ -605,3 +603,4 @@ const About = () => {
 };
 
 export default About;
+

@@ -1,12 +1,11 @@
 import React, { useRef, useState, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import { useNavigate } from "react-router-dom";
-import trek1 from "../assets/images/photo1.jpeg";
-import trek2 from "../assets/images/photo2.jpeg";
-import trek3 from "../assets/images/photo3.jpeg";
 import mapPattern from "../assets/images/map-pattren.png";
-import { FiChevronLeft, FiChevronRight, FiClock, FiMapPin, FiCalendar, FiStar, FiArrowRight } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiClock, FiMapPin, FiCalendar, FiArrowRight } from 'react-icons/fi';
 import { FaMountain } from 'react-icons/fa';
+import { db } from "../firebase";
+import { collection, getDocs } from "firebase/firestore";
 
 const shimmer = keyframes`
   0% {
@@ -443,12 +442,13 @@ const TrekTitle = styled.h3`
   }
 `;
 
-const TagRow = styled.div`
-  display: flex;
-  gap: 10px;
-  margin-bottom: 18px;
-  flex-wrap: wrap;
-`;
+// Commented out as it's not being used
+// const TagRow = styled.div`
+//   display: flex;
+//   gap: 10px;
+//   margin-bottom: 18px;
+//   flex-wrap: wrap;
+// `;
 
 const Tag = styled.span`
   background: #F7FAFF;
@@ -668,51 +668,56 @@ const ScrollIndicator = styled.div`
   }
 `;
 
-const treks = [
-  {
-    id: "bhrigu-lake",
-    image: trek1,
-    country: "India",
-    difficulty: "Difficult",
-    title: "Bhrigu Lake Trek",
-    rating: 4.8,
-    reviews: 124,
-    days: 8,
-    price: "3,850 Rupees",
-    location: "Himachal Pradesh"
-  },
-  {
-    id: "valley-of-flowers",
-    image: trek2,
-    country: "India",
-    difficulty: "Moderate",
-    title: "Valley Of Flowers Trek",
-    rating: 5.0,
-    reviews: 98,
-    days: 7,
-    price: "8,250 Rupees",
-    location: "Uttarakhand Himalayas"
-  },
-  {
-    id: "hampta-pass",
-    image: trek3,
-    country: "India",
-    difficulty: "Moderate",
-    title: "Hampta Pass Trek ",
-    rating: 4.2,
-    reviews: 87,
-    days: 6,
-    price: "6,050 Rupees",
-    location: "Himachal Pradesh"
-  },
- 
-];
+// Treks will be fetched from Firebase
+
+// Import the image utilities
+import { getValidImageUrl } from "../utils/images";
 
 export default function FeaturedTreks() {
   const navigate = useNavigate();
   const scrollRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
+  const [treks, setTreks] = useState([]);  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch treks from Firebase when component mounts
+  useEffect(() => {
+    const fetchTreks = async () => {
+      try {
+        setLoading(true);
+        
+        // Check if the treks collection exists
+        const treksCollection = collection(db, "treks");
+        
+        try {
+          const treksSnapshot = await getDocs(treksCollection);
+          const treksData = treksSnapshot.docs
+            .filter(doc => doc.id !== "placeholder" && doc.data().title) // Filter out placeholder docs
+            .map(doc => ({
+              id: doc.id,
+              ...doc.data(),
+            }));
+          
+          if (treksData.length === 0) {
+            console.log("No treks found. Admin needs to add treks.");
+          }
+          
+          setTreks(treksData);
+        } catch (fetchError) {
+          console.error("Error fetching trek documents:", fetchError);
+          setError("Unable to load treks. The trek data might not be initialized yet. Please contact the administrator.");
+        }
+      } catch (err) {
+        console.error("Error fetching treks:", err);
+        setError("Failed to load treks. Please try again later or contact support.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTreks();
+  }, []);
 
   // Optimized scrolling with requestAnimationFrame
   const handleScroll = (direction) => {
@@ -794,9 +799,8 @@ export default function FeaturedTreks() {
         if (scrollTimeout) clearTimeout(scrollTimeout);
         ref.removeEventListener('scroll', handleScrollUpdate);
       };
-    }
-  }, [activeIndex, isScrolling]);
-
+    }  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeIndex, isScrolling, treks.length]);
   return (
     <Section>
       {/* Enhanced Map Pattern */}
@@ -810,20 +814,80 @@ export default function FeaturedTreks() {
         <Underline />
         <Subtitle>Discover breathtaking adventures, from mountain peaks to hidden valleys. Perfect for explorers of all levels!</Subtitle>
         
-        <ScrollContainer>
-          <PrevButton 
-            onClick={() => handleScroll('left')}
-            disabled={activeIndex === 0 || isScrolling}
-            aria-label="Previous treks"
-          >
-            <FiChevronLeft />
-          </PrevButton>
-          
-          <TrekListContainer ref={scrollRef}>
-            {treks.map((trek, idx) => (
+        {loading ? (
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            minHeight: '300px', 
+            flexDirection: 'column',
+            color: 'white',
+            gap: '20px'
+          }}>
+            <div style={{
+              width: '60px',
+              height: '60px',
+              borderRadius: '50%',
+              border: '5px solid rgba(128, 255, 219, 0.3)',
+              borderTopColor: '#5390D9',
+              animation: 'spin 1.5s linear infinite'
+            }} />
+            <style>{`
+              @keyframes spin {
+                to {
+                  transform: rotate(360deg);
+                }
+              }
+            `}</style>
+            <p style={{ fontSize: '1.2rem' }}>Loading treks...</p>
+          </div>
+        ) : error ? (
+          <div style={{ 
+            textAlign: 'center', 
+            color: 'white', 
+            padding: '40px 20px',
+            backgroundColor: 'rgba(255, 0, 0, 0.1)',
+            borderRadius: '12px',
+            margin: '20px 0'
+          }}>
+            <h3 style={{ marginBottom: '15px' }}>Error</h3>
+            <p>{error}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              style={{
+                marginTop: '20px',
+                padding: '10px 20px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer'
+              }}
+            >
+              Try Again
+            </button>
+          </div>
+        ) : treks.length === 0 ? (
+          <div style={{ 
+            textAlign: 'center', 
+            color: 'white', 
+            padding: '40px 20px' 
+          }}>
+            <p>No treks found. Please check back later!</p>          </div>        ) : (
+          <>
+          <ScrollContainer>
+            <PrevButton 
+              onClick={() => handleScroll('left')}
+              disabled={activeIndex === 0 || isScrolling}
+              aria-label="Previous treks"
+            >
+              <FiChevronLeft />
+            </PrevButton>
+            
+            <TrekListContainer ref={scrollRef}>            {treks.map((trek, idx) => (
               <TrekCard key={idx}>
                 <TrekImageWrapper>
-                  <TrekImage style={{backgroundImage: `url(${trek.image})`}} />
+                  <TrekImage style={{backgroundImage: `url(${getValidImageUrl(trek.image)})`}} />
                   <ImageOverlay />
                   <TrekTags>
                     <LocationTag><FiMapPin /> {trek.country}</LocationTag>
@@ -832,14 +896,13 @@ export default function FeaturedTreks() {
                 </TrekImageWrapper>
                 <TrekInfo>
                   <TrekTitle>{trek.title}</TrekTitle>
-                  <InfoRow>
-                    <InfoItem>
+                  <InfoRow>                    <InfoItem>
                       <FiClock />
                       <span>{trek.days} Days</span>
                     </InfoItem>
                     <InfoItem>
                       <FiCalendar />
-                      <span>Aug-Sept</span>
+                      <span>{trek.season || "Year-round"}</span>
                     </InfoItem>
                   </InfoRow>
                   <InfoRow>
@@ -867,8 +930,7 @@ export default function FeaturedTreks() {
                   </ActionRow>
                 </TrekInfo>
               </TrekCard>
-            ))}
-          </TrekListContainer>
+            ))}          </TrekListContainer>
           
           <NextButton 
             onClick={() => handleScroll('right')}
@@ -876,8 +938,7 @@ export default function FeaturedTreks() {
             aria-label="Next treks"
           >
             <FiChevronRight />
-          </NextButton>
-        </ScrollContainer>
+          </NextButton>        </ScrollContainer>
         
         <ScrollIndicatorContainer>
           {treks.map((_, idx) => (
@@ -889,6 +950,8 @@ export default function FeaturedTreks() {
             />
           ))}
         </ScrollIndicatorContainer>
+      </>
+      )}
       </SectionContent>
     </Section>
   );

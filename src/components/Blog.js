@@ -1,6 +1,5 @@
 import React from 'react';
 import styled, { keyframes } from 'styled-components';
-import Navbar from './Navbar';
 import blogImg from '../assets/images/trek1.png';
 
 // Animations
@@ -311,7 +310,7 @@ const Blog = () => (
   <Page>
     <FloatingElement />
     <FloatingElement />
-    <Navbar active="blog" />
+    {/* Removed Navbar - using BottomNavbar from App.js */}
     <Container>
       <Header>
         <SectionTitle>Adventure Blog</SectionTitle>
@@ -339,3 +338,4 @@ const Blog = () => (
 );
 
 export default Blog;
+

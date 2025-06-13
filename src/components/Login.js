@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import styled, { keyframes } from 'styled-components';
-import Navbar from './Navbar';
 import { useNavigate } from 'react-router-dom';
 import mapPattern from '../assets/images/map-pattren.png';
 import { auth } from '../firebase';
@@ -481,10 +480,9 @@ const handleGoogleLogin = async () => {
     setLoading(false);
   }
 };
-
   return (
     <Page>
-      <Navbar active="login" />
+      {/* Removed Navbar - using BottomNavbar from App.js */}
       <FormContainer>
         <Form onSubmit={handleSubmit}>
           <HeaderSection>

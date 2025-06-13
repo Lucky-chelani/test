@@ -1,14 +1,14 @@
 import { db } from '../firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
-export const initializeChatrooms = async () => {
-  const chatrooms = [
+export const initializeChatrooms = async () => {  const chatrooms = [
     {
       id: 'himalayan',
       name: 'Himalayan Explorers',
       description: 'Talk all things Himalayas!',
       members: [],
       createdAt: new Date(),
+      featured: true, // This one is featured
     },
     {
       id: 'patagonia',
@@ -16,6 +16,7 @@ export const initializeChatrooms = async () => {
       description: 'Share Patagonia tips and plans.',
       members: [],
       createdAt: new Date(),
+      featured: false,
     },
     {
       id: 'sahyadri',
@@ -23,6 +24,7 @@ export const initializeChatrooms = async () => {
       description: 'Connect with local hikers.',
       members: [],
       createdAt: new Date(),
+      featured: false,
     },
     {
       id: 'alpine',
@@ -30,6 +32,7 @@ export const initializeChatrooms = async () => {
       description: 'For lovers of the Alps.',
       members: [],
       createdAt: new Date(),
+      featured: true, // This one is featured
     },
   ];
 
@@ -37,12 +40,12 @@ export const initializeChatrooms = async () => {
     for (const room of chatrooms) {
       const roomRef = doc(db, 'chatrooms', room.id);
       const roomDoc = await getDoc(roomRef);
-      
-      if (!roomDoc.exists()) {
+        if (!roomDoc.exists()) {
         await setDoc(roomRef, {
           ...room,
           createdAt: new Date().toISOString(), // Convert Date to string for Firestore
-          members: [] // Ensure members array exists
+          members: [], // Ensure members array exists
+          featured: room.featured || false // Ensure featured flag exists
         });
         console.log(`Created chatroom: ${room.name}`);
       } else {
