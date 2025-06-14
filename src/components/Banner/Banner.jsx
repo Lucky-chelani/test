@@ -108,7 +108,7 @@ const Banner = () => {
           </button>
           <button 
             className="banner-btn secondary"
-            onClick={() => navigate('/popular')}
+            onClick={() => navigate('/explore')}
           >
             Popular Destinations
           </button>
