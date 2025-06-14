@@ -289,25 +289,33 @@ const ScrollContainer = styled.div`
   position: relative;
   width: 100%;
   margin-bottom: 30px;
+  max-width: calc(100vw - 40px);
+  margin-left: auto;
+  margin-right: auto;
 `;
 
 // Enhanced card container with better scrolling similar to FeaturedTreks
 const ChatroomListContainer = styled.div`
   display: flex;
-  gap: 30px;
   overflow-x: auto;
-  padding: 30px 15px 50px 15px;
+  padding: 30px 20px 50px 20px;
+  margin: 0 10px;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none; /* Firefox */
-  scroll-snap-type: x mandatory;
+  scroll-snap-type: x proximity;
   overscroll-behavior-x: contain;
   will-change: scroll-position;
+  gap: 30px; /* Fixed gap between cards */
   
   &::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Edge */
   }
   
   /* Optimized for smoother scrolling */
+  @media (max-width: 768px) {
+    gap: 20px;
+    padding: 30px 10px 40px 10px;
+  }
   > * {
     scroll-snap-align: start;
   }
@@ -341,8 +349,8 @@ const NavigationButton = styled.button`
   width: 54px;
   height: 54px;
   border-radius: 50%;
-  background: rgba(128, 255, 219, 0.1);
-  border: 1px solid rgba(128, 255, 219, 0.3);
+  background: rgba(83, 144, 217, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.5);
   color: white;
   font-size: 1.5rem;
   display: flex;
@@ -351,11 +359,14 @@ const NavigationButton = styled.button`
   cursor: pointer;
   z-index: 10;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25);
   will-change: transform, background-color;
+  backdrop-filter: blur(5px);
   
   &:hover {
-    background: rgba(128, 255, 219, 0.2);
+    background: rgba(83, 144, 217, 1);
+    transform: translateY(-50%) scale(1.05);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
   }
   
   &:active {
@@ -381,26 +392,26 @@ const NavigationButton = styled.button`
 `;
 
 const PrevButton = styled(NavigationButton)`
-  left: -27px;
+  left: -15px;
   
   @media (max-width: 768px) {
-    left: -15px;
+    left: 5px;
   }
   
   @media (max-width: 480px) {
-    left: -10px;
+    left: 5px;
   }
 `;
 
 const NextButton = styled(NavigationButton)`
-  right: -27px;
+  right: -15px;
   
   @media (max-width: 768px) {
-    right: -15px;
+    right: 5px;
   }
   
   @media (max-width: 480px) {
-    right: -10px;
+    right: 5px;
   }
 `;
 
@@ -442,11 +453,13 @@ const ChatroomCard = styled.div`
   box-shadow: ${props => props.featured ? 
     '0 10px 25px rgba(83, 144, 217, 0.4), 0 0 0 2px rgba(83, 144, 217, 0.2)' : 
     '0 10px 20px rgba(0, 0, 0, 0.1)'};
-  width: 360px;
+  width: 340px;
+  min-width: 340px;
   flex-shrink: 0;
-  margin-right: 24px;
+  margin: 0; /* Remove margin and use gap instead */
   transition: all 0.3s ease;
   cursor: pointer;
+  scroll-snap-align: start;
   
   ${props => props.featured && `
     position: relative;
@@ -462,18 +475,19 @@ const ChatroomCard = styled.div`
       '0 15px 30px rgba(83, 144, 217, 0.5), 0 0 0 3px rgba(83, 144, 217, 0.3)' : 
       '0 15px 30px rgba(0, 0, 0, 0.15)'};
   }
-  
-  @media (max-width: 1200px) {
-    min-width: 340px;
+    @media (max-width: 1200px) {
+    width: 320px;
+    min-width: 320px;
   }
   
   @media (max-width: 1000px) {
+    width: 300px;
     min-width: 300px;
   }
       
   @media (max-width: 768px) {
-    min-width: 80%;
-    max-width: 80%;
+    width: 280px;
+    min-width: 280px;
     
     &:hover {
       transform: translateY(-5px);
@@ -481,8 +495,9 @@ const ChatroomCard = styled.div`
   }
   
   @media (max-width: 480px) {
-    min-width: 90%;
-    max-width: 90%;
+    width: 260px;
+    min-width: 260px;
+    flex: 0 0 auto;
   }
   
   ${props => props.isNew && css`
@@ -1368,6 +1383,56 @@ const FloatingElement = styled.div`
   }
 `;
 
+// Header styling for Communities page
+const Header = styled.div`
+  text-align: center;
+  padding: 40px 20px;
+  margin-bottom: 30px;
+  position: relative;
+  
+  &:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 150px;
+    height: 5px;
+    background: linear-gradient(to right, #5390D9, #7400B8);
+    border-radius: 5px;
+  }
+`;
+
+const PageTitle = styled.h1`
+  font-size: 4rem;
+  font-weight: 800;
+  margin-bottom: 15px;
+  background: linear-gradient(to right, #80FFDB 0%, #5390D9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  
+  @media (max-width: 768px) {
+    font-size: 3rem;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 2.5rem;
+  }
+`;
+
+const PageSubtitle = styled.p`
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.8);
+  max-width: 600px;
+  margin: 0 auto 20px;
+  line-height: 1.6;
+  
+  @media (max-width: 768px) {
+    font-size: 1.1rem;
+  }
+`;
+
 const Community = () => {
   const [chatrooms, setChatrooms] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -1663,8 +1728,14 @@ const Community = () => {
       {/* Enhanced Map Pattern */}
       <MapPatternBackground />
       <Overlay />
-      
-      <Container>        {!loading && chatrooms.some(room => room.featured) && (
+        <Container>
+        <Header>
+          <PageTitle>Trek Communities</PageTitle>          <PageSubtitle>
+            Join discussions, share experiences, and connect with fellow trekking enthusiasts around the world.
+          </PageSubtitle>
+        </Header>
+        
+        {!loading && chatrooms.some(room => room.featured) && (
           <Section>
             <SectionTitle>Featured Communities</SectionTitle>
             <Underline />
@@ -1762,7 +1833,8 @@ const Community = () => {
                   <FiChevronLeft />
                 </PrevButton>
                 
-                <ChatroomListContainer ref={scrollRef}>                  {chatrooms.map((room) => (
+                <ChatroomListContainer ref={scrollRef}>
+                  {chatrooms.map((room) => (
                     <ChatroomCard key={room.id} isNew={room.isNew} featured={room.featured} onClick={() => handleJoinRoom(room)}>
                       {room.createdBy === auth.currentUser?.uid && (
                         <>

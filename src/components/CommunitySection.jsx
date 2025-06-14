@@ -1497,6 +1497,7 @@ export default function CommunitySection() {
   // Load communities from Firebase when tab changes
   useEffect(() => {
     loadCommunities();
+    console.log("Loading communities for tab:", activeTab);
   }, [activeTab]);
 
   // Load communities from Firebase
@@ -1506,6 +1507,7 @@ export default function CommunitySection() {
     }
 
     try {
+      console.log("Fetching communities from Firebase...");
       const communitiesRef = collection(db, "chatrooms");
       let communitiesQuery;
       
@@ -1531,59 +1533,90 @@ export default function CommunitySection() {
       const querySnapshot = await getDocs(communitiesQuery);
       
       if (querySnapshot.empty) {
+        console.log("No communities found in Firestore. Using sample data.");
         setHasMore(false);
+        // If no communities found, don't update the current state
+        if (!isLoadMore) {
+          setCommunities(communityRooms);
+        }
       } else {
+        console.log(`Found ${querySnapshot.docs.length} communities in Firestore.`);
         // Get the last visible document
         setLastVisible(querySnapshot.docs[querySnapshot.docs.length - 1]);
         
         // Map the data to our expected format
         const loadedCommunities = querySnapshot.docs.map((doc, index) => {
           const data = doc.data();
+          
           // Convert Firestore timestamps to JavaScript dates
           const createdAt = data.createdAt?.toDate?.() || new Date();
           const lastActivity = data.lastActivity?.toDate?.() || new Date();
+          
+          // Process recent messages if available
+          let formattedUsers = [];
+          if (data.recentMessages && Array.isArray(data.recentMessages) && data.recentMessages.length > 0) {
+            formattedUsers = data.recentMessages.map(msg => ({
+              initials: msg.userName ? msg.userName.substring(0, 2).toUpperCase() : "CM",
+              name: msg.userName || "Community Member",
+              level: Math.floor(Math.random() * 20) + 1,
+              levelColor: "#c8fad0",
+              levelTextColor: "#2a8a34",
+              msg: msg.text || "Join the conversation!",
+              time: msg.timestamp ? new Date(msg.timestamp.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "New",
+              likes: msg.likes || Math.floor(Math.random() * 10),
+              isNew: (new Date() - (msg.timestamp?.toDate() || new Date())) < 24 * 60 * 60 * 1000, // New if less than 24 hours old
+            }));
+          } else {
+            // Generate a sample message if no recent messages
+            formattedUsers = [{
+              initials: data.name ? data.name.substring(0, 2).toUpperCase() : "CG",
+              name: "Community Member",
+              level: Math.floor(Math.random() * 20) + 1,
+              levelColor: "#c8fad0",
+              levelTextColor: "#2a8a34",
+              msg: data.description || "Join our community discussions!",
+              time: "New",
+              likes: Math.floor(Math.random() * 10),
+              isNew: true,
+            }];
+          }
+          
+          // Generate random color if none is provided
+          const randomColor = () => {
+            const colors = ["#2a8a34", "#5390D9", "#3a506b", "#295a30", "#1e3d59"];
+            return colors[Math.floor(Math.random() * colors.length)];
+          };
           
           return {
             group: data.name || "Community Group",
             icon: data.icon || "mountain",
             online: data.membersOnline || Math.floor(Math.random() * 30) + 5,
             popular: index === 0, // Mark the first one as popular
-            users: data.recentMessages || [
-              {
-                initials: "JM",
-                name: "James Mitchell",
-                level: 12,
-                levelColor: "#c8fad0",
-                levelTextColor: "#2a8a34",
-                msg: "Let's plan our next expedition!",
-                time: "2m ago",
-                likes: 4,
-              },
-              {
-                initials: "SL",
-                name: "Sarah Lin",
-                level: 24,
-                levelColor: "#f9d6e7",
-                levelTextColor: "#b0336e",
-                msg: "I'm thinking about a trek next month.",
-                time: "Just now",
-                likes: 2,
-                isNew: true,
-              }
-            ],
-            btnColor: data.btnColor || "#295a30",
-            memberCount: data.members?.length || 0,
+            users: formattedUsers,
+            btnColor: data.btnColor || randomColor(),
             tags: data.tags || ["Hiking", "Trekking", "Adventure"],
             id: doc.id,
-            docId: doc.id
+            docId: doc.id,
+            img: data.image || null, // Store the community image
+            description: data.description || "Join our community for adventure enthusiasts!",
+            memberCount: data.members?.length || Math.floor(Math.random() * 50) + 10,
+            messageCount: data.messageCount || Math.floor(Math.random() * 200) + 20
           };
         });
         
-        // Append or replace communities based on whether we're loading more
-        setCommunities(prev => isLoadMore ? [...prev, ...loadedCommunities] : loadedCommunities);
+        if (isLoadMore) {
+          setCommunities(prev => [...prev, ...loadedCommunities]);
+        } else {
+          setCommunities(loadedCommunities);
+        }
       }
-    } catch (error) {
-      console.error("Error loading communities:", error);
+    } catch (err) {
+      console.error("Error fetching communities:", err);
+      // Fallback to sample data if there's an error
+      if (!isLoadMore) {
+        setCommunities(communityRooms);
+      }
+      setHasMore(false);
     } finally {
       setLoading(false);
     }
@@ -1675,14 +1708,14 @@ export default function CommunitySection() {
       loadCommunities(true);
     }
   };
-
-  // Join discussion
+  // Join discussion - Redirects to main Community page
   const handleJoinDiscussion = (room) => {
     if (!auth.currentUser) {
       navigate('/login');
       return;
     }
-    navigate(`/chat/${room.id || room.docId}`, { state: { room } });
+    // Navigate to the main community page instead of a specific chat room
+    navigate('/community', { state: { selectedCommunity: room.id || room.docId } });
   };
 
   const handleLikeToggle = (roomIndex, userIndex) => {
@@ -1944,9 +1977,8 @@ export default function CommunitySection() {
                           </MessageStatus>
                         </UserInfoWrapper>
                       </UserItem>
-                    ))}                    <ButtonContainer>
-                      <ActionButton bg={room.btnColor} onClick={() => handleJoinDiscussion(room)}>
-                        Join Discussion
+                    ))}                    <ButtonContainer>                      <ActionButton bg={room.btnColor} onClick={() => handleJoinDiscussion(room)}>
+                        View Community
                       </ActionButton>
                     </ButtonContainer>
                   </UsersContainer>
@@ -1962,9 +1994,20 @@ export default function CommunitySection() {
             ))
           )}
         </CardsContainer>
-        
-        <SeeMoreButton onClick={handleLoadMore} disabled={!hasMore || loading}>
+          <SeeMoreButton onClick={handleLoadMore} disabled={!hasMore || loading}>
           {loading ? "Loading..." : hasMore ? "See More Communities" : "No More Communities"}
+        </SeeMoreButton>
+        
+        <SeeMoreButton 
+          onClick={() => navigate('/community')}
+          style={{ 
+            backgroundColor: '#5390D9', 
+            color: '#fff', 
+            marginTop: '20px',
+            fontWeight: 'bold'
+          }}
+        >
+          View All Communities
         </SeeMoreButton>
 
         <PromotionSection>
@@ -1972,15 +2015,14 @@ export default function CommunitySection() {
           <PromotionText>
             Become a part of our growing community and unlock exclusive benefits. 
             Share your trekking stories, get personalized advice, and connect with fellow adventurers.
-          </PromotionText>
-          <PromotionButtons>
+          </PromotionText>          <PromotionButtons>
             <PrimaryButton onClick={() => auth.currentUser ? navigate('/community') : navigate('/login')}>
-              Join the Community
+              Browse All Communities
             </PrimaryButton>
             <SecondaryButton onClick={() => navigate('/explore')}>
               Learn More
             </SecondaryButton>
-          </PromotionButtons>          <StatStrip>
+          </PromotionButtons><StatStrip>
             <Stat>
               <StatIconWrapper>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1995,25 +2037,29 @@ export default function CommunitySection() {
             </Stat>
             <Stat>
               <StatIconWrapper>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-                </svg>
-              </StatIconWrapper>
-              <StatNumber>5,000+</StatNumber>
-              <StatLabel>Active Discussions</StatLabel>
-            </Stat>
-            <Stat>
-              <StatIconWrapper>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22.5,21H1.5L7.71,5.74a1,1,0,0,1,1.72,0L11.9,11.64L14.57,7.29a1,1,0,0,1,1.72,0Z"></path>
-                </svg>
-              </StatIconWrapper>
-              <StatNumber>1,000+</StatNumber>
-              <StatLabel>Treks Shared</StatLabel>
-            </Stat>
-          </StatStrip>
-        </PromotionSection>
-      </ContentContainer>
-    </SectionContainer>
-  );
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="7" width="18" height="13" rx="2" ry="2"></rect>
+                      <path d="M16 3v4"></path>
+                      <path d="M8 3v4"></path>
+                      <path d="M3 11h18"></path>
+                    </svg>
+                  </StatIconWrapper>
+                  <StatNumber>2,500+</StatNumber>
+                  <StatLabel>Communities Created</StatLabel>
+                </Stat>
+                          <Stat>
+                            <StatIconWrapper>
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M3 22v-2a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                              </svg>
+                            </StatIconWrapper>
+                            <StatNumber>100,000+</StatNumber>
+                            <StatLabel>Messages Shared</StatLabel>
+                          </Stat>
+                        </StatStrip>
+                      </PromotionSection>
+                    </ContentContainer>
+                  </SectionContainer>
+  )
 }

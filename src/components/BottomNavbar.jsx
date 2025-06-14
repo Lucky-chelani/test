@@ -574,8 +574,8 @@ const useTouchFeedback = (navbarRef) => {
     const touchableElements = navbar.querySelectorAll('a, div[role="button"]');
     
     const addTouchClass = (e) => {
-      // Prevent default to avoid iOS double-tap zoom
-      e.preventDefault();
+      // Only prevent default if needed for iOS double-tap zoom
+      // e.preventDefault(); // Commented out to avoid blocking navigation
       e.currentTarget.classList.add('touch-active');
     };
     
@@ -595,7 +595,7 @@ const useTouchFeedback = (navbarRef) => {
     touchableElements.forEach(element => {
       if (element instanceof Element) {
         // Enhanced touch event handling
-        element.addEventListener('touchstart', addTouchClass, { passive: false });
+        element.addEventListener('touchstart', addTouchClass, { passive: true });
         element.addEventListener('touchend', removeTouchClass, { passive: true });
         element.addEventListener('touchcancel', handleTouchCancel, { passive: true });
         
@@ -726,9 +726,6 @@ const BottomNavbar = ({ active, transparent = false }) => {
   };
 
   const handleProfileAction = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
     if (user) {
       navigate('/profile');
     } else {
@@ -746,9 +743,6 @@ const BottomNavbar = ({ active, transparent = false }) => {
 
   // Handle navigation with proper event handling
   const handleNavigation = (path, e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
     if (location.pathname === path && path === '/') {
       scrollToTop();
     } else {
