@@ -910,13 +910,13 @@ export default function TrekDetails() {
 
   // Format price if needed
   const formatPrice = (price) => {
-    if (!price) return "$0";
-    if (typeof price === "number") return `$${price}`;
+    if (!price) return "0";
+    if (typeof price === "number") return `${price}`;
     if (typeof price === "string") {
-      if (price.startsWith("$")) return price;
-      return `$${price}`;
+      // Remove leading $ if present
+      return price.replace(/^\$/, "");
     }
-    return "$0";
+    return "0";
   };
   if (loading) {
     return (
