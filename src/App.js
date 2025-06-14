@@ -25,6 +25,10 @@ import CommunityAdmin from './components/CommunityAdmin'; // Import the Communit
 import TrekCategoryAdmin from './components/TrekCategoryAdmin'; // Import the Trek Category Admin component
 import BottomNavbar from './components/BottomNavbar'; // Import the new bottom navbar component
 import { checkMessageCleanupDue } from './utils/messageCleanup'; // Import message cleanup utility
+import TermsPage from './pages/TermsPage'; // Import TermsPage
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage'; // Import PrivacyPolicyPage
+import CookiesPolicyPage from './pages/CookiesPolicyPage'; // Import CookiesPolicyPage
+import AccessibilityPage from './pages/AccessibilityPage'; // Import AccessibilityPage
 
 // Page transition wrapper component
 const PageTransition = ({ children }) => {
@@ -159,6 +163,27 @@ function App() {
           <Route path="/admin/trek-categories" element={
             <PageTransition>
               <TrekCategoryAdmin />
+            </PageTransition>
+          } />
+          
+          <Route path="/terms" element={
+            <PageTransition>
+              <TermsPage />
+            </PageTransition>
+          } />
+          <Route path="/privacy" element={
+            <PageTransition>
+              <PrivacyPolicyPage />
+            </PageTransition>
+          } />
+          <Route path="/cookies" element={
+            <PageTransition>
+              <CookiesPolicyPage />
+            </PageTransition>
+          } />
+          <Route path="/accessibility" element={
+            <PageTransition>
+              <AccessibilityPage />
             </PageTransition>
           } />
         </Routes>

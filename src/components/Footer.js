@@ -712,10 +712,10 @@ const Footer = () => {
           <FooterTitle>Explore</FooterTitle>
           <LinksWrapper>
             <FooterLink to="/explore">All Treks</FooterLink>
-            <FooterLink to="/categories/beginner">Beginner Friendly</FooterLink>
+            {/* <FooterLink to="/categories/beginner">Beginner Friendly</FooterLink>
             <FooterLink to="/categories/advanced">Advanced Trails</FooterLink>
             <FooterLink to="/map">Interactive Map</FooterLink>
-            <FooterLink to="/seasonal">Seasonal Highlights</FooterLink>
+            <FooterLink to="/seasonal">Seasonal Highlights</FooterLink> */}
           </LinksWrapper>
         </FooterSection>
 
@@ -723,22 +723,22 @@ const Footer = () => {
           <FooterTitle>Community</FooterTitle>
           <LinksWrapper>
             <FooterLink to="/community">Adventure Groups</FooterLink>
-            <FooterLink to="/events">Upcoming Events</FooterLink>
+            {/* <FooterLink to="/events">Upcoming Events</FooterLink>
             <FooterLink to="/forum">Trekkers Forum</FooterLink>
             <FooterLink to="/stories">Trail Stories</FooterLink>
-            <FooterLink to="/gallery">Photo Gallery</FooterLink>
+            <FooterLink to="/gallery">Photo Gallery</FooterLink> */}
           </LinksWrapper>
         </FooterSection>
 
         <FooterSection delay="0.4s">
-          <FooterTitle>Support</FooterTitle>
+          {/* <FooterTitle>Support</FooterTitle>
           <LinksWrapper>
             <FooterLink to="/contact">Contact Us</FooterLink>
             <FooterLink to="/faq">FAQ</FooterLink>
             <FooterLink to="/safety">Safety Guidelines</FooterLink>
             <FooterLink to="/gear">Gear Recommendations</FooterLink>
             <FooterLink to="/help">Help Center</FooterLink>
-          </LinksWrapper>
+          </LinksWrapper> */}
         </FooterSection>
       </FooterContent>      <FooterBottom>
         <Copyright>
