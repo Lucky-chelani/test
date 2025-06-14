@@ -731,14 +731,15 @@ const Footer = () => {
         </FooterSection>
 
         <FooterSection delay="0.4s">
-          {/* <FooterTitle>Support</FooterTitle>
+          <FooterTitle>Business Communication Address</FooterTitle>
           <LinksWrapper>
-            <FooterLink to="/contact">Contact Us</FooterLink>
-            <FooterLink to="/faq">FAQ</FooterLink>
-            <FooterLink to="/safety">Safety Guidelines</FooterLink>
-            <FooterLink to="/gear">Gear Recommendations</FooterLink>
-            <FooterLink to="/help">Help Center</FooterLink>
-          </LinksWrapper> */}
+            <div style={{ color: '#FFD2BF', fontWeight: 600, lineHeight: 1.7 }}>
+              TROVIA<br />
+              204, Nai Sadak, Shubey Ki Goth,<br />
+              Gwalior, Madhya Pradesh – 474001<br />
+              📧 Email: <a href="mailto:trovia.in@gmail.com" style={{ color: '#FFD2BF', textDecoration: 'underline' }}>trovia.in@gmail.com</a>
+            </div>
+          </LinksWrapper>
         </FooterSection>
       </FooterContent>      <FooterBottom>
         <Copyright>
