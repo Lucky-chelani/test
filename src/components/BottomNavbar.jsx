@@ -576,20 +576,28 @@ const useTouchFeedback = (navbarRef) => {
     const addTouchClass = (e) => {
       // Only prevent default if needed for iOS double-tap zoom
       // e.preventDefault(); // Commented out to avoid blocking navigation
-      e.currentTarget.classList.add('touch-active');
+      if (e.currentTarget) {
+        e.currentTarget.classList.add('touch-active');
+      }
     };
     
     const removeTouchClass = (e) => {
-      e.currentTarget.classList.add('touch-end');
-      e.currentTarget.classList.remove('touch-active');
-      
-      setTimeout(() => {
-        e.currentTarget.classList.remove('touch-end');
-      }, 300);
+      if (e.currentTarget) {
+        e.currentTarget.classList.add('touch-end');
+        e.currentTarget.classList.remove('touch-active');
+        
+        setTimeout(() => {
+          if (e.currentTarget) {
+            e.currentTarget.classList.remove('touch-end');
+          }
+        }, 300);
+      }
     };
     
     const handleTouchCancel = (e) => {
-      e.currentTarget.classList.remove('touch-active', 'touch-end');
+      if (e.currentTarget) {
+        e.currentTarget.classList.remove('touch-active', 'touch-end');
+      }
     };
     
     touchableElements.forEach(element => {
@@ -673,14 +681,16 @@ const BottomNavbar = ({ active, transparent = false }) => {
     setIsSafari(isSafariBrowser || isIOS);
     
     // Add utility classes
-    if (isIOS) {
+    if (isIOS && document.body) {
       document.body.classList.add('ios-device');
     }
     
     // Set CSS custom property for safe area inset
-    document.documentElement.style.setProperty('--safe-area-inset-bottom', 
-      getComputedStyle(document.documentElement).getPropertyValue('env(safe-area-inset-bottom)') || '0px'
-    );
+    if (document.documentElement) {
+      document.documentElement.style.setProperty('--safe-area-inset-bottom', 
+        getComputedStyle(document.documentElement).getPropertyValue('env(safe-area-inset-bottom)') || '0px'
+      );
+    }
   }, []);
 
   // Track scroll position with improved performance

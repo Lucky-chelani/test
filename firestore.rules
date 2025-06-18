@@ -63,6 +63,15 @@ service cloud.firestore {
         (request.auth.token.email in ['luckychelani950@gmail.com', 'test@example.com', 'youremail@example.com']);
     }
     
+    // Users collection - needed for profile creation
+    match /users/{userId} {
+      // Users can create/read/update their own profiles
+      allow create, read, update: if request.auth != null && request.auth.uid == userId;
+      // Only admins can read all user profiles or delete profiles
+      allow read, delete: if request.auth != null && 
+        (request.auth.token.email in ['luckychelani950@gmail.com', 'test@example.com', 'youremail@example.com']);
+    }
+    
     // Default rule - deny all other access
     match /{document=**} {
       allow read, write: if false;

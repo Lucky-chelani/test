@@ -563,35 +563,55 @@ const Signup = () => {
   setLoading(true);
   
   try {
+    // Step 1: Create the auth account
+    console.log("Creating authentication account...");
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
+    console.log("Auth account created successfully");
 
+    // Step 2: Update the user profile
+    console.log("Updating user profile...");
     await updateProfile(user, {
       displayName: name,
     });
+    console.log("Profile updated successfully");
 
-    await setDoc(doc(db, "users", user.uid), {
-      uid: user.uid,
-      name: name,
-      email: email,
-      dob: dob,
-      createdAt: new Date().toISOString(),
-      authProvider: 'email',
-    });
+    // Step 3: Create the Firestore user document
+    console.log("Creating user document in Firestore...");
+    try {
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        name: name,
+        email: email,
+        dob: dob,
+        createdAt: new Date().toISOString(),
+        authProvider: 'email',
+      });
+      console.log("User document created successfully");
+    } catch (firestoreError) {
+      console.error("Firestore Error:", firestoreError);
+      setError(`Profile creation error: ${firestoreError.message}. Please try again or contact support.`);
+      setLoading(false);
+      return;
+    }
 
     setLoading(false);
     setError(''); // Ensure error is cleared before navigation
     navigate('/profile');
   } catch (err) {
+    console.error("Signup Error:", err.code, err.message);
     if (err.code === 'auth/email-already-in-use') {
       setError('This email address is already in use. Please try a different email or log in.');
     } else if (err.code === 'auth/weak-password') {
       setError('The password is too weak. Please choose a stronger password.');
+    } else if (err.code === 'auth/invalid-email') {
+      setError('The email address is not valid. Please enter a valid email address.');
+    } else if (err.code === 'auth/network-request-failed') {
+      setError('Network error. Please check your internet connection and try again.');
     } else {
-      setError(err.message || 'Failed to create an account. Please try again.');
+      setError(`Failed to create an account: ${err.message || 'Unknown error'}. Please try again.`);
     }
     setLoading(false);
-    console.error("Signup failed:", err);
   }
 };
 
@@ -600,29 +620,52 @@ const handleGoogleSignup = async () => {
   setLoading(true);
 
   try {
+    console.log("Initiating Google sign-in...");
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
+    console.log("Google authentication successful");
 
     const userDocRef = doc(db, "users", user.uid);
-    const userDocSnap = await getDoc(userDocRef);
-
-    if (!userDocSnap.exists()) {
-      await setDoc(userDocRef, {
-        uid: user.uid,
-        name: user.displayName || 'Google User',
-        email: user.email,
-        createdAt: new Date().toISOString(),
-        authProvider: 'google',
-      });
-    }
+    console.log("Checking if user profile already exists...");
     
-    setLoading(false);
-    setError(''); // Ensure error is cleared
-    navigate('/profile');
+    try {
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (!userDocSnap.exists()) {
+        console.log("Creating new user profile in Firestore...");
+        await setDoc(userDocRef, {
+          uid: user.uid,
+          name: user.displayName || 'Google User',
+          email: user.email,
+          photoURL: user.photoURL || null,
+          createdAt: new Date().toISOString(),
+          authProvider: 'google',
+        });
+        console.log("User profile created successfully");
+      } else {
+        console.log("User profile already exists");
+      }
+      
+      setLoading(false);
+      setError(''); // Ensure error is cleared
+      navigate('/profile');
+    } catch (firestoreError) {
+      console.error("Firestore Error:", firestoreError);
+      setError(`Profile creation error: ${firestoreError.message}. Please try again or contact support.`);
+      setLoading(false);
+    }
   } catch (err) {
-    setError('Failed to sign up with Google. Please try again.');
-    console.error('Google signup failed:', err);
+    console.error('Google signup error:', err.code, err.message);
+    if (err.code === 'auth/popup-closed-by-user') {
+      setError('Sign-in popup was closed before completing the sign in.');
+    } else if (err.code === 'auth/cancelled-popup-request') {
+      setError('Another authentication popup is already open.');
+    } else if (err.code === 'auth/network-request-failed') {
+      setError('Network error. Please check your internet connection.');
+    } else {
+      setError(`Failed to sign up with Google: ${err.message || 'Unknown error'}. Please try again.`);
+    }
     setLoading(false);
   }
 };
