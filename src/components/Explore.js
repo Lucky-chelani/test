@@ -1,18 +1,19 @@
 // filepath: c:\Users\DELL\Documents\Coders\test\src\components\Explore.js
 import React, { useRef, useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import mapPattern from '../assets/images/map-pattren.png';
 import trek1 from '../assets/images/trek1.png';
 import Footer from './Footer';
 import groupImg from '../assets/images/trek1.png';
 import eventImg from '../assets/images/trek1.png';
-import { FiChevronLeft, FiChevronRight, FiClock, FiMapPin, FiCalendar, FiArrowRight, FiUsers, FiInfo, FiTrendingUp, FiAward } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiClock, FiMapPin, FiCalendar, FiArrowRight, FiUsers, FiInfo, FiTrendingUp, FiAward, FiSearch, FiX } from 'react-icons/fi';
 import { FaMountain, FaStar } from 'react-icons/fa';
 import { RiCommunityFill } from 'react-icons/ri';
 import { MdEventAvailable } from 'react-icons/md';
 import { db } from '../firebase';
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
+import { useSearch } from '../context/SearchContext';
 
 // Animations
 const fadeIn = keyframes`
@@ -98,6 +99,112 @@ const Container = styled.div`
 `;
 
 // Title Components
+
+// Search Components
+const SearchBarContainer = styled.div`
+  margin: 20px auto 40px auto;
+  max-width: 600px;
+  width: 100%;
+  position: relative;
+  
+  @media (max-width: 768px) {
+    max-width: 90%;
+    margin: 10px auto 30px auto;
+  }
+`;
+
+const SearchInputWrapper = styled.div`
+  position: relative;
+  width: 100%;
+  border-radius: 30px;
+  overflow: hidden;
+  display: flex;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  
+  &:focus-within {
+    box-shadow: 0 5px 25px rgba(128, 255, 219, 0.3);
+  }
+`;
+
+const SearchInputField = styled.input`
+  width: 100%;
+  padding: 16px 60px 16px 25px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  color: white;
+  font-size: 1.05rem;
+  transition: all 0.3s ease;
+  
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+  }
+  
+  &:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.15);
+  }
+  
+  @media (max-width: 480px) {
+    padding: 14px 50px 14px 20px;
+    font-size: 0.95rem;
+  }
+`;
+
+const SearchButton = styled.button`
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.3);
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  color: white;
+  font-size: 1.2rem;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: rgba(128, 255, 219, 0.3);
+    color: white;
+  }
+  
+  @media (max-width: 480px) {
+    width: 35px;
+    height: 35px;
+    font-size: 1.1rem;
+  }
+`;
+
+const ClearButton = styled(SearchButton)`
+  right: 60px;
+  background: transparent;
+  font-size: 1rem;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  @media (max-width: 480px) {
+    right: 50px;
+  }
+`;
+
+const SearchResultsHeader = styled.div`
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+  padding: 0 10px;
+  font-style: italic;
+  text-align: center;
+  animation: ${fadeIn} 0.5s ease-out;
+`;
 const SectionTitleContainer = styled.div`
   text-align: center;
   margin-bottom: 3rem;
@@ -270,43 +377,41 @@ const RightArrowButton = styled(ArrowButton)`
 `;
 
 // Card Components
-// Enhanced Trek Card 
+// Clean and modern Trek Card
 const TrekCard = styled.div`
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 24px;
+  background: white;
+  border-radius: 16px;
   overflow: hidden;
   min-width: 380px;
   flex: 0 0 380px;
   box-shadow: ${props => props.featured ? 
-    '0 15px 35px rgba(255, 210, 191, 0.3), 0 0 0 2px rgba(255, 210, 191, 0.3)' : 
-    '0 15px 35px rgba(0, 0, 0, 0.3)'};
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+    '0 10px 30px rgba(255, 87, 34, 0.15)' : 
+    '0 10px 30px rgba(0, 0, 0, 0.15)'};
+  transition: all 0.3s ease;
   border: ${props => props.featured ? 
-    '2px solid rgba(255, 210, 191, 0.5)' : 
-    '1px solid rgba(255, 255, 255, 0.1)'};
+    '1px solid rgba(255, 87, 34, 0.1)' : 
+    'none'};
   scroll-snap-align: start;
   position: relative;
   will-change: transform;
-  
-  @media (min-width: 769px) {
+    @media (min-width: 769px) {
     &:hover {
       transform: translateY(-10px);
       box-shadow: ${props => props.featured ? 
-        '0 20px 40px rgba(255, 210, 191, 0.4), 0 0 0 2px rgba(255, 210, 191, 0.5)' : 
-        '0 20px 40px rgba(0, 0, 0, 0.4)'};
-      border-color: ${props => props.featured ? 
-        'rgba(255, 210, 191, 0.6)' : 
-        'rgba(255, 255, 255, 0.2)'};
+        '0 15px 35px rgba(255, 87, 34, 0.2)' : 
+        '0 15px 35px rgba(0, 0, 0, 0.2)'};
     }
   }
   
   ${props => props.featured && `
-    &::after {
+    &::before {
       content: '';
       position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(255, 210, 191, 0.1) 0%, transparent 100%);
-      pointer-events: none;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: #FF5722;
       z-index: 1;
     }
   `}
@@ -330,16 +435,6 @@ const TrekCard = styled.div`
     min-width: 90%;
     flex: 0 0 90%;
   }
-  
-  &:hover {
-    transform: translateY(-15px) rotateX(5deg);
-    box-shadow: ${props => props.featured ? 
-      '0 30px 60px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 210, 191, 0.4)' : 
-      '0 30px 60px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 210, 191, 0.1)'};
-    border-color: ${props => props.featured ? 
-      'rgba(255, 210, 191, 0.8)' : 
-      'rgba(255, 255, 255, 0.2)'};
-  }
 
   @media (max-width: 1024px) {
     min-width: 360px;
@@ -349,19 +444,11 @@ const TrekCard = styled.div`
   @media (max-width: 768px) {
     min-width: 300px;
     flex: 0 0 300px;
-    
-    &:hover {
-      transform: translateY(-10px) rotateX(3deg);
-    }
   }
 
   @media (max-width: 480px) {
     min-width: 85%;
     flex: 0 0 85%;
-    
-    &:hover {
-      transform: translateY(-5px);
-    }
   }
 `;
 
@@ -369,6 +456,19 @@ const TrekImageWrapper = styled.div`
   position: relative;
   height: 220px;
   overflow: hidden;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 1));
+    z-index: 2;
+    pointer-events: none;
+  }
   
   @media (max-width: 768px) {
     height: 180px;
@@ -382,9 +482,26 @@ const TrekImage = styled.div`
   background-position: center;
   position: relative;
   transition: transform 0.8s cubic-bezier(0.33, 1, 0.68, 1);
+  will-change: transform;
+  filter: saturate(1.2) contrast(1.1);
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg,
+      rgba(0, 0, 0, 0.2) 0%,
+      rgba(0, 0, 0, 0.4) 70%
+    );
+    z-index: 1;
+    pointer-events: none;
+  }
   
   ${TrekCard}:hover & {
-    transform: scale(1.08);
+    transform: scale(1.1) rotate(-1deg);
   }
 `;
 
@@ -482,69 +599,46 @@ const EventTag = styled(Tag)`
 `;
 
 const TrekInfo = styled.div`
-  padding: 25px 22px;
-  background: rgba(255, 255, 255, 0.97);
-  color: #222;
+  padding: 24px;
+  background: white;
+  color: #333;
   position: relative;
   
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 20px;
-    right: 20px;
-    height: 1px;
-    background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.1), transparent);
-  }
-  
   @media (max-width: 768px) {
-    padding: 20px 18px;
+    padding: 20px;
   }
   
   @media (max-width: 480px) {
-    padding: 16px 14px;
+    padding: 16px;
   }
 `;
 
 const TrekTitle = styled.h3`
-  font-size: 1.4rem;
-  font-weight: 800;
-  color: #181828;
-  margin-bottom: 12px;
-  position: relative;
-  display: inline-block;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 16px;
   line-height: 1.3;
   
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -5px;
-    left: 0;
-    width: 40px;
-    height: 3px;
-    background: #FFD2BF;
-    border-radius: 2px;
-  }
-  
   @media (max-width: 768px) {
-    font-size: 1.25rem;
+    font-size: 1.4rem;
   }
   
   @media (max-width: 480px) {
-    font-size: 1.15rem;
+    font-size: 1.3rem;
   }
 `;
 
 const TrekLocation = styled.div`
   display: flex;
   align-items: center;
-  color: #555;
+  color: #666;
   font-size: 1rem;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   gap: 8px;
   
   svg {
-    color: #FFD2BF;
+    color: #2196F3;
     min-width: 18px;
   }
   
@@ -558,7 +652,7 @@ const MetaRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   flex-wrap: wrap;
   
   @media (max-width: 480px) {
@@ -570,11 +664,11 @@ const MetaItem = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #555;
+  color: #666;
   font-size: 0.95rem;
   
   svg {
-    color: #FFD2BF;
+    color: #2196F3;
     min-width: 16px;
   }
   
@@ -585,7 +679,7 @@ const MetaItem = styled.div`
 `;
 
 const Difficulty = styled.div`
-  color: #555;
+  color: #666;
   font-size: 0.95rem;
   font-weight: 600;
   display: flex;
@@ -593,7 +687,7 @@ const Difficulty = styled.div`
   gap: 6px;
   
   svg {
-    color: #FFD2BF;
+    color: #2196F3;
   }
   
   @media (max-width: 480px) {
@@ -604,11 +698,13 @@ const Difficulty = styled.div`
 const TrekRating = styled.div`
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   margin-bottom: 20px;
+  border-top: 1px solid #eee;
+  padding-top: 15px;
   
   svg {
-    color: gold;
+    color: #FFC107;
     font-size: 1.1rem;
   }
   
@@ -618,7 +714,7 @@ const TrekRating = styled.div`
   }
   
   .reviews {
-    color: #777;
+    color: #999;
     font-weight: 400;
     font-size: 0.9rem;
   }
@@ -641,27 +737,27 @@ const ActionButton = styled.a`
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: linear-gradient(135deg, #FFD2BF 0%, #ffbfa3 100%);
-  color: #333;
+  background: #4CAF50;
+  color: white;
   border: none;
-  border-radius: 10px;
-  font-weight: 700;
+  border-radius: 8px;
+  font-weight: 600;
   font-size: 1rem;
-  padding: 12px 20px;
+  padding: 14px 24px;
   cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 6px 15px rgba(255, 210, 191, 0.3);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
   width: 100%;
   text-decoration: none;
   
   svg {
-    transition: transform 0.3s;
+    transition: transform 0.2s ease;
   }
   
   &:hover {
-    background: linear-gradient(135deg, #ffbfa3 0%, #ffb296 100%);
+    background: #45a049;
     transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(255, 210, 191, 0.5);
+    box-shadow: 0 6px 15px rgba(76, 175, 80, 0.3);
     
     svg {
       transform: translateX(4px);
@@ -670,26 +766,28 @@ const ActionButton = styled.a`
   
   &:active {
     transform: translateY(-1px);
-    box-shadow: 0 5px 15px rgba(255, 210, 191, 0.4);
+    box-shadow: 0 3px 8px rgba(76, 175, 80, 0.2);
   }
   
   @media (max-width: 480px) {
     font-size: 0.95rem;
-    padding: 10px 18px;
+    padding: 12px 20px;
   }
 `;
 
 const EventButton = styled(ActionButton)`
-  background: linear-gradient(135deg, #ffe0b2 0%, #ffb74d 100%);
-  box-shadow: 0 6px 15px rgba(255, 183, 77, 0.3);
+  background: #FF9800;
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.2);
   
   &:hover {
-    background: linear-gradient(135deg, #ffb74d 0%, #ffa726 100%);
-    box-shadow: 0 10px 25px rgba(255, 183, 77, 0.5);
+    background: #F57C00;
+    box-shadow: 0 6px 15px rgba(255, 152, 0, 0.3);
+    transform: translateY(-3px);
   }
   
   &:active {
-    box-shadow: 0 5px 15px rgba(255, 183, 77, 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(255, 152, 0, 0.2);
   }
 `;
 
@@ -849,12 +947,19 @@ const upcomingEvents = [
 ];
 
 const Explore = () => {
+  const navigate = useNavigate();
   const [recommendedTreks, setRecommendedTreks] = useState([]);
   const [popularTreks, setPopularTreks] = useState([]);
   const [upcomingTreks, setUpcomingTreks] = useState([]);
   const [trendingTreks, setTrendingTreks] = useState([]);
+  const [filteredRecommendedTreks, setFilteredRecommendedTreks] = useState([]);
+  const [filteredPopularTreks, setFilteredPopularTreks] = useState([]);
+  const [filteredUpcomingTreks, setFilteredUpcomingTreks] = useState([]);
+  const [filteredTrendingTreks, setFilteredTrendingTreks] = useState([]);
+  const [localSearchQuery, setLocalSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { searchQuery, updateSearchQuery, searchTreks } = useSearch();
 
   useEffect(() => {
     const fetchTreks = async () => {
@@ -885,10 +990,15 @@ const Explore = () => {
         setUpcomingTreks(
           treksData.filter(trek => trek.upcoming || trek.season === "Upcoming")
         );
-        
-        setTrendingTreks(
+          setTrendingTreks(
           treksData.filter(trek => trek.trending || trek.rating >= 4.5)
         );
+        
+        // Set filtered treks to be the same as all treks initially
+        setFilteredRecommendedTreks(treksData.filter(trek => trek.recommended || trek.rating >= 4.8));
+        setFilteredPopularTreks(treksData.filter(trek => trek.popular || trek.reviews >= 100));
+        setFilteredUpcomingTreks(treksData.filter(trek => trek.upcoming || trek.season === "Upcoming"));
+        setFilteredTrendingTreks(treksData.filter(trek => trek.trending || trek.rating >= 4.5));
         
         setLoading(false);
       } catch (err) {
@@ -898,8 +1008,54 @@ const Explore = () => {
       }
     };
 
-    fetchTreks();
-  }, []);
+    fetchTreks();  }, []);
+
+  // Handle search functionality
+  useEffect(() => {
+    const query = localSearchQuery || searchQuery;
+    
+    if (!query) {
+      // If no search query, show all treks
+      setFilteredRecommendedTreks(recommendedTreks);
+      setFilteredPopularTreks(popularTreks);
+      setFilteredUpcomingTreks(upcomingTreks);
+      setFilteredTrendingTreks(trendingTreks);
+    } else {
+      // Filter treks based on search query
+      setFilteredRecommendedTreks(searchTreks(recommendedTreks, query));
+      setFilteredPopularTreks(searchTreks(popularTreks, query));
+      setFilteredUpcomingTreks(searchTreks(upcomingTreks, query));
+      setFilteredTrendingTreks(searchTreks(trendingTreks, query));
+    }
+  }, [
+    recommendedTreks, 
+    popularTreks, 
+    upcomingTreks, 
+    trendingTreks, 
+    searchQuery, 
+    localSearchQuery, 
+    searchTreks
+  ]);
+    // Handle local search
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setLocalSearchQuery(value);
+  };
+  
+  // Clear search
+  const clearSearch = () => {
+    setLocalSearchQuery('');
+    updateSearchQuery('');
+  };
+  
+  // Handle search submit
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (localSearchQuery.trim()) {
+      updateSearchQuery(localSearchQuery);
+      navigate('/search-results');
+    }
+  };
 
   const renderTrekSection = (sectionTitle, treks, sectionId) => {
     if (loading) {
@@ -998,7 +1154,7 @@ const Explore = () => {
                   <span className="reviews">({trek.reviews || Math.floor(Math.random() * 100) + 50} reviews)</span>
                 </TrekRating>
                 <ActionButton as={Link} to={`/trek/${trek.id || trek.title.toLowerCase().replace(/\s+/g, '-')}`}>
-                  View Trek <FiArrowRight />
+                  Book Now <FiArrowRight />
                 </ActionButton>
               </TrekInfo>
             </TrekCard>
@@ -1113,14 +1269,43 @@ const Explore = () => {
     <ExploreSection>
 
       <MapPatternBackground />
-      <Overlay />
-      
-      <Container>
-        {/* Render Trek Sections */}
-        {renderTrekSection("Recommended Treks", recommendedTreks, "recommended-treks")}
-        {renderTrekSection("Popular Treks", popularTreks, "popular-treks")}
-        {renderTrekSection("Upcoming Treks", upcomingTreks, "upcoming-treks")}
-        {renderTrekSection("Trending Treks", trendingTreks, "trending-treks")}
+      <Overlay />      <Container>
+        {/* Search Bar */}
+        <SearchBarContainer>
+          <form onSubmit={handleSearchSubmit}>
+            <SearchInputWrapper>
+              <SearchInputField
+                type="text"
+                placeholder="Search for treks by name, location, difficulty..."
+                value={localSearchQuery || searchQuery}
+                onChange={handleSearch}
+              />
+              {(localSearchQuery || searchQuery) && (
+                <ClearButton onClick={clearSearch} aria-label="Clear search">
+                  <FiX />
+                </ClearButton>
+              )}
+              <SearchButton aria-label="Search" type="submit">
+                <FiSearch />
+              </SearchButton>
+            </SearchInputWrapper>
+          </form>
+        </SearchBarContainer>
+        
+        {(localSearchQuery || searchQuery) && (
+          <SearchResultsHeader>
+            {filteredRecommendedTreks.length + filteredPopularTreks.length + 
+             filteredUpcomingTreks.length + filteredTrendingTreks.length === 0 
+              ? "No treks match your search. Try a different keyword." 
+              : `Found treks matching "${localSearchQuery || searchQuery}"`}
+          </SearchResultsHeader>
+        )}
+        
+        {/* Render Trek Sections with filtered treks */}
+        {renderTrekSection("Recommended Treks", filteredRecommendedTreks, "recommended-treks")}
+        {renderTrekSection("Popular Treks", filteredPopularTreks, "popular-treks")}
+        {renderTrekSection("Upcoming Treks", filteredUpcomingTreks, "upcoming-treks")}
+        {renderTrekSection("Trending Treks", filteredTrendingTreks, "trending-treks")}
         
         {/* Active Groups Section */}
         <SectionTitleContainer>

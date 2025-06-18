@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Banner.css';
+import styled from 'styled-components';
+import AnimatedSearchTapBar from '../AnimatedSearchTapBar';
 // Removed Navbar import since we're using BottomNavbar in App.js now
 
 // Import images
@@ -9,6 +11,30 @@ import mountainBack from '../../assets/images/mountain-back.png';
 import mountainRight from '../../assets/images/mountain-right.png';
 import mountainLeft from '../../assets/images/mountain-left.png';
 import birds from '../../assets/images/birds.png';
+
+// Styled component for the search bar position
+const SearchBarWrapper = styled.div`
+  position: relative;
+  z-index: 100;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+  width: 100%;
+  max-width: 550px;
+  margin: 15px auto;
+  transform: translateY(0);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  
+  &:hover {
+    transform: translateY(-3px);
+  }
+  
+  @media (max-width: 768px) {
+    max-width: 450px;
+  }
+  
+  @media (max-width: 480px) {
+    max-width: 340px;
+  }
+`;
 
 const Banner = () => {
   const navigate = useNavigate();
@@ -88,17 +114,20 @@ const Banner = () => {
         {/* Birds with enhanced animation */}
         <div className="birds">
           <img src={birds} alt="birds" />
-        </div>
-      </div>
-
-      {/* Enhanced Content with better transitions */}
-      <div className="banner-content" ref={contentRef}>
+        </div>      </div>
+      
+      {/* Enhanced Content with better transitions */}      <div className="banner-content" ref={contentRef}>
         <h1 className="banner-title">
           DISCOVER YOUR NEXT<br />ADVENTURE
         </h1>
         <p className="banner-subtitle">
           Explore breathtaking trails and unforgettable journeys
         </p>
+
+        {/* Animated Search Tap Bar - Centered position */}
+        <SearchBarWrapper className="search-tap-container">
+          <AnimatedSearchTapBar />
+        </SearchBarWrapper>
         <div className="banner-actions">
           <button 
             className="banner-btn primary"

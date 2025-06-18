@@ -29,6 +29,11 @@ import TermsPage from './pages/TermsPage'; // Import TermsPage
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'; // Import PrivacyPolicyPage
 import CookiesPolicyPage from './pages/CookiesPolicyPage'; // Import CookiesPolicyPage
 import AccessibilityPage from './pages/AccessibilityPage'; // Import AccessibilityPage
+import { SearchProvider } from './context/SearchContext'; // Import SearchProvider
+import SearchResultsPage from './pages/SearchResultsPage'; // Import SearchResultsPage
+import PaymentTester from './components/PaymentTester'; // Import PaymentTester component
+import MockPaymentTester from './components/MockPaymentTester'; // Import MockPaymentTester component
+import RazorpayDebugger from './components/RazorpayDebugger'; // Import RazorpayDebugger component
 
 // Page transition wrapper component
 const PageTransition = ({ children }) => {
@@ -66,12 +71,12 @@ function App() {
     const cleanupInterval = setInterval(performCleanup, 60 * 60 * 1000);
     return () => clearInterval(cleanupInterval);
   }, []);
-
   return (
     <Router>
-      <div className="App">
-        <BottomNavbar />
-        <Routes>
+      <SearchProvider>
+        <div className="App">
+          <BottomNavbar />
+          <Routes>
           <Route path="/" element={
             <PageTransition>
               <>
@@ -170,24 +175,42 @@ function App() {
             <PageTransition>
               <TermsPage />
             </PageTransition>
-          } />
-          <Route path="/privacy" element={
+          } />          <Route path="/privacy" element={
             <PageTransition>
               <PrivacyPolicyPage />
+            </PageTransition>
+          } />
+          <Route path="/search-results" element={
+            <PageTransition>
+              <SearchResultsPage />
             </PageTransition>
           } />
           <Route path="/cookies" element={
             <PageTransition>
               <CookiesPolicyPage />
             </PageTransition>
-          } />
-          <Route path="/accessibility" element={
+          } />          <Route path="/accessibility" element={
             <PageTransition>
               <AccessibilityPage />
+            </PageTransition>
+          } />          <Route path="/payment-test" element={
+            <PageTransition>
+              <PaymentTester />
+            </PageTransition>
+          } />
+          <Route path="/mock-payment" element={
+            <PageTransition>
+              <MockPaymentTester />
+            </PageTransition>
+          } />
+          <Route path="/razorpay-debugger" element={
+            <PageTransition>
+              <RazorpayDebugger />
             </PageTransition>
           } />
         </Routes>
       </div>
+      </SearchProvider>
     </Router>
   );
 }

@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import logo from '../assets/images/logo.png';
 import mapPattern from '../assets/images/map-pattren.png';
+import { 
+  saveEmailSubscription, 
+  processPendingSubscriptions,
+  checkFirestoreAvailability 
+} from '../utils/newsletterService';
 
 // Animations
 const fadeIn = keyframes`
@@ -621,21 +626,140 @@ const SuccessMessage = styled.div`
   }
 `;
 
+const ErrorMessage = styled.div`
+  background: rgba(252, 165, 165, 0.2);
+  border: 1px solid rgba(252, 165, 165, 0.4);
+  color: #f87171;
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+`;
+
+const LoadingSpinner = styled.div`
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s linear infinite;
+  margin-left: 10px;
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
 const Footer = () => {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [firestoreAvailable, setFirestoreAvailable] = useState(true);
   
-  const handleSubscribe = (e) => {
-    e.preventDefault();
-    if (email.trim()) {
-      // Here you would typically send this to your API
-      setSubscribed(true);
-      setEmail('');
+  // Check Firestore availability and process any pending subscriptions 
+  useEffect(() => {
+    const checkAvailability = async () => {
+      // Check if Firebase is available
+      const isAvailable = await checkFirestoreAvailability();
+      setFirestoreAvailable(isAvailable);
       
-      // Reset the success message after 5 seconds
+      // If available, try to process any pending subscriptions
+      if (isAvailable) {
+        const result = await processPendingSubscriptions();
+        
+        if (result.processed > 0) {
+          console.log(`Processed ${result.processed} pending subscriptions`);
+        }
+      }
+    };
+    
+    // Run the check after a short delay to allow the component to render
+    const timer = setTimeout(checkAvailability, 3000);
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    
+    if (!email.trim()) {
+      return;
+    }
+    
+    setIsLoading(true);
+    setErrorMessage('');
+    
+    try {
+      const result = await saveEmailSubscription(email);
+        if (result.success) {
+        setSubscribed(true);
+        setEmail('');
+        
+        // Reset the success message after 5 seconds
+        setTimeout(() => {
+          setSubscribed(false);
+        }, 5000);
+        
+        // If it was saved locally, let the user know
+        if (result.localOnly) {
+          setErrorMessage('Your subscription is saved locally and will be processed when our service is available again.');
+          setTimeout(() => {
+            setErrorMessage('');
+          }, 6000);
+        }
+      } else {
+        // Handle different error cases
+        if (result.status === 'duplicate') {
+          setErrorMessage('This email is already subscribed to our newsletter.');
+        } else if (result.code === 'permission-denied') {
+          // Special handling for permission errors
+          setErrorMessage('Our subscription service is temporarily unavailable. Please try again later.');
+          
+          // Save locally as a fallback
+          try {
+            const savedEmails = JSON.parse(localStorage.getItem('pending_subscriptions') || '[]');
+            savedEmails.push({
+              email,
+              timestamp: new Date().toISOString()
+            });
+            localStorage.setItem('pending_subscriptions', JSON.stringify(savedEmails));
+            
+            // Let user know we saved locally
+            setErrorMessage('Your subscription will be processed when our service is back online.');
+          } catch (localError) {
+            console.error("Failed to save locally:", localError);
+            setErrorMessage('Subscription service unavailable. Please try again later.');
+          }
+        } else {
+          setErrorMessage(result.error || 'An error occurred. Please try again.');
+        }
+        
+        // Clear error message after 4 seconds
+        setTimeout(() => {
+          setErrorMessage('');
+        }, 4000);
+      }
+    } catch (error) {
+      setErrorMessage('An unexpected error occurred. Please try again later.');
+      console.error('Newsletter subscription error:', error);
+      
       setTimeout(() => {
-        setSubscribed(false);
-      }, 5000);
+        setErrorMessage('');
+      }, 4000);
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -663,16 +787,28 @@ const Footer = () => {
               Thanks for subscribing! Get ready for adventure updates.
             </SuccessMessage>
           ) : (
-            <NewsletterForm onSubmit={handleSubscribe}>
-              <NewsletterInput 
+            <NewsletterForm onSubmit={handleSubscribe}>              <NewsletterInput 
                 type="email" 
                 placeholder="Your email address" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
                 required
               />
-              <SubscribeButton type="submit">Subscribe</SubscribeButton>
+              <SubscribeButton type="submit" disabled={isLoading}>
+                {isLoading ? 'Subscribing...' : 'Subscribe'}
+                {isLoading && <LoadingSpinner />}
+              </SubscribeButton>
             </NewsletterForm>
+          )}
+          
+          {errorMessage && (
+            <ErrorMessage>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 9v6m0 3h.01M12 3v3m0 12v3m9-15h-3m-12 0H3m18 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              {errorMessage}
+            </ErrorMessage>
           )}
         </NewsletterSection>
 

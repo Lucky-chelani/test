@@ -2,11 +2,12 @@ import React, { useRef, useState, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import { useNavigate } from "react-router-dom";
 import mapPattern from "../assets/images/map-pattren.png";
-import { FiChevronLeft, FiChevronRight, FiClock, FiMapPin, FiCalendar, FiArrowRight } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiClock, FiMapPin, FiCalendar, FiArrowRight, FiSearch } from 'react-icons/fi';
 import { FaMountain } from 'react-icons/fa';
 import { db } from "../firebase";
 import { collection, getDocs } from "firebase/firestore";
 import { getValidImageUrl } from "../utils/images";
+import { useSearch } from "../context/SearchContext";
 
 const shimmer = keyframes`
   0% {
@@ -39,21 +40,31 @@ const floatAnimation = keyframes`
 
 const Section = styled.section`
   position: relative;
-  min-height: 700px;
-  padding: 100px 0 120px 0;
-  background-color: #0a1a2f;
+  min-height: 800px;
+  padding: 120px 0 140px 0;
+  background-color: #080808; /* Darker background to match cards */
   display: flex;
   flex-direction: column;
   align-items: center;
   overflow: hidden;
   
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.1), transparent);
+  }
+  
   @media (max-width: 768px) {
-    padding: 70px 0 90px 0;
+    padding: 90px 0 110px 0;
     min-height: auto;
   }
   
   @media (max-width: 480px) {
-    padding: 50px 0 70px 0;
+    padding: 60px 0 90px 0;
   }
 `;
 
@@ -117,35 +128,36 @@ const SectionContent = styled.div`
   }
 `;
 
-// Enhanced heading with modern gradient
+// Enhanced heading with bold gradient and larger size
 const Heading = styled.h2`
   color: #fff;
-  font-size: 3.5rem;
+  font-size: 4rem;
   font-weight: 800;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
   text-align: center;
   animation: ${fadeIn} 0.6s ease-out;
-  background: linear-gradient(to right, #80FFDB 0%, #5390D9 100%);
+  background: linear-gradient(to right, #ffffff 0%, #5390D9 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+  letter-spacing: 1px;
   
   @media (max-width: 768px) {
-    font-size: 2.8rem;
+    font-size: 3.2rem;
   }
   
   @media (max-width: 480px) {
-    font-size: 2.2rem;
+    font-size: 2.5rem;
   }
 `;
 
-// Improved underline with animation
+// Improved underline with animation and increased size
 const Underline = styled.div`
-  width: 80px;
-  height: 6px;
+  width: 120px;
+  height: 8px;
   background: linear-gradient(to right, #5390D9, #7400B8);
-  border-radius: 6px;
-  margin: 0 auto 24px auto;
+  border-radius: 8px;
+  margin: 0 auto 30px auto;
   animation: ${fadeIn} 0.6s ease-out 0.1s both;
   position: relative;
   overflow: hidden;
@@ -163,26 +175,90 @@ const Underline = styled.div`
 `;
 
 const Subtitle = styled.p`
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1.3rem;
-  margin-bottom: 60px;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 1.5rem;
+  margin-bottom: 30px;
   text-align: center;
   animation: ${fadeIn} 0.6s ease-out 0.2s both;
-  max-width: 700px;
+  max-width: 800px;
   margin-left: auto;
   margin-right: auto;
-  line-height: 1.6;
+  line-height: 1.7;
   letter-spacing: 0.5px;
+  font-weight: 300;
   
   @media (max-width: 768px) {
-    font-size: 1.1rem;
-    margin-bottom: 40px;
+    font-size: 1.2rem;
+    margin-bottom: 30px;
+    max-width: 90%;
   }
   
   @media (max-width: 480px) {
-    font-size: 1rem;
+    font-size: 1.1rem;
+    margin-bottom: 25px;
+  }
+`;
+
+const SearchContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-bottom: 40px;
+  width: 100%;
+  animation: ${fadeIn} 0.6s ease-out 0.3s both;
+  
+  @media (max-width: 768px) {
     margin-bottom: 30px;
   }
+`;
+
+const SearchInputContainer = styled.div`
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+`;
+
+const SearchInput = styled.input`
+  width: 100%;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 25px;
+  padding: 0 50px 0 20px;
+  color: white;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  
+  &:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 20px rgba(128, 255, 219, 0.1);
+  }
+  
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+  }
+`;
+
+const SearchIconContainer = styled.div`
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+`;
+
+const SearchResultsInfo = styled.div`
+  text-align: center;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1rem;
+  margin-bottom: 20px;
+  font-style: italic;
+  animation: ${fadeIn} 0.6s ease-out;
 `;
 
 const ScrollContainer = styled.div`
@@ -291,42 +367,36 @@ const NextButton = styled(NavigationButton)`
   }
 `;
 
-// Enhanced card with optimized animation
+// Premium card with clean, modern design
 const TrekCard = styled.div`
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 24px;
+  background: white;
+  border-radius: 16px;
   overflow: hidden;
   min-width: 380px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-  border: 1px solid rgba(128, 255, 219, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  transition: all 0.4s ease;
   flex-shrink: 0;
-  /* Removed backdrop-filter and transform-style for better performance */
-  will-change: transform;
+  position: relative;
+  border: none;
   
   @media (min-width: 769px) {
     &:hover {
       transform: translateY(-10px);
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-      border-color: rgba(128, 255, 219, 0.2);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
     }
   }
   
   @media (max-width: 1200px) {
-    min-width: 340px;
+    min-width: 360px;
   }
   
   @media (max-width: 1000px) {
-    min-width: 300px;
+    min-width: 320px;
   }
       
   @media (max-width: 768px) {
-    min-width: 80%;
-    max-width: 80%;
-    
-    &:hover {
-      transform: translateY(-5px);
-    }
+    min-width: 85%;
+    max-width: 85%;
   }
   
   @media (max-width: 480px) {
@@ -347,18 +417,20 @@ const TrekImage = styled.div`
   background-size: cover;
   background-position: center;
   position: relative;
-  transition: transform 0.3s ease;
-  will-change: transform;
+  transition: transform 0.5s ease;
   
-  &::after {
+  &::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.7));
-    pointer-events: none;
+    background: linear-gradient(0deg,
+      rgba(0, 0, 0, 0.3) 0%,
+      rgba(0, 0, 0, 0) 50%
+    );
+    z-index: 1;
   }
   
   @media (min-width: 769px) {
@@ -368,14 +440,17 @@ const TrekImage = styled.div`
   }
 `;
 
-// Enhanced image overlay
 const ImageOverlay = styled.div`
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle at center, transparent 30%, rgba(10, 26, 47, 0.5) 100%);
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0), 
+    rgba(0, 0, 0, 0.3)
+  );
   z-index: 1;
 `;
 
@@ -383,139 +458,113 @@ const TrekTags = styled.div`
   position: absolute;
   top: 16px;
   left: 16px;
+  right: 16px;
   display: flex;
+  justify-content: space-between;
   gap: 8px;
-  z-index: 2;
-`;
-
-// Modern clean card info section
-const TrekInfo = styled.div`
-  padding: 28px 25px;
-  background: rgba(255, 255, 255, 0.97);
-  color: #111;
-  position: relative;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 20px;
-    right: 20px;
-    height: 1px;
-    background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.1), transparent);
-  }
-  
-  @media (max-width: 768px) {
-    padding: 22px 20px;
-  }
+  z-index: 10;
+  flex-wrap: wrap;
   
   @media (max-width: 480px) {
-    padding: 18px 16px;
+    gap: 6px;
   }
 `;
 
-const TrekTitle = styled.h3`
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #181828;
-  margin-bottom: 12px;
-  position: relative;
-  display: inline-block;
-  line-height: 1.3;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -5px;
-    left: 0;
-    width: 40px;
-    height: 3px;
-    background: linear-gradient(to right, #5390D9, #7400B8);
-    border-radius: 2px;
-  }
-  
-  @media (max-width: 768px) {
-    font-size: 1.3rem;
-  }
-  
-  @media (max-width: 480px) {
-    font-size: 1.2rem;
-  }
-`;
-
-// Commented out as it's not being used
-// const TagRow = styled.div`
-//   display: flex;
-//   gap: 10px;
-//   margin-bottom: 18px;
-//   flex-wrap: wrap;
-// `;
-
-const Tag = styled.span`
-  background: #F7FAFF;
-  color: #181828;
+const Tag = styled.div`
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 16px;
   font-size: 0.9rem;
   font-weight: 500;
-  border-radius: 12px;
-  padding: 6px 18px;
-  display: flex;
-  align-items: center;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: background 0.3s, transform 0.3s;
   gap: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   
   svg {
-    color: #666;
+    flex-shrink: 0;
+    font-size: 1.2rem;
   }
   
-  @media (max-width: 480px) {
-    font-size: 0.8rem;
-    padding: 5px 14px;
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
   }
 `;
 
-// Updated difficulty tag with new color
+// Fresh, bright difficulty tag
 const DifficultyTag = styled(Tag)`
-  background: linear-gradient(to right, #5390D9, #7400B8);
+  background: #FF5722;
   color: white;
-  font-weight: 700;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 50px;
+  box-shadow: 0 2px 8px rgba(255, 87, 34, 0.3);
+  border: none;
+  min-width: 90px;
+  justify-content: center;
   
   svg {
-    color: rgba(255, 255, 255, 0.8);
+    color: white;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 5px 10px;
+    min-width: 80px;
+    font-size: 0.8rem;
   }
 `;
 
 const LocationTag = styled(Tag)`
-  background: rgba(128, 255, 219, 0.2);
-  border: 1px solid rgba(128, 255, 219, 0.3);
+  background: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+  min-width: 90px;
+  justify-content: center;
   
   svg {
-    color: #5390D9;
+    color: white;
   }
   
-  /* Only animate on non-mobile devices */
-  @media (min-width: 769px) {
-    animation: ${floatAnimation} 5s infinite ease-in-out;
+  @media (max-width: 480px) {
+    padding: 5px 10px;
+    min-width: 80px;
+    font-size: 0.8rem;
   }
 `;
 
 const InfoRow = styled.div`
   display: flex;
   justify-content: space-between;
-  margin-bottom: 16px;
-  color: #444;
-  font-size: 1rem;
+  margin-bottom: 14px;
+  color: #666;
+  font-size: 0.95rem;
   flex-wrap: wrap;
   align-items: center;
+  
+  &:last-of-type {
+    margin-bottom: 20px;
+  }
 `;
 
 const InfoItem = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #555;
+  color: #666;
   
   svg {
-    color: #5390D9;
+    color: #2196F3;
+    font-size: 1.1rem;
   }
 `;
 
@@ -523,7 +572,7 @@ const ActionRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 15px;
+  gap: 16px;
   
   @media (max-width: 480px) {
     flex-direction: column;
@@ -533,34 +582,34 @@ const ActionRow = styled.div`
 `;
 
 const Price = styled.div`
-  color: #181828;
-  font-size: 1.5rem;
-  font-weight: 800;
+  color: #333;
+  font-size: 1.6rem;
+  font-weight: 700;
   display: flex;
   align-items: center;
   gap: 5px;
   white-space: nowrap;
   
   span {
-    font-size: 0.9rem;
-    color: #777;
+    font-size: 0.95rem;
+    color: #888;
     font-weight: normal;
   }
 
   @media (max-width: 768px) {
-    font-size: 1.3rem;
+    font-size: 1.5rem;
     
     span {
-      font-size: 0.8rem;
+      font-size: 0.9rem;
     }
   }
   
   @media (max-width: 480px) {
-    font-size: 1.2rem;
+    font-size: 1.4rem;
     justify-content: center;
     
     span {
-      font-size: 0.75rem;
+      font-size: 0.85rem;
     }
   }
 `;
@@ -569,53 +618,62 @@ const RatingRow = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 24px;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-  padding-top: 16px;
+  margin-bottom: 20px;
+  border-top: 1px solid #eee;
+  padding-top: 15px;
+  
+  span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
 `;
 
 const StarContainer = styled.div`
   display: flex;
   align-items: center;
+  color: #FFC107;
+  font-size: 1rem;
 `;
 
 const Star = styled.span`
-  color: #5390D9;
-  font-size: 1.1rem;
+  color: #FFC107;
+  margin-right: 3px;
+  font-size: 1rem;
 `;
 
 const ReviewCount = styled.span`
-  color: #777;
+  color: #999;
   font-weight: 400;
   font-size: 0.9rem;
 `;
 
-// Enhanced button with simplified animations
 const ViewButton = styled.button`
-  background: linear-gradient(135deg, #5390D9 0%, #7400B8 100%);
+  background: #4CAF50;
   color: white;
   border: none;
-  border-radius: 12px;
-  padding: 14px 36px;
-  font-weight: 700;
+  border-radius: 8px;
+  padding: 14px 24px;
+  font-weight: 600;
   font-size: 1rem;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(83, 144, 217, 0.3);
-  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   min-width: 140px;
-  will-change: transform;
   
   &:hover {
-    background: linear-gradient(135deg, #4a81c4 0%, #6600a3 100%);
-    transform: translateY(-2px);
+    background: #45a049;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(76, 175, 80, 0.3);
   }
       
   &:active {
-    transform: translateY(0);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(76, 175, 80, 0.2);
   }
   
   svg {
@@ -623,20 +681,18 @@ const ViewButton = styled.button`
   }
   
   &:hover svg {
-    transform: translateX(3px);
+    transform: translateX(4px);
   }
   
   @media (max-width: 768px) {
-    padding: 12px 24px;
+    padding: 12px 20px;
     font-size: 0.95rem;
-    min-width: 120px;
   }
   
   @media (max-width: 480px) {
     width: 100%;
-    padding: 12px 20px;
+    padding: 12px 18px;
     font-size: 0.9rem;
-    min-width: unset;
   }
 `;
 
@@ -647,6 +703,17 @@ const ScrollIndicatorContainer = styled.div`
   justify-content: center;
   margin-top: 30px;
 `;
+
+const DetailsRow = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  color: #b0b0b0;
+  font-size: 1.05rem;
+  margin: 14px 0;
+  letter-spacing: 0.3px;
+`;
+
 
 const ScrollIndicator = styled.div`
   width: ${props => props.active ? '24px' : '8px'};
@@ -676,8 +743,12 @@ export default function FeaturedTreks() {
   const scrollRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
-  const [treks, setTreks] = useState([]);  const [loading, setLoading] = useState(true);
+  const [treks, setTreks] = useState([]);
+  const [filteredTreks, setFilteredTreks] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [localSearchValue, setLocalSearchValue] = useState('');
+  const { searchQuery, updateSearchQuery, searchTreks } = useSearch();
 
   // Fetch treks from Firebase when component mounts
   useEffect(() => {
@@ -916,13 +987,12 @@ export default function FeaturedTreks() {
                       ))}
                     </StarContainer>
                     <span>{trek.rating} <ReviewCount>({trek.reviews} reviews)</ReviewCount></span>
-                  </RatingRow>
-                  <ActionRow>
+                  </RatingRow>                  <ActionRow>
                     <Price>
                       {trek.price} <span>per person</span>
                     </Price>
                     <ViewButton onClick={() => navigateToTrekDetails(trek.id)}>
-                      View Trek
+                      Book Now
                       <FiArrowRight />
                     </ViewButton>
                   </ActionRow>
@@ -954,3 +1024,34 @@ export default function FeaturedTreks() {
     </Section>
   );
 }
+
+const TrekInfo = styled.div`
+  padding: 24px;
+  background: white;
+  color: #333;
+  position: relative;
+  
+  @media (max-width: 768px) {
+    padding: 20px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 16px;
+  }
+`;
+
+const TrekTitle = styled.h3`
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 16px;
+  line-height: 1.3;
+  
+  @media (max-width: 768px) {
+    font-size: 1.4rem;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 1.3rem;
+  }
+`;

@@ -68,3 +68,39 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+## Razorpay Integration
+
+This project includes Razorpay payment gateway integration for booking treks. Follow these steps to set up Razorpay:
+
+### Setup Instructions
+
+1. **Create a Razorpay Account**:
+   - Sign up at [Razorpay](https://razorpay.com)
+   - Get your API Key ID and Secret from the Dashboard
+
+2. **Environment Variables**:
+   - Copy `.env.example` to `.env`
+   - Update the variables with your actual Razorpay credentials:
+     ```
+     REACT_APP_RAZORPAY_KEY_ID=your_key_id_here
+     REACT_APP_RAZORPAY_SECRET=your_secret_key_here
+     ```
+
+3. **Testing Payments**:
+   - For test mode, use test cards provided by Razorpay
+   - Example test card: 4111 1111 1111 1111
+
+### Security Notes
+
+- Never expose your Razorpay Secret Key in client-side code
+- For production use, implement server-side signature verification
+- Use the templates provided in `src/server/razorpay-backend.js` to create your backend
+
+### Customization
+
+You can customize the Razorpay checkout by modifying the options in `src/utils/razorpayService.js`
+
+### Documentation
+
+For more information, refer to the [Razorpay Documentation](https://razorpay.com/docs)
