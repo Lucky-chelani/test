@@ -28,6 +28,7 @@ import mapPattern from "../assets/images/map-pattren.png";
 import { getValidImageUrl } from "../utils/images";
 import BookingModal from "./BookingModal";
 import { saveBooking } from "../utils/bookingService";
+import OrganizerCard from "./OrganizerCard"; // Import the OrganizerCard component
 
 // Animations
 const fadeIn = keyframes`
@@ -1034,7 +1035,7 @@ const StatCard = styled.div`
   background: white;
   padding: 1.75rem;
   border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(${props => props.colorRgb || '0, 0, 0'}, 0.05),
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05),
               0 2px 8px rgba(${props => props.colorRgb || '0, 0, 0'}, 0.06);
   border: 1px solid rgba(${props => props.colorRgb || '0, 0, 0'}, 0.06);
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -1491,8 +1492,6 @@ const QuickStats = styled.div`
     margin-bottom: -10px;
   }
 `;
-
-// StatCard is now defined earlier in the file
 
 // Timeline Components
 const Timeline = styled.div`
@@ -2420,7 +2419,7 @@ export default function TrekDetails() {  const { id } = useParams();
       location: "Mountain Region",
       country: "Nepal",
       season: "Year-round",
-      price: `$${(Math.floor(Math.random() * 900) + 300)}`,
+      price: `₹${(Math.floor(Math.random() * 9000) + 3000)}`,
       rating: (Math.random() * 1.5 + 3.5).toFixed(1),
       reviews: Math.floor(Math.random() * 100) + 10,
       capacity: `${Math.floor(Math.random() * 15) + 5}`,
@@ -2647,17 +2646,19 @@ export default function TrekDetails() {  const { id } = useParams();
     if (s.includes("winter") || s.includes("snow")) return <FaSnowflake />;
     if (s.includes("summer")) return <FaMountain />;
     if (s.includes("spring")) return <FaLeaf />;
-    if (s.includes("monsoon") || s.includes("rain")) return <FaWater />;
-    return <FaLeaf />;
-  };
-  // Format price if needed
+    if (s.includes("monsoon") || s.includes("rain")) return <FaWater />;    return <FaLeaf />;
+  };  
+  
+  // Format price if needed  
   const formatPrice = (price) => {
-    if (!price) return "0";
-    if (typeof price === "number") return `${price}`;
+    if (!price) return "₹0";
+    if (typeof price === "number") return `₹${price}`;
     if (typeof price === "string") {
-      return price.replace(/^\$/, "");
+      // Replace dollar sign with rupee symbol if present, or add rupee symbol if not
+      const formattedPrice = price.replace(/^\$/, "");
+      return formattedPrice.startsWith("₹") ? formattedPrice : `₹${formattedPrice}`;
     }
-    return "0";
+    return "₹0";
   };
   
   // Get numeric price for calculations
@@ -2665,11 +2666,13 @@ export default function TrekDetails() {  const { id } = useParams();
     if (!price) return 0;
     if (typeof price === "number") return price;
     if (typeof price === "string") {
-      const numericPrice = parseFloat(price.replace(/^\$/, ""));
+      // Remove both dollar and rupee symbols as well as any commas
+      const numericPrice = parseFloat(price.replace(/^[\$₹]/, "").replace(/,/g, ""));
       return isNaN(numericPrice) ? 0 : numericPrice;
     }
     return 0;
   };
+  
   if (loading) {
     return (
       <ModernPageContainer>
@@ -2717,6 +2720,13 @@ export default function TrekDetails() {  const { id } = useParams();
   const trekImage = getValidImageUrl(trek?.image);
   const trekDays = trek?.days || 1;
   const trekPrice = formatPrice(trek?.price);
+  
+  // Organizer information
+  const organizerId = trek?.organizerId || null;
+  const organizerName = trek?.organizerName || null;
+  const organizerVerified = trek?.organizerVerified || false;
+  const organizerDescription = trek?.organizerDescription || 'Experienced trek organizer providing amazing trekking experiences.';
+  const organizerExperience = trek?.organizerExperience || '3+ years';
   
   // Debug image loading
   console.log("Trek image path:", trek?.image);
@@ -2919,8 +2929,31 @@ export default function TrekDetails() {  const { id } = useParams();
                     <BigStatValue>{trekRating}</BigStatValue>
                     <BigStatLabel>Rating</BigStatLabel>
                   </StatText>
-                </StatCard>
-              </QuickStats>
+                </StatCard>              </QuickStats>
+
+              {/* Organizer Information */}
+              {organizerId && organizerName && (
+                <Section>
+                  <SectionHeader>
+                    <SectionTitle>
+                      <FaMountain />
+                      Trek Organizer
+                    </SectionTitle>
+                  </SectionHeader>                  <SectionBody>
+                    {/* Debug check to ensure organizerId exists */}
+                    {!organizerId && console.warn('Trek is missing organizerId')}
+                    <OrganizerCard 
+                      name={organizerName || "Trek Organizer"}
+                      id={organizerId}
+                      trekCount={trek?.organizerTrekCount || 1}
+                      verified={organizerVerified}
+                      description={organizerDescription}
+                      experience={organizerExperience}
+                      inTrekDetails={true}
+                    />
+                  </SectionBody>
+                </Section>
+              )}
 
               {/* Highlights Section */}
               <Section>
@@ -3071,10 +3104,9 @@ export default function TrekDetails() {  const { id } = useParams();
             </MainContentArea>          {/* Sidebar */}
             <Sidebar>
               <BookingCard>
-                <BookingHeader>
-                  <PriceTag>
+                <BookingHeader>                  <PriceTag>
                     <Price>
-                      ${trekPrice} <span>per person</span>
+                      ₹{trekPrice} <span>per person</span>
                     </Price>
                     <PriceCaption>
                       Based on {trekDays} {trekDays === 1 ? 'day' : 'days'}
@@ -3138,6 +3170,18 @@ export default function TrekDetails() {  const { id } = useParams();
                   </BookNowBtn>
                 </BookingBody>
               </BookingCard>
+                {/* Add Organizer Card */}
+              {trek?.organizerId && trek?.organizerName && (
+                <OrganizerCard 
+                  name={trek.organizerName}
+                  id={trek.organizerId}
+                  trekCount={trek.organizerTrekCount || 1}
+                  verified={trek.organizerVerified || false}
+                  description={trek.organizerDescription || 'Experienced trek organizer providing amazing trekking experiences.'}
+                  experience={trek.organizerExperience || '3+ years'}
+                  inTrekDetails={true}
+                />
+              )}
             </Sidebar>
           </TwoColumnLayout>
         </ContentContainer>

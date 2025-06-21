@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import styled, { keyframes, css } from 'styled-components';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { FaHome, FaCompass, FaUsers, FaBook, FaMedal, FaInfoCircle, FaUserCircle } from 'react-icons/fa';
+import { doc, getDoc } from 'firebase/firestore';
+import { FaHome, FaCompass, FaUsers, FaBook, FaMedal, FaInfoCircle, FaUserCircle, FaMountain, FaShieldAlt } from 'react-icons/fa';
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(10px); }
@@ -576,28 +577,20 @@ const useTouchFeedback = (navbarRef) => {
     const addTouchClass = (e) => {
       // Only prevent default if needed for iOS double-tap zoom
       // e.preventDefault(); // Commented out to avoid blocking navigation
-      if (e.currentTarget) {
-        e.currentTarget.classList.add('touch-active');
-      }
+      e.currentTarget.classList.add('touch-active');
     };
     
     const removeTouchClass = (e) => {
-      if (e.currentTarget) {
-        e.currentTarget.classList.add('touch-end');
-        e.currentTarget.classList.remove('touch-active');
-        
-        setTimeout(() => {
-          if (e.currentTarget) {
-            e.currentTarget.classList.remove('touch-end');
-          }
-        }, 300);
-      }
+      e.currentTarget.classList.add('touch-end');
+      e.currentTarget.classList.remove('touch-active');
+      
+      setTimeout(() => {
+        e.currentTarget.classList.remove('touch-end');
+      }, 300);
     };
     
     const handleTouchCancel = (e) => {
-      if (e.currentTarget) {
-        e.currentTarget.classList.remove('touch-active', 'touch-end');
-      }
+      e.currentTarget.classList.remove('touch-active', 'touch-end');
     };
     
     touchableElements.forEach(element => {
@@ -664,6 +657,7 @@ const useSafeAreaInset = () => {
 
 const BottomNavbar = ({ active, transparent = false }) => {
   const [user, setUser] = useState(null);
+  const [userRole, setUserRole] = useState('user');
   const [scrolled, setScrolled] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [isSafari, setIsSafari] = useState(false);
@@ -681,16 +675,14 @@ const BottomNavbar = ({ active, transparent = false }) => {
     setIsSafari(isSafariBrowser || isIOS);
     
     // Add utility classes
-    if (isIOS && document.body) {
+    if (isIOS) {
       document.body.classList.add('ios-device');
     }
     
     // Set CSS custom property for safe area inset
-    if (document.documentElement) {
-      document.documentElement.style.setProperty('--safe-area-inset-bottom', 
-        getComputedStyle(document.documentElement).getPropertyValue('env(safe-area-inset-bottom)') || '0px'
-      );
-    }
+    document.documentElement.style.setProperty('--safe-area-inset-bottom', 
+      getComputedStyle(document.documentElement).getPropertyValue('env(safe-area-inset-bottom)') || '0px'
+    );
   }, []);
 
   // Track scroll position with improved performance
@@ -713,11 +705,31 @@ const BottomNavbar = ({ active, transparent = false }) => {
 
   // Apply touch feedback for mobile devices
   useTouchFeedback(navbarRef);
-
-  // Handle auth state changes
+  // Handle auth state changes and fetch user role
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
+      
+      // Fetch user role from Firestore
+      if (currentUser) {
+        const fetchUserRole = async () => {
+          try {
+            const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+            if (userDoc.exists()) {
+              setUserRole(userDoc.data().role || '');
+            } else {
+              setUserRole('');
+            }
+          } catch (error) {
+            console.error('Error fetching user role:', error);
+            setUserRole('');
+          }
+        };
+        
+        fetchUserRole();
+      } else {
+        setUserRole('');
+      }
     });
     return () => unsubscribe();
   }, []);
@@ -759,7 +771,124 @@ const BottomNavbar = ({ active, transparent = false }) => {
       navigate(path);
     }
   };
-  
+    // Determine which navigation items to show based on user role
+  const renderRoleBasedNavItems = () => {
+    const baseItems = (
+      <>
+        <Link 
+          to="/" 
+          className={location.pathname === '/' || active === 'home' ? 'active-link' : ''}
+          onClick={(e) => handleNavigation('/', e)}
+        >
+          <FaHome />
+          <span>Discover</span>
+        </Link>
+        
+        <Link 
+          to="/explore" 
+          className={location.pathname === '/explore' || active === 'explore' ? 'active-link' : ''}
+          onClick={(e) => handleNavigation('/explore', e)}
+        >
+          <FaCompass />
+          <span>Adventures</span>
+        </Link>
+        
+        <Link 
+          to="/community"
+          className={location.pathname === '/community' || active === 'community' ? 'active-link' : ''}
+          onClick={(e) => handleNavigation('/community', e)}
+        >
+          <FaUsers />
+          <span>Community</span>
+        </Link>
+      </>
+    );
+      // If user is not logged in 
+    if (!user) {
+      return (
+        <>
+          {baseItems}
+          <Link 
+            to="/about"
+            className={location.pathname === '/about' || active === 'about' ? 'active-link' : ''}
+            onClick={(e) => handleNavigation('/about', e)}
+          >
+            <FaInfoCircle />
+            <span>About</span>
+          </Link>
+          <Link 
+            to="/organizer-trek-login"
+            className={location.pathname === '/organizer-trek-login' ? 'active-link' : ''}
+            onClick={(e) => handleNavigation('/organizer-trek-login', e)}
+          >
+            <FaMountain />
+            <span>Organizer</span>
+          </Link>
+        </>
+      );
+    }
+    
+    // If user is a regular user
+    if (userRole === 'user') {
+      return (
+        <>
+          {baseItems}
+          <Link 
+            to="/about"
+            className={location.pathname === '/about' || active === 'about' ? 'active-link' : ''}
+            onClick={(e) => handleNavigation('/about', e)}
+          >
+            <FaInfoCircle />
+            <span>About</span>
+          </Link>
+        </>
+      );
+    }
+      // If user is an organizer
+    if (userRole === 'organizer') {
+      return (
+        <>
+          {baseItems}
+          <Link 
+            to="/organizer/dashboard"
+            className={location.pathname === '/organizer/dashboard' ? 'active-link' : ''}
+            onClick={(e) => handleNavigation('/organizer/dashboard', e)}
+          >
+            <FaShieldAlt />
+            <span>Dashboard</span>
+          </Link>
+          <Link 
+            to="/organizer/treks"
+            className={location.pathname === '/organizer/treks' ? 'active-link' : ''}
+            onClick={(e) => handleNavigation('/organizer/treks', e)}
+          >
+            <FaMountain />
+            <span>My Treks</span>
+          </Link>
+        </>
+      );
+    }
+    
+    // If user is an admin
+    if (userRole === 'admin') {
+      return (
+        <>
+          {baseItems}
+          <Link 
+            to="/admin"
+            className={location.pathname.startsWith('/admin') ? 'active-link' : ''}
+            onClick={(e) => handleNavigation('/admin', e)}
+          >
+            <FaShieldAlt />
+            <span>Admin</span>
+          </Link>
+        </>
+      );
+    }
+    
+    return baseItems;
+  };
+
   return (
     <>
       <NavbarWrapper 
@@ -769,41 +898,7 @@ const BottomNavbar = ({ active, transparent = false }) => {
         $isSafari={isSafari}
       >
         <NavLinks>
-          <Link 
-            to="/" 
-            className={location.pathname === '/' || active === 'home' ? 'active-link' : ''}
-            onClick={(e) => handleNavigation('/', e)}
-          >
-            <FaHome />
-            <span>Discover</span>
-          </Link>
-          
-          <Link 
-            to="/explore" 
-            className={location.pathname === '/explore' || active === 'explore' ? 'active-link' : ''}
-            onClick={(e) => handleNavigation('/explore', e)}
-          >
-            <FaCompass />
-            <span>Adventures</span>
-          </Link>
-          
-          <Link 
-            to="/community"
-            className={location.pathname === '/community' || active === 'community' ? 'active-link' : ''}
-            onClick={(e) => handleNavigation('/community', e)}
-          >
-            <FaUsers />
-            <span>Community</span>
-          </Link>
-          
-          <Link 
-            to="/about"
-            className={location.pathname === '/about' || active === 'about' ? 'active-link' : ''}
-            onClick={(e) => handleNavigation('/about', e)}
-          >
-            <FaInfoCircle />
-            <span>About</span>
-          </Link>
+          {renderRoleBasedNavItems()}
           
           <UserButton 
             onClick={handleProfileAction} 

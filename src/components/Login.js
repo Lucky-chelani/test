@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import mapPattern from '../assets/images/map-pattren.png';
 import { auth } from '../firebase';
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
@@ -133,6 +133,13 @@ const Title = styled.h2`
   @media (max-width: 480px) {
     font-size: 1.6rem;
   }
+`;
+
+const Subtitle = styled.p`
+  font-size: 1.1rem;
+  color: #b2c2d6;
+  margin: 0 0 12px 0;
+  font-weight: 400;
 `;
 
 const WelcomeText = styled.h1`
@@ -433,7 +440,7 @@ const LoadingSpinner = styled.div`
   }
 `;
 
-const Login = () => {
+const Login = ({ organizerMode }) => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -482,13 +489,11 @@ const handleGoogleLogin = async () => {
 };
   return (
     <Page>
-      {/* Removed Navbar - using BottomNavbar from App.js */}
       <FormContainer>
         <Form onSubmit={handleSubmit}>
           <HeaderSection>
-            <Title>Welcome Back</Title>
-            <WelcomeText>Explorer!</WelcomeText>
-            <SubText>Continue your adventure with Trovia</SubText>
+            <Title>{organizerMode ? 'Organizer Login' : 'Login'}</Title>
+            <Subtitle>{organizerMode ? 'Sign in to manage your treks as an organizer.' : 'Sign in to your account.'}</Subtitle>
           </HeaderSection>
 
           {error && <ErrorMessage>{error}</ErrorMessage>}
@@ -547,6 +552,12 @@ const handleGoogleLogin = async () => {
             New here? <a href="/signup" onClick={(e) => { e.preventDefault(); navigate('/signup'); }}>Join Now</a>
           </SignupLink>
         </Form>
+
+        {!organizerMode && (          <div style={{ textAlign: 'center', marginTop: 16 }}>
+            <span>Are you a trek organizer? </span>
+            <Link to="/organizer-trek-login" style={{ color: '#4CC9F0', fontWeight: 500 }}>Organizer Login</Link>
+          </div>
+        )}
       </FormContainer>
     </Page>
   );

@@ -241,7 +241,7 @@
 }
 
 .banner-title {
-  font-size: 5.5rem;
+  font-size: 4rem;
   font-weight: 800;
   margin-bottom: 16px;
   line-height: 1.1;
@@ -282,7 +282,7 @@
 }
 
 .banner-subtitle {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   color: #333;
   margin-bottom: 10px;
   font-weight: 400;
@@ -360,7 +360,7 @@
   padding: 18px 38px;
   border-radius: 50px;
   font-weight: 600;
-  font-size: 1.05rem;
+  font-size: 0.90rem;
   text-decoration: none;
   transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
   display: inline-block;

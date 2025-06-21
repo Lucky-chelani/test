@@ -32,12 +32,12 @@ const SearchTapContainer = styled.div`
   align-items: center;
   justify-content: center;
   width: 100%;
-  max-width: 420px;
-  min-height: 54px;
+  max-width: 400px;
+  min-height: 48px;
   background: #fff;
-  border-radius: 32px;
+  border-radius: 24px;
   box-shadow: 0 2px 16px 0 rgba(0,0,0,0.10);
-  padding: 0 20px;
+  padding: 0 18px;
   cursor: pointer;
   transition: box-shadow 0.2s, transform 0.2s;
   animation: ${pulse} 2.5s infinite;
@@ -49,9 +49,9 @@ const SearchTapContainer = styled.div`
   }
 `;
 const SearchIcon = styled(FiSearch)`
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   color: #2d3748;
-  margin-right: 14px;
+  margin-right: 12px;
   flex-shrink: 0;
 `;
 const AnimatedTextBase = styled.span`

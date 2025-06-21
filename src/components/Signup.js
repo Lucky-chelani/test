@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
+import { FaArrowRight } from "react-icons/fa";
 
 // Animations
 const fadeInUp = keyframes`
@@ -522,6 +523,34 @@ const LoadingSpinner = styled.div`
   }
 `;
 
+const OrganizerLink = styled.div`
+  text-align: center;
+  margin-top: 20px;
+  padding: 15px;
+  background-color: rgba(67, 97, 238, 0.15);
+  border-radius: 10px;
+  border: 1px solid rgba(67, 97, 238, 0.3);
+
+  p {
+    color: #fff;
+    font-size: 0.9rem;
+    margin: 0 0 8px 0;
+  }
+
+  a {
+    color: #4361EE;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+`;
+
 const Signup = () => {
   const navigate = useNavigate();
   const [name, setName] = useState('');
@@ -578,14 +607,14 @@ const Signup = () => {
 
     // Step 3: Create the Firestore user document
     console.log("Creating user document in Firestore...");
-    try {
-      await setDoc(doc(db, "users", user.uid), {
+    try {      await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         name: name,
         email: email,
         dob: dob,
         createdAt: new Date().toISOString(),
         authProvider: 'email',
+        role: 'user', // Default role for new users
       });
       console.log("User document created successfully");
     } catch (firestoreError) {
@@ -633,14 +662,14 @@ const handleGoogleSignup = async () => {
       const userDocSnap = await getDoc(userDocRef);
 
       if (!userDocSnap.exists()) {
-        console.log("Creating new user profile in Firestore...");
-        await setDoc(userDocRef, {
+        console.log("Creating new user profile in Firestore...");        await setDoc(userDocRef, {
           uid: user.uid,
           name: user.displayName || 'Google User',
           email: user.email,
           photoURL: user.photoURL || null,
           createdAt: new Date().toISOString(),
           authProvider: 'google',
+          role: 'user', // Default role for new users
         });
         console.log("User profile created successfully");
       } else {
@@ -803,6 +832,13 @@ const handleGoogleSignup = async () => {
           <LoginLink>
             Already a member? <a href="/login" onClick={(e) => { e.preventDefault(); navigate('/login'); }}>Log In</a>
           </LoginLink>
+          
+          <OrganizerLink>
+            <p>Do you run a trek organization?</p>
+            <a href="/organizer-signup" onClick={(e) => { e.preventDefault(); navigate('/organizer-signup'); }}>
+              Register as a Trek Organizer <FaArrowRight size={12} />
+            </a>
+          </OrganizerLink>
         </Container>
       </FormContainer>
     </Page>

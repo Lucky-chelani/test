@@ -1,0 +1,888 @@
+import React, { useState, useEffect, useRef } from 'react';
+import styled, { keyframes, css } from 'styled-components';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import { auth, db } from '../firebase';
+import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, getDoc, updateDoc, where, deleteDoc, Timestamp, getDocs, arrayUnion } from 'firebase/firestore';
+import mapPattern from '../assets/images/map-pattren.png';
+import user1 from '../assets/images/trek1.png'; // Placeholder
+
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const slideIn = keyframes`
+  from { transform: translateX(30px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+`;
+
+const glow = keyframes`
+  0% { box-shadow: 0 0 5px rgba(255, 75, 31, 0.5); }
+  50% { box-shadow: 0 0 20px rgba(255, 75, 31, 0.8); }
+  100% { box-shadow: 0 0 5px rgba(255, 75, 31, 0.5); }
+`;
+
+const typing = keyframes`
+  0% { opacity: 0.3; }
+  50% { opacity: 1; }
+  100% { opacity: 0.3; }
+`;
+
+// Enhanced visuals for the chat page
+const Page = styled.div`
+  background: #060F1B url(${mapPattern});
+  background-size: cover;
+  background-repeat: repeat;
+  min-height: 100vh;
+  color: #fff;
+  padding-top: 80px;
+  position: relative;
+  
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, rgba(10, 26, 47, 0.4) 0%, rgba(10, 26, 47, 0.9) 100%);
+    pointer-events: none;
+  }
+`;
+
+const ChatContainer = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  background: rgba(15, 24, 42, 0.85);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 100px);
+  position: relative;
+  z-index: 1;
+  
+  @media (max-width: 768px) {
+    height: calc(100vh - 80px);
+    border-radius: 0;
+    margin: 0;
+    max-width: 100%;
+  }
+`;
+
+const ChatHeader = styled.div`
+  padding: 15px 25px;
+  background: rgba(10, 17, 30, 0.9);
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  gap: 15px;
+`;
+
+const BackButton = styled.button`
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  
+  &:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+  }
+`;
+
+const RoomInfo = styled.div`
+  flex: 1;
+`;
+
+const RoomName = styled.h2`
+  margin: 0 0 5px 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  background: linear-gradient(to right, #80FFDB, #5390D9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+`;
+
+const RoomDescription = styled.p`
+  margin: 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+`;
+
+const MessageContainer = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scroll-behavior: smooth;
+  
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+  }
+  
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+`;
+
+const DateDivider = styled.div`
+  text-align: center;
+  margin: 15px 0;
+  position: relative;
+  
+  &:before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    z-index: 1;
+  }
+`;
+
+const DateLabel = styled.span`
+  background: rgba(15, 24, 42, 0.8);
+  padding: 5px 15px;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  position: relative;
+  z-index: 2;
+`;
+
+const ChatForm = styled.form`
+  display: flex;
+  padding: 20px;
+  background: rgba(10, 17, 30, 0.9);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 15px;
+  align-items: center;
+`;
+
+const MessageInput = styled.input`
+  flex: 1;
+  padding: 15px 20px;
+  border: none;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.3s;
+  
+  &:focus {
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 0 2px rgba(128, 255, 219, 0.3);
+  }
+  
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+  }
+`;
+
+const SendButton = styled.button`
+  background: linear-gradient(135deg, #5390D9 0%, #7400B8 100%);
+  color: white;
+  border: none;
+  border-radius: 30px;
+  padding: 15px 25px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(83, 144, 217, 0.4);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+  
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+`;
+
+// Improved message component with better visual design
+const MessageWrapper = styled.div`
+  display: flex;
+  flex-direction: ${props => props.$isCurrentUser ? 'row-reverse' : 'row'};
+  align-items: flex-start;
+  gap: 12px;
+  margin: 8px 0;
+  max-width: 80%;
+  align-self: ${props => props.$isCurrentUser ? 'flex-end' : 'flex-start'};
+  animation: ${fadeIn} 0.3s ease-out;
+  position: relative;
+  
+  ${props => props.$isLocal && css`
+    opacity: 0.8;
+  `}
+  
+  ${props => props.$sendFailed && css`
+    opacity: 0.6;
+  `}
+`;
+
+const Avatar = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-image: url(${props => props.src || user1});
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+  border: 2px solid ${props => props.$isCurrentUser ? 'rgba(128, 255, 219, 0.5)' : 'rgba(255, 255, 255, 0.2)'};
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 50%;
+    background: ${props => props.$isCurrentUser ? 
+      'linear-gradient(135deg, rgba(128, 255, 219, 0.2), rgba(83, 144, 217, 0.2))' : 
+      'none'};
+    z-index: -1;
+  }
+`;
+
+const MessageContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+`;
+
+const MessageBubble = styled.div`
+  background: ${props => props.$isCurrentUser ? 
+    'linear-gradient(135deg, rgba(83, 144, 217, 0.9), rgba(116, 0, 184, 0.8))' : 
+    'rgba(255, 255, 255, 0.1)'};
+  color: white;
+  padding: 12px 18px;
+  border-radius: 18px;
+  border-top-right-radius: ${props => props.$isCurrentUser ? '4px' : '18px'};
+  border-top-left-radius: ${props => !props.$isCurrentUser ? '4px' : '18px'};
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid ${props => props.$isCurrentUser ? 
+    'rgba(128, 255, 219, 0.3)' : 
+    'rgba(255, 255, 255, 0.1)'};
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: ${props => props.$isCurrentUser ? 
+      'linear-gradient(to right, rgba(128, 255, 219, 0.6), rgba(83, 144, 217, 0.6))' : 
+      'rgba(255, 255, 255, 0.2)'};
+  }
+  
+  ${props => props.$sendFailed && css`
+    border: 1px solid rgba(255, 75, 75, 0.5);
+    
+    &::before {
+      background: linear-gradient(to right, rgba(255, 75, 75, 0.6), rgba(255, 100, 100, 0.6));
+    }
+  `}
+  
+  ${props => props.$isLocal && !props.$sendFailed && css`
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      width: 12px;
+      height: 12px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top: 2px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    }
+  `}
+`;
+
+const MessageText = styled.div`
+  word-break: break-word;
+  white-space: pre-wrap;
+  font-size: 0.95rem;
+  line-height: 1.5;
+`;
+
+const MessageMeta = styled.div`
+  display: flex;
+  justify-content: ${props => props.$isCurrentUser ? 'flex-end' : 'flex-start'};
+  margin-top: 4px;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.5);
+  gap: 8px;
+`;
+
+const UserName = styled.span`
+  font-weight: 500;
+  color: ${props => props.$isCurrentUser ? 'rgba(128, 255, 219, 0.8)' : 'rgba(255, 255, 255, 0.7)'};
+`;
+
+const MessageTimeText = styled.span`
+  color: rgba(255, 255, 255, 0.4);
+`;
+
+const MessageStatus = styled.div`
+  position: absolute;
+  bottom: -18px;
+  right: ${props => props.$isCurrentUser ? '10px' : 'auto'};
+  left: ${props => !props.$isCurrentUser ? '10px' : 'auto'};
+  font-size: 0.7rem;
+  color: #ff6b6b;
+  animation: ${fadeIn} 0.3s ease-out;
+  background: rgba(255, 75, 75, 0.2);
+  padding: 2px 8px;
+  border-radius: 10px;
+`;
+
+const ErrorMessage = styled.div`
+  color: #ff6b6b;
+  background: rgba(255, 75, 75, 0.1);
+  border-left: 3px solid #ff6b6b;
+  padding: 10px 15px;
+  margin: 10px 0;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  animation: ${fadeIn} 0.3s ease;
+`;
+
+const InfoMessage = styled.div`
+  text-align: center;
+  padding: 10px;
+  margin: 10px auto;
+  border-radius: 20px;
+  background: rgba(83, 144, 217, 0.1);
+  border: 1px solid rgba(83, 144, 217, 0.3);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  max-width: 80%;
+  animation: ${fadeIn} 0.5s ease;
+`;
+
+const EmptyState = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 50px 20px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  margin: auto;
+  
+  svg {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    opacity: 0.5;
+  }
+  
+  h3 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    background: linear-gradient(to right, #80FFDB 0%, #5390D9 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  p {
+    max-width: 400px;
+    line-height: 1.6;
+  }
+`;
+
+// Format date for display
+const formatDate = (timestamp) => {
+  if (!timestamp) return 'Just now';
+  
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  const now = new Date();
+  const diff = now - date;
+  const oneDay = 24 * 60 * 60 * 1000;
+  
+  // If today
+  if (diff < oneDay && date.getDate() === now.getDate()) {
+    return 'Today';
+  }
+  
+  // If yesterday
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (date.getDate() === yesterday.getDate() && 
+      date.getMonth() === yesterday.getMonth() && 
+      date.getFullYear() === yesterday.getFullYear()) {
+    return 'Yesterday';
+  }
+  
+  // Otherwise, return the date
+  return date.toLocaleDateString(undefined, {
+    weekday: 'long',
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric'
+  });
+};
+
+// Format time for display
+const formatTime = (timestamp) => {
+  if (!timestamp) return '';
+  
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  return date.toLocaleTimeString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
+const ChatRoom = () => {
+  const { roomId } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { room } = location.state || {};
+  const messageContainerRef = useRef(null);
+    const [newMessage, setNewMessage] = useState('');
+  const [messages, setMessages] = useState([]);
+  const [localMessages, setLocalMessages] = useState([]);
+  const [error, setError] = useState('');
+  const [infoMessage, setInfoMessage] = useState('');
+  const [roomDocId, setRoomDocId] = useState('');
+  const [roomData, setRoomData] = useState(null);
+  const [isUserMember, setIsUserMember] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    if (messageContainerRef.current) {
+      messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+    }
+  }, [messages, localMessages]);
+  
+  // Fetch room data and set up message listener
+  useEffect(() => {
+    const fetchRoomData = async () => {
+      if (!roomId) {
+        navigate('/community');
+        return;
+      }
+      
+      try {
+        setLoading(true);
+        // First, find the room document ID by its custom ID
+        const roomsQuery = query(collection(db, 'chatrooms'), where('id', '==', roomId));
+        const roomSnapshot = await getDocs(roomsQuery);
+        
+        if (roomSnapshot.empty) {
+          setError("Community not found");
+          setLoading(false);
+          return;
+        }
+        
+        const roomDoc = roomSnapshot.docs[0];
+        const roomDocData = roomDoc.data();
+        setRoomDocId(roomDoc.id);
+        setRoomData(roomDocData);
+        
+        // Check if current user is a member
+        const isMember = auth.currentUser && 
+          roomDocData.members && 
+          roomDocData.members.includes(auth.currentUser.uid);
+        setIsUserMember(isMember);
+          // Set up message listener with error handling
+        const messagesQuery = query(
+          collection(db, 'chatrooms', roomDoc.id, 'messages'), 
+          orderBy('timestamp', 'asc')
+        );
+        
+        // Unsubscribe from previous listener if any
+        let unsubscribe;
+        try {
+          unsubscribe = onSnapshot(
+            messagesQuery, 
+            (snapshot) => {
+              // Process only non-empty snapshots with changes
+              if (!snapshot.empty) {
+                const messageData = snapshot.docs.map(doc => {
+                  const data = doc.data();
+                  return {
+                    ...data,
+                    id: doc.id,
+                    // Convert server timestamp to JS Date if it exists
+                    timestamp: data.timestamp ? 
+                      (typeof data.timestamp.toDate === 'function' ? data.timestamp.toDate() : data.timestamp) : 
+                      new Date()
+                  };
+                });
+                
+                // Deduplicate messages based on their IDs
+                setMessages(messageData);
+              }
+              setLoading(false);
+            },
+            (err) => {
+              console.error("Error in messages listener:", err);
+              if (err.code === 'permission-denied') {
+                setError("You don't have permission to view messages in this community");
+                // Update membership status since we don't have permission
+                setIsUserMember(false);
+              } else {
+                setError("Error loading messages: " + err.message);
+              }
+              setLoading(false);
+            }
+          );
+        } catch (err) {
+          console.error("Error setting up message listener:", err);
+          setError("Error connecting to chat: " + err.message);
+          setLoading(false);
+        }
+        
+        return () => unsubscribe();
+      } catch (err) {
+        console.error("Error fetching chatroom:", err);
+        setError("Error loading community: " + err.message);
+        setLoading(false);
+      }
+    };
+    
+    fetchRoomData();
+  }, [roomId, navigate]);
+  // Enhanced message handling
+  // Handle message submission with improved error handling
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    
+    // Clear any previous errors
+    setError('');
+    
+    if (!newMessage.trim() || !auth.currentUser) {
+      if (!auth.currentUser) {
+        setError('Please sign in to send messages');
+      }
+      return;
+    }
+    
+    // Check if user is a member
+    if (!isUserMember) {
+      setError('You need to join this community before sending messages');
+      return;
+    }
+    
+    // Get the message text and clear input immediately to prevent duplicate sends
+    const messageText = newMessage.trim();
+    setNewMessage('');
+    
+    // Add temporary local message for immediate feedback
+    const tempMessage = {
+      id: `temp-${Date.now()}`,
+      text: messageText,
+      userId: auth.currentUser.uid,
+      userName: auth.currentUser.displayName || 'Anonymous',
+      userPhoto: auth.currentUser.photoURL || null,
+      isLocal: true, // Mark as local/pending
+      timestamp: new Date()
+    };
+    
+    setLocalMessages(prev => [...prev, tempMessage]);
+      try {
+      // Calculate expiration time (8 hours from now)
+      const expirationTime = new Date();
+      expirationTime.setHours(expirationTime.getHours() + 8);
+      
+      // Send to Firestore with a timeout to prevent hanging requests
+      const sendPromise = addDoc(collection(db, `chatrooms/${roomDocId}/messages`), {
+        text: tempMessage.text,
+        userId: auth.currentUser.uid,
+        userName: auth.currentUser.displayName || 'Anonymous',
+        userPhoto: auth.currentUser.photoURL || null,
+        timestamp: serverTimestamp(),
+        expiresAt: Timestamp.fromDate(expirationTime), // Add expiration timestamp
+        ttl: '8 hours' // Add readable TTL for UI purposes
+      });
+      
+      // Wait for the message to be sent
+      await sendPromise;
+      
+      // Once confirmed sent, remove the local message
+      // Only remove matching ID to avoid removing other local messages
+      setLocalMessages(prev => prev.filter(msg => msg.id !== tempMessage.id));
+    } catch (err) {
+      console.error('Error sending message:', err);
+      
+      // Show different error messages based on error type
+      if (err.code === 'permission-denied') {
+        setError('You do not have permission to send messages in this community. Please join first.');
+        // Update isUserMember to reflect reality
+        setIsUserMember(false);
+      } else if (err.code === 'unavailable') {
+        setError('Network issue. Message saved locally and will be sent when connection is restored.');
+        // Keep the local message for retry
+        return;
+      } else {
+        setError(`Failed to send message: ${err.message}. Please try again.`);
+      }
+      
+      // Update local message to show failure
+      setLocalMessages(prev => 
+        prev.map(msg => 
+          msg.id === tempMessage.id 
+            ? {...msg, sendFailed: true, errorMessage: err.message} 
+            : msg
+        )
+      );
+    }
+  };
+    // Join the community with enhanced error handling
+  const handleJoinCommunity = async () => {
+    if (!auth.currentUser) {
+      navigate('/login');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      
+      // Add user to community members
+      await updateDoc(doc(db, 'chatrooms', roomDocId), {
+        members: arrayUnion(auth.currentUser.uid),
+        memberCount: (roomData?.memberCount || 0) + 1
+      });
+      
+      // Update local state
+      setIsUserMember(true);
+      setError('');
+      setInfoMessage('You have successfully joined this community!');
+      
+      // Update the roomData state
+      setRoomData(prev => ({
+        ...prev,
+        members: [...(prev.members || []), auth.currentUser.uid],
+        memberCount: (prev.memberCount || 0) + 1
+      }));
+      
+      setTimeout(() => setInfoMessage(''), 5000); // Clear the message after 5 seconds
+      
+    } catch (err) {
+      console.error("Error joining community:", err);
+      if (err.code === 'permission-denied') {
+        setError("You don't have permission to join this community. It may be restricted to specific users.");
+      } else {
+        setError("Failed to join community: " + err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+    // Deduplicate and group messages by date
+  // First, deduplicate messages by creating a map keyed by message ID
+  const messageMap = new Map();
+  
+  // Add Firebase messages first (they take precedence over local messages)
+  messages.forEach(message => {
+    messageMap.set(message.id, message);
+  });
+  
+  // Then add local messages only if they don't already exist in Firebase messages
+  localMessages.forEach(message => {
+    if (!messageMap.has(message.id)) {
+      messageMap.set(message.id, message);
+    }
+  });
+  
+  // Convert map back to array and sort by timestamp
+  const allMessages = Array.from(messageMap.values())
+    .sort((a, b) => {
+      // Handle missing timestamps as the newest
+      if (!a.timestamp) return 1;
+      if (!b.timestamp) return -1;
+      return new Date(a.timestamp) - new Date(b.timestamp);
+    });
+  
+  // Now group by date
+  const groupedMessages = allMessages.reduce((groups, message) => {
+    const date = message.timestamp ? 
+      (message.isLocal ? 'Just now' : formatDate(message.timestamp)) : 
+      'Just now';
+      
+    if (!groups[date]) {
+      groups[date] = [];
+    }
+    groups[date].push(message);
+    return groups;
+  }, {});
+  
+  return (
+    <Page>
+      <ChatContainer>
+        <ChatHeader>
+          <BackButton onClick={() => navigate('/community')}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </BackButton>
+          
+          {room && (
+            <>
+              <RoomInfo>
+                <RoomName>{room.name}</RoomName>
+                <RoomDescription>{room.desc}</RoomDescription>
+              </RoomInfo>
+              
+              {/* Join button if not a member */}
+              {!isUserMember && (
+                <SendButton onClick={handleJoinCommunity}>
+                  Join Community
+                </SendButton>
+              )}
+            </>
+          )}
+        </ChatHeader>
+        
+        <MessageContainer ref={messageContainerRef}>          {loading ? (
+            <InfoMessage>Loading messages...</InfoMessage>
+          ) : error && messages.length === 0 ? (
+            <ErrorMessage>{error}</ErrorMessage>
+          ) : infoMessage ? (
+            <InfoMessage>
+              {infoMessage}
+            </InfoMessage>
+          ) : messages.length === 0 && localMessages.length === 0 ? (
+            <EmptyState>
+              <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <h3>No Messages Yet</h3>
+              <p>Be the first to start a conversation in this community!</p>
+            </EmptyState>
+          ) : (
+            Object.entries(groupedMessages).map(([date, dateMessages]) => (
+              <React.Fragment key={date}>
+                <DateDivider>
+                  <DateLabel>{date}</DateLabel>
+                </DateDivider>
+                
+                {dateMessages.map((message) => {
+                  const isCurrentUser = auth.currentUser && message.userId === auth.currentUser.uid;
+                  
+                  return (                    <MessageWrapper 
+                      key={message.id} 
+                      $isCurrentUser={isCurrentUser}
+                      $isLocal={message.isLocal}
+                      $sendFailed={message.sendFailed}
+                    >                      <Avatar
+                        src={message.userPhoto}
+                        $isCurrentUser={isCurrentUser}
+                      />
+                      
+                      <MessageContent>                        <MessageBubble 
+                          $isCurrentUser={isCurrentUser}
+                          $isLocal={message.isLocal}
+                          $sendFailed={message.sendFailed}
+                        >
+                          <MessageText>{message.text}</MessageText>
+                        </MessageBubble>
+                          <MessageMeta $isCurrentUser={isCurrentUser}>                          <UserName $isCurrentUser={isCurrentUser}>{message.userName}</UserName>
+                          <MessageTimeText>{formatTime(message.timestamp)}</MessageTimeText>
+                        </MessageMeta>
+                        
+                        {message.sendFailed && (                          <MessageStatus $isCurrentUser={isCurrentUser}>
+                            Failed to send
+                          </MessageStatus>
+                        )}
+                      </MessageContent>
+                    </MessageWrapper>
+                  );
+                })}
+              </React.Fragment>
+            ))
+          )}
+          
+          {error && messages.length > 0 && (
+            <ErrorMessage>{error}</ErrorMessage>
+          )}
+          
+          {!isUserMember && !loading && messages.length > 0 && (
+            <InfoMessage>
+              Join this community to participate in the conversation
+            </InfoMessage>
+          )}
+        </MessageContainer>
+        
+        <ChatForm onSubmit={handleSendMessage}>
+          <MessageInput
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder={isUserMember ? "Type a message..." : "Join this community to send messages"}
+            disabled={!isUserMember || loading}
+          />
+          
+          <SendButton 
+            type="submit"
+            disabled={!newMessage.trim() || !isUserMember || loading}
+          >
+            Send
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </SendButton>
+        </ChatForm>
+      </ChatContainer>
+    </Page>
+  );
+};
+
+export default ChatRoom;

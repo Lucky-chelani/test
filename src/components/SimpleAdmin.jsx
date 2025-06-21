@@ -74,11 +74,10 @@ const SimpleAdmin = () => {
             Manage treks, set featured status, and update trek information.
           </Description>
         </AdminCard>
-        
-        <AdminCard to="/admin/users">
+          <AdminCard to="/admin/users">
           <Title>User Management</Title>
           <Description>
-            View and manage user accounts and permissions.
+            Manage user accounts, assign organizer roles, and control user permissions.
           </Description>
         </AdminCard>
       </AdminGrid>

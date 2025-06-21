@@ -5,7 +5,7 @@ import { auth, db } from '../firebase';
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { motion } from 'framer-motion';
-import { FaEnvelope, FaBirthdayCake, FaEdit, FaSignOutAlt, FaMapMarkerAlt, FaMountain, FaClock } from 'react-icons/fa';
+import { FaEnvelope, FaBirthdayCake, FaEdit, FaSignOutAlt, FaMapMarkerAlt, FaMountain, FaClock, FaCrown, FaCompass } from 'react-icons/fa';
 import profileImg from '../assets/images/trek1.png';
 import mapPattern from '../assets/images/map-pattren.png';
 
@@ -603,14 +603,60 @@ const BadgeTooltip = styled.div`
   }
 `;
 
+const RoleText = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 0.9rem;
+  color: #ddd;
+  
+  svg {
+    color: ${props => props.roleColor || '#4CC9F0'};
+  }
+  
+  span {
+    display: inline-block;
+    background: ${props => props.roleGradient || 'linear-gradient(135deg, #4CC9F0, #06D6A0)'};
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+`;
+
 // Badge data with added color gradients
 const badges = [
   { emoji: '🥾', name: 'First Hike', gradient: 'linear-gradient(135deg, #4CC9F0, #06D6A0)' },
   { emoji: '🏔️', name: 'Mountain Climber', gradient: 'linear-gradient(135deg, #F72585, #B5179E)' },
-  { emoji: '🌄', name: 'Sunrise Trekker', gradient: 'linear-gradient(135deg, #FFD166, #F79824)' },
-  { emoji: '🎒', name: 'Backpacker Pro', gradient: 'linear-gradient(135deg, #4361EE, #3A0CA3)' },
+  { emoji: '🌄', name: 'Sunrise Trekker', gradient: 'linear-gradient(135deg, #FFD166, #F79824)' },  { emoji: '🎒', name: 'Backpacker Pro', gradient: 'linear-gradient(135deg, #4361EE, #3A0CA3)' },
   { emoji: '🏅', name: 'Elite Trekker', gradient: 'linear-gradient(135deg, #FF6B6B, #FFD166)' }
 ];
+
+// Role configuration
+const roleConfig = {
+  admin: { 
+    label: 'Administrator',
+    gradient: 'linear-gradient(135deg, #FF6B6B, #FF9E80)',
+    icon: FaCrown,
+    color: '#FF6B6B'
+  },
+  organizer: { 
+    label: 'Trek Organizer', 
+    gradient: 'linear-gradient(135deg, #4361EE, #3A0CA3)',
+    icon: FaMountain,
+    color: '#4361EE'
+  },
+  user: { 
+    label: 'Explorer',
+    gradient: 'linear-gradient(135deg, #4CC9F0, #06D6A0)',
+    icon: FaCompass,
+    color: '#4CC9F0'
+  }
+};
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -624,11 +670,16 @@ const Profile = () => {
         setAuthUser(currentUser);
         const userDocRef = doc(db, "users", currentUser.uid);
         try {
-          const userDocSnap = await getDoc(userDocRef);
-          if (userDocSnap.exists()) {
+          const userDocSnap = await getDoc(userDocRef);          if (userDocSnap.exists()) {
             setUserData(userDocSnap.data());
           } else {
             console.log("No such user document in Firestore!");
+            // Set basic user data to prevent errors
+            setUserData({
+              name: currentUser.displayName || 'User',
+              email: currentUser.email,
+              role: 'user'
+            });
           }
         } catch (error) {
           console.error("Error fetching user data from Firestore:", error);
@@ -673,6 +724,9 @@ const Profile = () => {
   const displayEmail = authUser.email || 'No email provided';
   const displayDob = userData?.dob || 'Not set';
   const avatarUrl = authUser.photoURL || profileImg;
+  const userRole = userData?.role || 'user';
+  const roleInfo = roleConfig[userRole] || roleConfig.user;
+
   return (
     <Page>
       <Container>
@@ -688,8 +742,17 @@ const Profile = () => {
             {userData?.dob && <DobText>
               <FaBirthdayCake /> Date of Birth: {displayDob}
             </DobText>}
-            <ButtonGroup>
-              <EditButton onClick={() => alert('Edit profile functionality to be implemented!')}>
+            {/* Display user role with appropriate styling */}
+            {userData?.role && (
+              <RoleText 
+                roleGradient={roleConfig[userData.role]?.gradient}
+                roleColor={roleConfig[userData.role]?.color}
+              >
+                {roleConfig[userData.role]?.icon && React.createElement(roleConfig[userData.role].icon)}
+                <span>{roleConfig[userData.role]?.label || 'Explorer'}</span>
+              </RoleText>
+            )}
+            <ButtonGroup>              <EditButton onClick={() => navigate('/edit-profile')}>
                 <FaEdit /> Edit Profile
               </EditButton>
               <LogoutButton onClick={handleLogout}>

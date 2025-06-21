@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import { db, auth } from "../firebase";
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, setDoc } from "firebase/firestore";
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, setDoc, query, where } from "firebase/firestore";
 import { initializeTreks } from "../utils/initializeTreks";
 import { FiTrash, FiEdit, FiSave, FiX, FiPlusCircle, FiLogIn, FiUpload, FiImage } from 'react-icons/fi';
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
@@ -480,7 +480,9 @@ const TrekAdmin = () => {
     rating: 5.0,
     reviews: 0,
     image: '',
-    description: ''
+    description: '',
+    organizerId: '', // Add organizerId field
+    organizerName: '' // Add organizerName field
   });
   
   // Image upload state
@@ -488,7 +490,12 @@ const TrekAdmin = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const fileInputRef = useRef(null);
-    useEffect(() => {
+  
+  // Organizers list state
+  const [organizers, setOrganizers] = useState([]);
+  const [loadingOrganizers, setLoadingOrganizers] = useState(false);
+  
+  useEffect(() => {
     // Check authentication state
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setAuthLoading(false);
@@ -497,6 +504,7 @@ const TrekAdmin = () => {
         // User is authenticated and is an admin
         setUser(currentUser);
         fetchTreks();
+        fetchOrganizers(); // Fetch organizers when authenticated
       } else if (currentUser) {
         // User is authenticated but not an admin
         signOut(auth); // Sign them out
@@ -510,6 +518,30 @@ const TrekAdmin = () => {
     
     return () => unsubscribe();
   }, []);
+  
+  // Function to fetch all users with organizer role
+  const fetchOrganizers = async () => {
+    try {
+      setLoadingOrganizers(true);
+      const usersCollection = collection(db, "users");
+      const organizerQuery = query(usersCollection, where("role", "in", ["organizer", "admin"]));
+      const organizersSnapshot = await getDocs(organizerQuery);
+      
+      const organizersList = organizersSnapshot.docs.map(doc => ({
+        id: doc.id,
+        name: doc.data().name,
+        email: doc.data().email,
+        organizationName: doc.data().organizationDetails?.name || doc.data().name,
+        role: doc.data().role
+      }));
+      
+      setOrganizers(organizersList);
+      setLoadingOrganizers(false);
+    } catch (error) {
+      console.error('Error fetching organizers:', error);
+      setLoadingOrganizers(false);
+    }
+  };
   
   const handleLogin = async (email, password) => {
     try {
@@ -587,7 +619,9 @@ const TrekAdmin = () => {
       rating: 5.0,
       reviews: 0,
       image: '',
-      description: ''
+      description: '',
+      organizerId: '', // Add organizerId field
+      organizerName: '' // Add organizerName field
     });
     setEditingTrek(null);
     setImageFile(null);
@@ -623,7 +657,9 @@ const TrekAdmin = () => {
       rating: trek.rating || 5.0,
       reviews: trek.reviews || 0,
       image: trek.image || '',
-      description: trek.description || ''
+      description: trek.description || '',
+      organizerId: trek.organizerId || '', // Add organizerId field
+      organizerName: trek.organizerName || '' // Add organizerName field
     });
     setEditingTrek(trek.docId);
     setShowForm(true);
@@ -737,14 +773,16 @@ const TrekAdmin = () => {
         // New image to upload
         imageUrl = await handleImageUpload(trekId);
       }
-      
-      const trekData = {
+        const trekData = {
         ...formData,
         id: trekId,
         days: Number(formData.days),
         rating: Number(formData.rating),
         reviews: Number(formData.reviews),
-        image: imageUrl
+        image: imageUrl,
+        organizerId: formData.organizerId || '', 
+        organizerName: formData.organizerName || '',
+        updatedAt: new Date().toISOString()
       };
       
       if (editingTrek) {
@@ -963,6 +1001,39 @@ const TrekAdmin = () => {
               </FormGroup>
               
               <FormGroup>
+                <Label htmlFor="organizerId">Organizer</Label>
+                <select
+                  id="organizerId"
+                  name="organizerId"
+                  value={formData.organizerId || ''}
+                  onChange={(e) => {
+                    const selectedOrganizer = organizers.find(org => org.id === e.target.value);
+                    setFormData(prev => ({
+                      ...prev,
+                      organizerId: e.target.value,
+                      organizerName: selectedOrganizer ? selectedOrganizer.organizationName : ''
+                    }));
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    borderRadius: '4px',
+                    border: '1px solid #ddd',
+                    backgroundColor: '#fff',
+                    color: '#333'
+                  }}
+                  required
+                >
+                  <option value="">Select an Organizer</option>
+                  {organizers.map(organizer => (
+                    <option key={organizer.id} value={organizer.id}>
+                      {organizer.organizationName || organizer.name} {organizer.role === 'admin' ? '(Admin)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </FormGroup>
+              
+              <FormGroup>
                 <Label htmlFor="location">Location</Label>
                 <Input
                   type="text"
@@ -1097,6 +1168,8 @@ const TrekAdmin = () => {
                   </small>
                 </ImageUploadContainer>
               </FormGroup>
+              
+              
               
               <FormFullWidth>
                 <Label htmlFor="description">Description</Label>

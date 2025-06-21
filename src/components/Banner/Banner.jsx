@@ -18,7 +18,7 @@ const SearchBarWrapper = styled.div`
   z-index: 100;
   filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
   width: 100%;
-  max-width: 550px;
+  max-width: 380px;
   margin: 15px auto;
   transform: translateY(0);
   transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);

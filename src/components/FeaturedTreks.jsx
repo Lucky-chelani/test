@@ -3,11 +3,192 @@ import styled, { keyframes } from "styled-components";
 import { useNavigate } from "react-router-dom";
 import mapPattern from "../assets/images/map-pattren.png";
 import { FiChevronLeft, FiChevronRight, FiClock, FiMapPin, FiCalendar, FiArrowRight, FiSearch } from 'react-icons/fi';
-import { FaMountain } from 'react-icons/fa';
+import { FaMountain, FaStar } from 'react-icons/fa';
 import { db } from "../firebase";
 import { collection, getDocs } from "firebase/firestore";
 import { getValidImageUrl } from "../utils/images";
 import { useSearch } from "../context/SearchContext";
+// import { MetaRow, MetaItem, TrekRating } from "./TrekCardComponents";
+
+// Define these components directly in this file as fallback
+const MetaRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+  
+  @media (max-width: 480px) {
+    gap: 12px;
+  }
+`;
+
+const metaShimmer = keyframes`
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+`;
+
+const MetaItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #e0e0e0;
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.07);
+  padding: 14px 20px;
+  border-radius: 14px;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  flex-grow: 1;
+  justify-content: center;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(76, 111, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(5px);
+  
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to bottom, #64B5F6, #1976D2);
+    opacity: 0.6;
+    transition: all 0.3s ease;
+  }
+  
+  /* Add gradient shimmer on hover */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(to right,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.05) 25%,
+      rgba(76, 111, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0.05) 75%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 0;
+  }
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.09);
+    transform: translateY(-4px) translateX(2px);
+    box-shadow: 0 12px 25px rgba(76, 111, 255, 0.25);
+    border-color: rgba(76, 111, 255, 0.3);
+    
+    &::before {
+      opacity: 1;
+      animation: ${metaShimmer} 2s infinite;
+    }
+    
+    &::after {
+      opacity: 1;
+      height: 100%;
+      width: 6px;
+      background: linear-gradient(to bottom, #64B5F6, #1976D2, #0D47A1);
+    }
+  }
+  
+  svg {
+    color: #64B5F6;
+    min-width: 16px;
+    font-size: 1.3rem;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
+    transition: all 0.3s ease;
+  }
+  
+  &:hover svg {
+    color: #90CAF9;
+    transform: scale(1.1) translateY(-2px);
+  }
+  
+  span {
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    position: relative;
+    z-index: 1;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 0.9rem;
+    gap: 8px;
+    padding: 10px 16px;
+  }
+`;
+
+const TrekRating = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  padding: 16px 0 8px 0;
+  color: #eee;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(to right, 
+      rgba(255, 255, 255, 0.02), 
+      rgba(255, 193, 7, 0.2), 
+      rgba(255, 255, 255, 0.02));
+  }
+  
+  svg {
+    color: #FFC107;
+    font-size: 1.1rem;
+  }
+  
+  .reviews {
+    opacity: 0.8;
+    font-size: 0.9rem;
+    margin-left: 5px;
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 152, 0, 0.1));
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 193, 7, 0.15);
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.1);
+    transition: all 0.3s ease;
+    
+    &:hover {
+      background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 152, 0, 0.15));
+      transform: translateY(-1px);
+    }
+  }
+`;
+
+// Animations
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
 
 const shimmer = keyframes`
   0% {
@@ -15,17 +196,6 @@ const shimmer = keyframes`
   }
   100% {
     background-position: 500px 0;
-  }
-`;
-
-const fadeIn = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 `;
 
@@ -367,31 +537,43 @@ const NextButton = styled(NavigationButton)`
   }
 `;
 
-// Premium card with clean, modern design
+// Define 3D card hover effect
+const cardHover = keyframes`
+  0% { transform: perspective(1200px) rotateY(0) rotateX(0); }
+  50% { transform: perspective(1200px) rotateY(5deg) rotateX(-2deg); }
+  100% { transform: perspective(1200px) rotateY(0) rotateX(0); }
+`;
+
+// Premium card with enhanced dark modern design and 3D effect
 const TrekCard = styled.div`
-  background: white;
+  background: linear-gradient(135deg, #121212 30%, #1a1f35 100%);
   border-radius: 16px;
   overflow: hidden;
-  min-width: 380px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-  transition: all 0.4s ease;
+  min-width: 450px; /* Increased card width */
+  box-shadow: 0 15px 35px rgba(76, 111, 255, 0.25);
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
   flex-shrink: 0;
   position: relative;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: white;
+  animation: ${fadeIn} 0.6s ease-out;
+  transform-style: preserve-3d;
+  transform-origin: center center;
   
   @media (min-width: 769px) {
     &:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+      transform: translateY(-10px) perspective(1200px) rotateY(5deg) rotateX(-2deg);
+      box-shadow: 0 20px 40px rgba(76, 111, 255, 0.35), -5px 20px 20px rgba(76, 111, 255, 0.1);
+      border-color: rgba(76, 111, 255, 0.2);
     }
   }
   
   @media (max-width: 1200px) {
-    min-width: 360px;
+    min-width: 420px;
   }
   
   @media (max-width: 1000px) {
-    min-width: 320px;
+    min-width: 380px;
   }
       
   @media (max-width: 768px) {
@@ -407,7 +589,7 @@ const TrekCard = styled.div`
 
 const TrekImageWrapper = styled.div`
   position: relative;
-  height: 220px;
+  height: 300px;
   overflow: hidden;
 `;
 
@@ -417,7 +599,8 @@ const TrekImage = styled.div`
   background-size: cover;
   background-position: center;
   position: relative;
-  transition: transform 0.5s ease;
+  transition: all 0.6s cubic-bezier(0.33, 1, 0.68, 1);
+  filter: saturate(1.1) contrast(1.1);
   
   &::before {
     content: '';
@@ -426,16 +609,23 @@ const TrekImage = styled.div`
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(0deg,
-      rgba(0, 0, 0, 0.3) 0%,
-      rgba(0, 0, 0, 0) 50%
+    background: linear-gradient(180deg,
+      rgba(0, 0, 0, 0.2) 0%,
+      rgba(0, 0, 0, 0.5) 50%,
+      rgba(0, 0, 0, 0.9) 100%
     );
     z-index: 1;
+    transition: opacity 0.6s ease;
   }
   
   @media (min-width: 769px) {
     ${TrekCard}:hover & {
-      transform: scale(1.05);
+      transform: scale(1.08);
+      filter: saturate(1.3) contrast(1.15) brightness(1.1);
+      
+      &::before {
+        opacity: 0.8;
+      }
     }
   }
 `;
@@ -446,24 +636,76 @@ const ImageOverlay = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0), 
-    rgba(0, 0, 0, 0.3)
+  background: linear-gradient(to bottom, 
+    rgba(0, 0, 0, 0.2) 0%,
+    rgba(0, 0, 0, 0.4) 40%,
+    rgba(0, 0, 0, 0.7) 70%,
+    rgba(0, 0, 0, 0.9) 100%
   );
-  z-index: 1;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 20px;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, 
+      rgba(18, 18, 18, 0) 40%, 
+      rgba(18, 18, 18, 0.8) 80%, 
+      rgba(18, 18, 18, 1) 100%);
+    z-index: -1;
+  }
+`;
+
+const InfoBadge = styled.div`
+  background: rgba(33, 150, 243, 0.25);
+  border: 1px solid rgba(33, 150, 243, 0.4);
+  border-radius: 12px;
+  padding: 10px 18px;
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 10;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.25);
+  transition: all 0.3s ease;
+  flex-grow: 1;
+  justify-content: center;
+  
+  &:hover {
+    background: rgba(33, 150, 243, 0.35);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(33, 150, 243, 0.35);
+  }
+  
+  svg {
+    color: #81D4FA;
+    font-size: 1.2rem;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 0.9rem;
+    padding: 8px 14px;
+  }
 `;
 
 const TrekTags = styled.div`
   position: absolute;
   top: 16px;
   left: 16px;
-  right: 16px;
+  right: 100px;
   display: flex;
-  justify-content: space-between;
-  gap: 8px;
+  justify-content: flex-start;
+  gap: 12px;
   z-index: 10;
   flex-wrap: wrap;
+  animation: fadeIn 0.5s ease-out;
   
   @media (max-width: 480px) {
     gap: 6px;
@@ -478,11 +720,13 @@ const Tag = styled.div`
   font-size: 0.9rem;
   font-weight: 500;
   color: #fff;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: background 0.3s, transform 0.3s;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.3s ease;
   gap: 6px;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   
   svg {
     flex-shrink: 0;
@@ -490,26 +734,27 @@ const Tag = styled.div`
   }
   
   &:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.7);
     transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.25);
   }
 `;
 
-// Fresh, bright difficulty tag
+// Modern glass-effect difficulty tag
 const DifficultyTag = styled(Tag)`
-  background: #FF5722;
+  background: rgba(255, 87, 34, 0.2);
   color: white;
   padding: 6px 14px;
   font-size: 0.85rem;
   font-weight: 600;
   border-radius: 50px;
-  box-shadow: 0 2px 8px rgba(255, 87, 34, 0.3);
-  border: none;
+  box-shadow: 0 4px 12px rgba(255, 87, 34, 0.25);
+  border: 1px solid rgba(255, 87, 34, 0.4);
   min-width: 90px;
   justify-content: center;
   
   svg {
-    color: white;
+    color: #FF8A65;
   }
   
   @media (max-width: 480px) {
@@ -520,14 +765,14 @@ const DifficultyTag = styled(Tag)`
 `;
 
 const LocationTag = styled(Tag)`
-  background: #2196F3;
+  background: rgba(33, 150, 243, 0.2);
   color: white;
-  border: none;
+  border: 1px solid rgba(33, 150, 243, 0.4);
   border-radius: 50px;
   padding: 6px 14px;
   font-size: 0.85rem;
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.25);
   min-width: 90px;
   justify-content: center;
   
@@ -544,9 +789,10 @@ const LocationTag = styled(Tag)`
 
 const InfoRow = styled.div`
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 12px;
   margin-bottom: 14px;
-  color: #666;
+  color: #ccc;
   font-size: 0.95rem;
   flex-wrap: wrap;
   align-items: center;
@@ -560,10 +806,19 @@ const InfoItem = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #666;
+  color: #ccc;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 6px 12px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+  }
   
   svg {
-    color: #2196F3;
+    color: #64B5F6;
     font-size: 1.1rem;
   }
 `;
@@ -614,18 +869,16 @@ const Price = styled.div`
   }
 `;
 
-const RatingRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 20px;
-  border-top: 1px solid #eee;
-  padding-top: 15px;
-  
-  span {
-    display: flex;
-    align-items: center;
-    gap: 4px;
+// Star rating components with animation
+const starPulse = keyframes`
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
   }
 `;
 
@@ -633,66 +886,163 @@ const StarContainer = styled.div`
   display: flex;
   align-items: center;
   color: #FFC107;
-  font-size: 1rem;
+  font-size: 1.1rem;
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 87, 34, 0.1));
+  padding: 8px 14px;
+  border-radius: 30px;
+  margin-right: 8px;
+  border: 1px solid rgba(255, 193, 7, 0.2);
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.15);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.2), rgba(255, 87, 34, 0.15));
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(255, 193, 7, 0.25);
+  }
 `;
 
 const Star = styled.span`
   color: #FFC107;
-  margin-right: 3px;
-  font-size: 1rem;
+  margin-right: 4px;
+  font-size: 1.1rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
+  transition: all 0.3s ease;
+  
+  &:hover {
+    color: #FFD54F;
+    animation: ${starPulse} 0.8s ease infinite;
+  }
 `;
 
 const ReviewCount = styled.span`
-  color: #999;
+  color: #aaa;
   font-weight: 400;
   font-size: 0.9rem;
+  margin-left: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px 10px;
+  border-radius: 20px;
+`;
+
+const RatingRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 10px 0 5px 0;
+  font-size: 0.9rem;
+  color: #fff;
+`;
+
+const buttonHover = keyframes`
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+`;
+
+const arrowAnimation = keyframes`
+  0% { transform: translateX(0); }
+  50% { transform: translateX(4px); }
+  100% { transform: translateX(0); }
 `;
 
 const ViewButton = styled.button`
-  background: #4CAF50;
+  background: linear-gradient(135deg, #5390D9, #4C6FFF, #5E60CE, #4C6FFF);
+  background-size: 300% 300%;
   color: white;
   border: none;
-  border-radius: 8px;
-  padding: 14px 24px;
-  font-weight: 600;
-  font-size: 1rem;
+  border-radius: 14px;
+  padding: 16px 30px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.5px;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
-  transition: all 0.3s ease;
+  box-shadow: 0 10px 25px rgba(76, 111, 255, 0.3);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-width: 140px;
+  gap: 10px;
+  min-width: 160px;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  margin-top: 20px;
+  
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: 0.5s;
+    z-index: 1;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 14px; 
+    padding: 2px;
+    background: linear-gradient(135deg, #7FC8F8, #4C6FFF);
+    -webkit-mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  &:hover::after {
+    opacity: 1;
+  }
+  
+  &:hover:before {
+    left: 100%;
+  }
   
   &:hover {
-    background: #45a049;
-    transform: translateY(-3px);
-    box-shadow: 0 6px 15px rgba(76, 175, 80, 0.3);
+    animation: ${buttonHover} 3s ease infinite;
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 15px 30px rgba(76, 111, 255, 0.5);
   }
       
   &:active {
-    transform: translateY(-1px);
-    box-shadow: 0 3px 8px rgba(76, 175, 80, 0.2);
+    transform: translateY(-2px) scale(0.98);
+    box-shadow: 0 5px 15px rgba(76, 111, 255, 0.3);
   }
   
   svg {
-    transition: transform 0.2s ease;
+    position: relative;
+    z-index: 1;
+    transition: transform 0.3s ease;
+    font-size: 1.3rem;
+  }
+  
+  span {
+    position: relative;
+    z-index: 1;
   }
   
   &:hover svg {
-    transform: translateX(4px);
+    transform: translateX(6px);
+    animation: ${arrowAnimation} 1.5s ease infinite;
   }
   
   @media (max-width: 768px) {
-    padding: 12px 20px;
-    font-size: 0.95rem;
+    padding: 14px 25px;
+    font-size: 1rem;
   }
   
   @media (max-width: 480px) {
     width: 100%;
-    padding: 12px 18px;
-    font-size: 0.9rem;
+    padding: 14px 22px;
+    font-size: 0.95rem;
   }
 `;
 
@@ -953,52 +1303,72 @@ export default function FeaturedTreks() {
               <FiChevronLeft />
             </PrevButton>
             
-            <TrekListContainer ref={scrollRef}>            {treks.map((trek, idx) => (
+            <TrekListContainer ref={scrollRef}>
+            {treks.map((trek, idx) => (
               <TrekCard key={idx}>
                 <TrekImageWrapper>
                   <TrekImage style={{backgroundImage: `url(${getValidImageUrl(trek.image)})`}} />
                   <ImageOverlay />
                   <TrekTags>
-                    <LocationTag><FiMapPin /> {trek.country}</LocationTag>
-                    <DifficultyTag><FaMountain /> {trek.difficulty}</DifficultyTag>
-                  </TrekTags>
-                </TrekImageWrapper>
-                <TrekInfo>
-                  <TrekTitle>{trek.title}</TrekTitle>
-                  <InfoRow>                    <InfoItem>
+                    <LocationTag><FiMapPin /> {trek.location || trek.country || "Location"}</LocationTag>
+                    <DifficultyTag><FaMountain /> {trek.difficulty || "Easy"}</DifficultyTag>
+                  </TrekTags>                  <TrekTitle>{trek.title}</TrekTitle>
+                  {(trek.organizerName || trek.organizer) && (
+                    <OrganizerRow>
+                      <OrganizerIcon>
+                        <FaMountain />
+                      </OrganizerIcon>
+                      <OrganizerText>
+                        Organized by <OrganizerName>{trek.organizerName || trek.organizer}</OrganizerName>
+                      </OrganizerText>
+                    </OrganizerRow>
+                  )}
+                </TrekImageWrapper>                <TrekInfo>
+                  <MetaRow>
+                    <MetaItem>
                       <FiClock />
                       <span>{trek.days} Days</span>
-                    </InfoItem>
-                    <InfoItem>
-                      <FiCalendar />
-                      <span>{trek.season || "Year-round"}</span>
-                    </InfoItem>
-                  </InfoRow>
-                  <InfoRow>
-                    <InfoItem>
+                    </MetaItem>
+                    <MetaItem>
                       <FiMapPin />
-                      <span>{trek.location}</span>
-                    </InfoItem>
-                  </InfoRow>
-                  <RatingRow>
-                    <StarContainer>
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i}>★</Star>
-                      ))}
-                    </StarContainer>
-                    <span>{trek.rating} <ReviewCount>({trek.reviews} reviews)</ReviewCount></span>
-                  </RatingRow>                  <ActionRow>
-                    <Price>
-                      {trek.price} <span>per person</span>
-                    </Price>
+                      <span>{trek.location || trek.country || "Location"}</span>
+                    </MetaItem>
+                  </MetaRow>
+                  
+                  <MetaRow>
+                    <SeasonBadge>
+                      <FiCalendar />
+                      <span>{trek.season || trek.month || "Year-round"}</span>
+                    </SeasonBadge>
+                  </MetaRow>
+                  
+                  {trek.rating && (
+                    <TrekRating>
+                      <StarContainer>
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i}>
+                            <FaStar style={{ opacity: i < Math.floor(trek.rating) ? 1 : 0.3 }} />
+                          </Star>
+                        ))}
+                      </StarContainer>
+                      <span>{trek.rating}</span>
+                      {trek.reviews && <ReviewCount>({trek.reviews} reviews)</ReviewCount>}
+                    </TrekRating>
+                  )}
+                  
+                  <PriceTag>
+                    <span>₹</span>{trek.price || "4,999"}
+                  </PriceTag>
+                  
+                  <ActionRow>
                     <ViewButton onClick={() => navigateToTrekDetails(trek.id)}>
-                      Book Now
-                      <FiArrowRight />
+                      View Trek <FiArrowRight />
                     </ViewButton>
                   </ActionRow>
                 </TrekInfo>
               </TrekCard>
-            ))}          </TrekListContainer>
+            ))}
+            </TrekListContainer>
           
           <NextButton 
             onClick={() => handleScroll('right')}
@@ -1026,32 +1396,250 @@ export default function FeaturedTreks() {
 }
 
 const TrekInfo = styled.div`
-  padding: 24px;
-  background: white;
-  color: #333;
+  padding: 28px 24px;
+  background: linear-gradient(135deg, #121212 30%, #1a1f35 100%);
+  color: #ffffff;
   position: relative;
+  z-index: 3;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-shadow: inset 0 10px 20px rgba(0, 0, 0, 0.1);
+  
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(76, 111, 255, 0.3), transparent);
+  }
+  
+  /* Subtle background pattern */
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0.03;
+    background-image: 
+      linear-gradient(30deg, rgba(76, 111, 255, 0.3) 12%, transparent 12.5%, transparent 87%, rgba(76, 111, 255, 0.3) 87.5%, rgba(76, 111, 255, 0.3)),
+      linear-gradient(150deg, rgba(76, 111, 255, 0.3) 12%, transparent 12.5%, transparent 87%, rgba(76, 111, 255, 0.3) 87.5%, rgba(76, 111, 255, 0.3)),
+      linear-gradient(30deg, rgba(76, 111, 255, 0.3) 12%, transparent 12.5%, transparent 87%, rgba(76, 111, 255, 0.3) 87.5%, rgba(76, 111, 255, 0.3)),
+      linear-gradient(150deg, rgba(76, 111, 255, 0.3) 12%, transparent 12.5%, transparent 87%, rgba(76, 111, 255, 0.3) 87.5%, rgba(76, 111, 255, 0.3)),
+      linear-gradient(60deg, rgba(76, 111, 255, 0.2) 25%, transparent 25.5%, transparent 75%, rgba(76, 111, 255, 0.2) 75%, rgba(76, 111, 255, 0.2)),
+      linear-gradient(60deg, rgba(76, 111, 255, 0.2) 25%, transparent 25.5%, transparent 75%, rgba(76, 111, 255, 0.2) 75%, rgba(76, 111, 255, 0.2));
+    background-size: 80px 140px;
+    background-position: 0 0, 0 0, 40px 70px, 40px 70px, 0 0, 40px 70px;
+    z-index: -1;
+    pointer-events: none;
+  }
   
   @media (max-width: 768px) {
-    padding: 20px;
+    padding: 28px 22px;
+    gap: 16px;
   }
   
   @media (max-width: 480px) {
-    padding: 16px;
+    padding: 24px 18px;
+    gap: 14px;
   }
 `;
 
 const TrekTitle = styled.h3`
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   font-weight: 700;
-  color: #333;
-  margin-bottom: 16px;
+  color: #ffffff;
+  margin-bottom: 10px;
   line-height: 1.3;
+  position: absolute;
+  bottom: 60px;
+  left: 20px;
+  right: 20px;
+  z-index: 5;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
   
   @media (max-width: 768px) {
-    font-size: 1.4rem;
+    font-size: 1.5rem;
+    bottom: 58px;
   }
   
   @media (max-width: 480px) {
     font-size: 1.3rem;
+    bottom: 58px;
+  }
+`;
+
+const OrganizerRow = styled.div`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(to top, 
+    rgba(0, 0, 0, 0.95) 0%,
+    rgba(0, 0, 0, 0.8) 50%, 
+    rgba(0, 0, 0, 0) 100%);
+  z-index: 5;
+  height: 40px;
+`;
+
+const OrganizerIcon = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-size: 0.9rem;
+  color: #4CC9F0;
+  background: rgba(76, 201, 240, 0.15);
+  border-radius: 50%;
+  padding: 4px;
+`;
+
+const OrganizerText = styled.div`
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+`;
+
+const OrganizerName = styled.span`
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  margin-left: 3px;
+`;
+
+// Add a month/season indicator component for the trek card
+const SeasonBadge = styled.div`
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #fff;
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.7), rgba(255, 193, 7, 0.7));
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.25);
+  backdrop-filter: blur(4px);
+  transition: all 0.3s ease;
+  
+  svg {
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 1rem;
+  }
+  
+  &:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 16px rgba(255, 193, 7, 0.35);
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.8), rgba(255, 193, 7, 0.8));
+  }
+  
+  @media (max-width: 480px) {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    right: 12px;
+    top: 12px;
+  }
+`;
+
+const MonthIndicator = SeasonBadge;
+
+const pulsate = keyframes`
+  0% {
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+  }
+`;
+
+const PriceTag = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: linear-gradient(135deg, #43A047, #2E7D32);
+  color: #fff;
+  font-weight: 800;
+  font-size: 1.4rem;
+  padding: 16px 28px;
+  border-radius: 14px;
+  border: 1px solid rgba(76, 175, 80, 0.4);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
+  margin: 12px 0;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.5px;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: 0.5s;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 14px; 
+    padding: 2px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), rgba(76, 175, 80, 0.6));
+    -webkit-mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  
+  &:hover::before {
+    left: 100%;
+  }
+  
+  &:hover::after {
+    opacity: 1;
+  }
+  
+  span {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-right: 2px;
+    color: rgba(255, 255, 255, 0.9);
+  }
+  
+  &:hover {
+    background: linear-gradient(135deg, #2E7D32, #388E3C);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 12px 30px rgba(76, 175, 80, 0.5);
+    animation: ${pulsate} 2s infinite;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 1.3rem;
+    padding: 14px 24px;
   }
 `;

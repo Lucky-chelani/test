@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import styled, { keyframes,css } from 'styled-components';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
-import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, getDoc, updateDoc, where, deleteDoc, Timestamp, getDocs } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, getDoc, updateDoc, where, deleteDoc, Timestamp, getDocs, arrayUnion } from 'firebase/firestore';
 import mapPattern from '../assets/images/map-pattren.png';
 import user1 from '../assets/images/trek1.png'; // Placeholder
 
@@ -436,10 +436,11 @@ const ChatRoom = () => {
   const [room, setRoom] = useState(location.state?.room || null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');  const [loading, setLoading] = useState(false);
   const [localMessages, setLocalMessages] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [isUserMember, setIsUserMember] = useState(false);
+  const [joining, setJoining] = useState(false);
   const messagesEndRef = useRef(null);
   
   // Get room data if not provided in location state
@@ -454,10 +455,16 @@ const ChatRoom = () => {
           const unsubscribe = onSnapshot(roomsQuery, (snapshot) => {
             const roomData = snapshot.docs
               .map(doc => ({...doc.data(), docId: doc.id}))
-              .find(r => r.id === roomId);
-              
+              .find(r => r.id === roomId);              
             if (roomData) {
               setRoom(roomData);
+              
+              // Check if current user is a member of this room
+              if (auth.currentUser && roomData.members) {
+                setIsUserMember(roomData.members.includes(auth.currentUser.uid));
+              } else {
+                setIsUserMember(false);
+              }
             } else {
               setError(`Room "${roomId}" not found`);
             }
@@ -572,10 +579,23 @@ const ChatRoom = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, localMessages]);
-  
-  const handleSendMessage = async (e) => {
+    const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !roomId || !auth.currentUser) return;
+    
+    // Check if user is logged in
+    if (!auth.currentUser) {
+      setError('Please sign in to send messages');
+      return;
+    }
+    
+    // Check if message is not empty
+    if (!newMessage.trim() || !roomId) return;
+    
+    // Check if user is a member before attempting to send
+    if (!isUserMember) {
+      setError('You need to join this community before sending messages');
+      return;
+    }
     
     // Add temporary local message for immediate feedback
     const tempMessage = {
@@ -605,16 +625,63 @@ const ChatRoom = () => {
         expiresAt: Timestamp.fromDate(expirationTime), // Add expiration timestamp
         ttl: '8 hours' // Add readable TTL for UI purposes
       });
-      
-      // Remove local message once it's saved
+        // Remove local message once it's saved
       setLocalMessages(prev => prev.filter(msg => msg.id !== tempMessage.id));
       setError('');
     } catch (err) {
-      setError('Failed to send message. Please try again.');
       console.error('Error sending message:', err);
+      
+      // Specifically handle permission errors with clearer message
+      if (err.code === 'permission-denied' || err.message.includes('permission') || err.message.includes('insufficient')) {
+        setError('You don\'t have permission to send messages in this community. You may need to join first.');
+      } else {
+        setError('Failed to send message. Please try again.');
+      }
       
       // Remove failed message
       setLocalMessages(prev => prev.filter(msg => msg.id !== tempMessage.id));
+    }
+  };
+  
+  // New function to handle joining a room
+  const handleJoinRoom = async () => {
+    if (!auth.currentUser) {
+      navigate('/login');
+      return;
+    }
+
+    if (!room || !room.docId) {
+      setError('Cannot join room - room information is missing');
+      return;
+    }
+
+    try {
+      setJoining(true);
+      
+      // Add user to the members array
+      const roomRef = doc(db, 'chatrooms', room.docId);
+      await updateDoc(roomRef, {
+        members: arrayUnion(auth.currentUser.uid)
+      });
+      
+      // Update local state
+      setIsUserMember(true);
+      setRoom(prev => ({
+        ...prev,
+        members: [...(prev.members || []), auth.currentUser.uid]
+      }));
+      
+      setError(''); // Clear any errors
+    } catch (err) {
+      console.error('Error joining room:', err);
+      
+      if (err.code === 'permission-denied') {
+        setError('You don\'t have permission to join this community.');
+      } else {
+        setError(`Failed to join community: ${err.message}`);
+      }
+    } finally {
+      setJoining(false);
     }
   };
   
@@ -644,24 +711,62 @@ const ChatRoom = () => {
           </BackButton>
           
           {room && (
-            <>
-              <RoomInfo>
+            <>              <RoomInfo>
                 <RoomName>{room.name}</RoomName>
                 <RoomDescription>{room.desc}</RoomDescription>
               </RoomInfo>
               
-              <MembersCount>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M17 8C17 10.7614 14.7614 13 12 13C9.23858 13 7 10.7614 7 8C7 5.23858 9.23858 3 12 3C14.7614 3 17 5.23858 17 8Z" stroke="currentColor" strokeWidth="2"/>
-                  <path d="M3 21C3 18 7 15 12 15C17 15 21 18 21 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-                {room.members?.length || 0} members
-              </MembersCount>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {!isUserMember && auth.currentUser && (
+                  <SendButton 
+                    onClick={handleJoinRoom} 
+                    disabled={joining} 
+                    style={{ background: 'linear-gradient(90deg, #3a66db, #2752bb)' }}
+                  >
+                    {joining ? 'Joining...' : 'Join Community'}
+                  </SendButton>
+                )}
+                
+                <MembersCount>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17 8C17 10.7614 14.7614 13 12 13C9.23858 13 7 10.7614 7 8C7 5.23858 9.23858 3 12 3C14.7614 3 17 5.23858 17 8Z" stroke="currentColor" strokeWidth="2"/>
+                    <path d="M3 21C3 18 7 15 12 15C17 15 21 18 21 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                  {room.members?.length || 0} members
+                </MembersCount>
+              </div>
             </>
           )}
         </ChatHeader>
+          {error && <ErrorMessage>{error}</ErrorMessage>}
         
-        {error && <ErrorMessage>{error}</ErrorMessage>}
+        {auth.currentUser && !isUserMember && !error && (
+          <div style={{
+            background: 'rgba(58, 102, 219, 0.1)',
+            border: '1px solid rgba(58, 102, 219, 0.3)',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            margin: '0 0 16px',
+            color: 'rgba(255, 255, 255, 0.9)',
+            fontSize: '0.9rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <span>Join this community to participate in the conversation</span>
+            <SendButton 
+              onClick={handleJoinRoom} 
+              disabled={joining} 
+              style={{ 
+                background: 'linear-gradient(90deg, #3a66db, #2752bb)',
+                padding: '8px 16px',
+                minWidth: 'auto'
+              }}
+            >
+              {joining ? 'Joining...' : 'Join Now'}
+            </SendButton>
+          </div>
+        )}
         
         <MessagesContainer>
           {allMessages.length === 0 ? (
@@ -711,19 +816,52 @@ const ChatRoom = () => {
           )}
           <div ref={messagesEndRef} />
         </MessagesContainer>
-        
-        <InputContainer onSubmit={handleSendMessage}>
-          <MessageInput
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder={auth.currentUser ? "Type your message..." : "Sign in to send messages"}
-            disabled={loading || !auth.currentUser}
-          />
-          <SendButton type="submit" disabled={loading || !newMessage.trim() || !auth.currentUser}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M22 2L11 13M22 2L15 22L11 13M11 13L2 9L22 2" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </SendButton>
+          <InputContainer onSubmit={handleSendMessage}>
+          {!auth.currentUser ? (
+            // User is not logged in
+            <>
+              <MessageInput
+                disabled={true}
+                placeholder="Sign in to send messages"
+              />
+              <SendButton type="button" disabled={true}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M22 2L11 13M22 2L15 22L11 13M11 13L2 9L22 2" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </SendButton>
+            </>
+          ) : !isUserMember ? (
+            // User is logged in but not a member
+            <>
+              <MessageInput
+                disabled={true}
+                placeholder="Join this community to send messages"
+              />
+              <SendButton 
+                type="button" 
+                onClick={handleJoinRoom}
+                disabled={joining}
+                style={{ background: 'linear-gradient(90deg, #3a66db, #2752bb)' }}
+              >
+                {joining ? '...' : 'Join'}
+              </SendButton>
+            </>
+          ) : (
+            // User is logged in and a member
+            <>
+              <MessageInput
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder="Type your message..."
+                disabled={loading}
+              />
+              <SendButton type="submit" disabled={loading || !newMessage.trim()}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M22 2L11 13M22 2L15 22L11 13M11 13L2 9L22 2" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </SendButton>
+            </>
+          )}
         </InputContainer>
       </ChatContainer>
     </Page>

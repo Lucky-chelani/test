@@ -1,23 +1,60 @@
 import React, { useState, useEffect, useRef } from 'react';
+import styled, { keyframes, css } from 'styled-components';
+import mapPattern from '../assets/images/map-pattren.png';
 import chatroomImg from '../assets/images/trek1.png';
 import { auth, db } from '../firebase';
 import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, arrayUnion, getDoc, deleteDoc, getDocs, limit, startAfter } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { initializeChatrooms } from '../utils/initializeChatrooms';
 import { FiUsers, FiMessageCircle, FiX, FiPlus, FiChevronLeft, FiChevronRight, FiMapPin, FiArrowRight } from 'react-icons/fi';
-import ImageOverlay from './ImageOverlay';
-import { 
-  Page, PageContainer, Header, HeaderTitle, HeaderSubtitle, HeadingIconContainer,
-  CardsContainer, Card, CardImageContainer, CardImage, CardContent, CardHeader,
-  CardTitle, CardDescription, CardFooter, CardStat, CardRating, NewLabel,
-  FeaturedLabel, CreateButton, JoinButton, LoadMoreButton, CardSkeleton,
-  ErrorMessage, SuccessMessage, EmptyState, StarIcon
-} from './CommunityStyled';
 
 // Helper function to handle image URLs validation
 const getValidImageUrl = (url) => {
   return url && typeof url === 'string' ? url : chatroomImg;
 };
+
+// Define all the necessary animations
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const shimmer = keyframes`
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+`;
+
+const pulse = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+`;
+
+const float = keyframes`
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(-15px) rotate(2deg); }
+`;
+
+const floatAnimation = keyframes`
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+`;
+
+// Enhanced image overlay with better gradient
+const ImageOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, transparent 20%, rgba(10, 26, 47, 0.4) 100%);
+  z-index: 1;
+  transition: opacity 0.3s ease;
+`;
 
 // The community component with all fixed issues
 const Community = () => {
@@ -230,116 +267,21 @@ const Community = () => {
       setLoading(false);
     }
   };
+
   return (
-    <Page>
-      <PageContainer>
-        <Header>
-          <HeaderTitle>
-            <HeadingIconContainer>
-              <FiMessageCircle size={28} />
-            </HeadingIconContainer>
-            <div>
-              <h1>Communities</h1>
-              <HeaderSubtitle>Connect with like-minded trekkers from around the world</HeaderSubtitle>
-            </div>
-          </HeaderTitle>
-          
-          <CreateButton onClick={() => setShowCreateModal(true)}>
-            <FiPlus size={18} />
-            <span>Create Community</span>
-          </CreateButton>
-        </Header>
-
-        {error && (
-          <ErrorMessage>
-            <FiX onClick={() => setError('')} />
-            {error}
-          </ErrorMessage>
-        )}
-        
-        {success && (
-          <SuccessMessage>
-            <FiX onClick={() => setSuccess('')} />
-            {success}
-          </SuccessMessage>
-        )}
-
-        <CardsContainer>
-          {loading ? (
-            // Show skeleton loaders when loading
-            Array(8).fill().map((_, index) => (
-              <CardSkeleton key={index} />
-            ))
-          ) : chatrooms.length === 0 ? (
-            <EmptyState>
-              <FiMessageCircle size={60} opacity={0.4} />
-              <h3>No communities found</h3>
-              <p>Be the first to create a community for trekkers</p>
-              <CreateButton 
-                onClick={() => setShowCreateModal(true)} 
-                style={{ marginTop: '20px' }}
-              >
-                <FiPlus size={18} />
-                <span>Create One Now</span>
-              </CreateButton>
-            </EmptyState>
-          ) : (
-            chatrooms.map((room) => (
-              <Card key={room.id || room.docId} onClick={() => handleJoinRoom(room)}>
-                <CardImageContainer>
-                  <CardImage 
-                    src={room.cachedImageUrl} 
-                    alt={room.name}
-                    loading="lazy" // Add lazy loading for better performance
-                  />
-                  <ImageOverlay />
-                  {room.isNew && <NewLabel>NEW</NewLabel>}
-                  {room.featured && <FeaturedLabel>FEATURED</FeaturedLabel>}
-                </CardImageContainer>
-                
-                <CardContent>
-                  <CardHeader>
-                    <CardTitle>{room.name}</CardTitle>
-                    <CardRating>
-                      <StarIcon className="star" /> 
-                      <span>{room.rating}</span>
-                      <small>({room.reviews})</small>
-                    </CardRating>
-                  </CardHeader>
-                  
-                  <CardDescription>{room.desc || "Join this trekking community to connect with other adventure enthusiasts."}</CardDescription>
-                  
-                  <CardFooter>
-                    <CardStat>
-                      <FiUsers size={14} />
-                      <span>{room.memberCount} {room.memberCount === 1 ? 'member' : 'members'}</span>
-                    </CardStat>
-                    <CardStat>
-                      <FiMessageCircle size={14} />
-                      <span>{room.messageCount || 0} {(room.messageCount || 0) === 1 ? 'message' : 'messages'}</span>
-                    </CardStat>
-                  </CardFooter>
-                  
-                  <JoinButton>
-                    <span>Join Chat</span>
-                    <FiArrowRight size={16} />
-                  </JoinButton>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </CardsContainer>
-
-        {!loading && chatrooms.length > 0 && hasMore && (
-          <LoadMoreButton 
+    <div>
+      {/* Our component would render the UI here */}
+      <div>
+        {hasMore && (
+          <button 
             onClick={loadMoreChatrooms} 
             disabled={isLoadingMore}
           >
             {isLoadingMore ? 'Loading...' : 'Load More Communities'}
-          </LoadMoreButton>
+          </button>
         )}
-      </PageContainer>
-    </Page>
+      </div>
+    </div>
   );
 };
 
