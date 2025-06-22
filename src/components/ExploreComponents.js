@@ -132,14 +132,11 @@ const badgeAnimation = `
 `;
 
 export const BadgeTag = styled.span`
-  position: absolute;
-  top: 16px;
-  right: 16px;
   padding: 8px 16px;
   background: linear-gradient(135deg, #FF8A65, #FF5722);
   color: white;
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 0.95rem;
   border-radius: 12px;
   box-shadow: 0 6px 15px rgba(255, 87, 34, 0.35);
   z-index: 10;
@@ -147,6 +144,11 @@ export const BadgeTag = styled.span`
   backdrop-filter: blur(5px);
   border: 1px solid rgba(255, 87, 34, 0.3);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-right: auto; /* Push to the right of DifficultyTag */
   
   /* Inject keyframes */
   ${badgeAnimation}

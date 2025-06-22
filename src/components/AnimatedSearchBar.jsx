@@ -100,171 +100,283 @@ const Bar = styled.div`
   animation-delay: ${props => props.delay}s;
 `;
 
+const slideDown = keyframes`
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+`;
+
+const slideUp = keyframes`
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+`;
+
 const SearchDialog = styled.div`
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(15px);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  padding-top: 15vh;
+  justify-content: center;
   z-index: 2000;
-  animation: ${fadeIn} 0.3s ease-out;
   opacity: ${props => props.isOpen ? 1 : 0};
   pointer-events: ${props => props.isOpen ? 'all' : 'none'};
-  transition: opacity 0.3s ease;
+  transition: all 0.3s ease;
+  padding: 20px;
 `;
 
 const DialogContent = styled.div`
   width: 100%;
-  max-width: 700px;
-  padding: 0 20px;
+  max-width: 500px;
+  background: #151515;
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: ${slideUp} 0.4s ease-out;
+  position: relative;
+  
+  @media (max-width: 768px) {
+    max-width: 90%;
+    padding: 20px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 16px;
+    border-radius: 20px;
+  }
 `;
 
 const SearchForm = styled.form`
   width: 100%;
-  margin-bottom: 30px;
+  margin-bottom: 24px;
 `;
 
 const SearchInputWrapper = styled.div`
   position: relative;
   width: 100%;
-  height: 70px;
-  border-radius: 35px;
+  height: 58px;
+  border-radius: 18px;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+  background: #222222;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
   transition: all 0.3s ease;
   
   &:focus-within {
-    box-shadow: 0 10px 40px rgba(128, 255, 219, 0.3);
+    box-shadow: 0 0 0 2px rgba(128, 255, 219, 0.3);
     border-color: rgba(128, 255, 219, 0.3);
   }
   
   @media (max-width: 768px) {
-    height: 60px;
+    height: 54px;
+    border-radius: 16px;
+  }
+  
+  @media (max-width: 480px) {
+    height: 48px;
+    border-radius: 14px;
   }
 `;
 
 const SearchInput = styled.input`
   width: 100%;
   height: 100%;
-  padding: 0 70px 0 30px;
+  padding: 0 60px 0 22px;
   background: transparent;
   border: none;
-  font-size: 1.5rem;
+  font-size: 1.1rem;
   color: white;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Inter', 'Poppins', sans-serif;
   
   &:focus {
     outline: none;
   }
   
   &::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 1rem;
   }
   
   @media (max-width: 768px) {
-    font-size: 1.2rem;
-    padding: 0 60px 0 25px;
+    font-size: 1rem;
+    padding: 0 55px 0 18px;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 0.95rem;
+    padding: 0 50px 0 16px;
+    
+    &::placeholder {
+      font-size: 0.9rem;
+    }
   }
 `;
 
 const SearchButton = styled.button`
   position: absolute;
   top: 50%;
-  right: 15px;
+  right: 10px;
   transform: translateY(-50%);
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background: rgba(128, 255, 219, 0.2);
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #10B981;
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   color: white;
   transition: all 0.2s ease;
   
-  &:hover {
-    background: rgba(128, 255, 219, 0.3);
+  &:hover, &:active {
+    background: #059669;
     transform: translateY(-50%) scale(1.05);
   }
   
   @media (max-width: 768px) {
-    width: 40px;
-    height: 40px;
-    font-size: 1.2rem;
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+    border-radius: 10px;
+  }
+  
+  @media (max-width: 480px) {
+    width: 32px;
+    height: 32px;
+    right: 8px;
+    font-size: 1rem;
   }
 `;
 
 const CloseButton = styled.button`
   position: absolute;
-  top: 30px;
-  right: 30px;
-  width: 50px;
-  height: 50px;
+  top: -15px;
+  right: -15px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
+  background: #333;
+  border: 2px solid #151515;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 1.5rem;
+  font-size: 1.1rem;
   color: white;
   transition: all 0.2s ease;
+  z-index: 2001;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
   
-  &:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(1.05);
+  &:hover, &:active {
+    background: #444;
+    transform: scale(1.1) rotate(90deg);
   }
   
   @media (max-width: 768px) {
-    top: 20px;
-    right: 20px;
-    width: 40px;
-    height: 40px;
-    font-size: 1.2rem;
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+  
+  @media (max-width: 480px) {
+    width: 32px;
+    height: 32px;
+    top: -10px;
+    right: -10px;
   }
 `;
 
 const SearchHint = styled.div`
   color: rgba(255, 255, 255, 0.7);
-  font-size: 1.1rem;
-  margin-bottom: 20px;
+  font-size: 1rem;
+  margin-bottom: 16px;
+  font-weight: 500;
+  
+  @media (max-width: 768px) {
+    font-size: 0.95rem;
+    margin-bottom: 14px;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+  }
 `;
 
 const RecentSearches = styled.div`
   width: 100%;
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 20px;
+  gap: 12px;
+  margin-top: 16px;
+  
+  @media (max-width: 480px) {
+    gap: 8px;
+  }
+`;
+
+const popIn = keyframes`
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 `;
 
 const RecentSearchItem = styled.button`
-  padding: 10px 20px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 25px;
+  padding: 10px 18px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
   color: white;
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 0.9rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: ${popIn} 0.3s ease forwards;
+  animation-delay: calc(0.1s * var(--index, 0));
+  opacity: 0;
+  transform: scale(0.9);
   
-  &:hover {
-    background: rgba(255, 255, 255, 0.2);
+  &:hover, &:active {
+    background: linear-gradient(135deg, rgba(128, 255, 219, 0.15), rgba(76, 201, 240, 0.15));
     transform: translateY(-2px);
+    border-color: rgba(128, 255, 219, 0.3);
+  }
+  
+  @media (max-width: 768px) {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    border-radius: 12px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 8px 14px;
+    font-size: 0.8rem;
   }
 `;
 
@@ -374,12 +486,12 @@ const AnimatedSearchBar = () => {
           
           {recentSearches.length > 0 && (
             <>
-              <SearchHint>Recent searches:</SearchHint>
-              <RecentSearches>
+              <SearchHint>Recent searches:</SearchHint>              <RecentSearches>
                 {recentSearches.map((term, idx) => (
                   <RecentSearchItem
                     key={idx}
                     onClick={() => handleRecentSearchClick(term)}
+                    style={{"--index": idx}}
                   >
                     {term}
                   </RecentSearchItem>

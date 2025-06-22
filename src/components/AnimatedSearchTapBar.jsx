@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styled, { keyframes, css } from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { useSearch } from '../context/SearchContext';
 import { FiSearch, FiX } from 'react-icons/fi';
 
@@ -17,14 +17,7 @@ const pulse = keyframes`
   0%, 100% { box-shadow: 0 2px 16px 0 rgba(0,0,0,0.10); }
   50% { box-shadow: 0 4px 32px 0 rgba(0,0,0,0.13); }
 `;
-const slideInFromTop = keyframes`
-  from { transform: translateY(-20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-`;
-const scaleIn = keyframes`
-  from { transform: scale(0.95); }
-  to { transform: scale(1); }
-`;
+
 
 // --- Styled components ---
 const SearchTapContainer = styled.div`
@@ -43,6 +36,7 @@ const SearchTapContainer = styled.div`
   animation: ${pulse} 2.5s infinite;
   position: relative;
   border: 1.5px solid #e6e6e6;
+  z-index: 1; /* Ensure it stays below the dialog */
   &:hover {
     box-shadow: 0 6px 32px 0 rgba(0,0,0,0.13);
     transform: translateY(-2px) scale(1.02);
@@ -83,35 +77,62 @@ const ArrowIndicator = styled.span`
 `;
 
 // --- Dialog Styles ---
+const slideUp = keyframes`
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+`;
+
 const SearchDialog = styled.div`
   position: fixed;
-  top: 0; left: 0; right: 0;
-  height: auto;
-  max-height: 320px;
-  background: rgba(255,255,255,0.98);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 20px;
-  padding-bottom: 24px;
+  justify-content: flex-start;
+  padding: 80px 20px 20px;
   z-index: 2000;
   opacity: ${props => props.isOpen ? 1 : 0};
   pointer-events: ${props => props.isOpen ? 'all' : 'none'};
-  transform: translateY(${props => props.isOpen ? '0' : '-100%'});
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  overflow: hidden;
-  border-bottom: 1px solid rgba(0,0,0,0.08);
+  transition: opacity 0.3s ease;
+  background: transparent;
+  
+  @media (max-width: 768px) {
+    padding-top: 70px;
+  }
+  @media (max-width: 480px) {
+    padding-top: 60px;
+  }
 `;
 
 const DialogContent = styled.div`
   width: 100%;
-  max-width: 780px;
+  max-width: 500px;
+  background: #fff;
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  animation: ${slideUp} 0.4s ease-out;
   position: relative;
-  animation: ${scaleIn} 0.25s ease-out;
-  padding: 0 24px;
+  transform-origin: top center;
+  backdrop-filter: blur(5px);
+  @media (max-width: 768px) {
+    max-width: 90%;
+    padding: 20px;
+  }
+  @media (max-width: 480px) {
+    padding: 16px;
+    border-radius: 20px;
+  }
 `;
 const SearchForm = styled.form`
   width: 100%;
@@ -120,81 +141,101 @@ const SearchForm = styled.form`
 const SearchInputWrapper = styled.div`
   position: relative;
   width: 100%;
-  height: 60px;
-  border-radius: 8px;
-  background: white;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  height: 56px;
+  border-radius: 16px;
+  background: #f5f7fa;
   border: 1px solid #e2e8f0;
   display: flex;
   align-items: center;
   transition: all 0.2s ease;
-  
+  overflow: hidden;
   &:focus-within {
-    border-color: #cbd5e0;
+    border-color: #4299e1;
     box-shadow: 0 0 0 3px rgba(66,153,225,0.15);
+    background: white;
+  }
+  @media (max-width: 768px) {
+    height: 52px;
+    border-radius: 14px;
+  }
+  @media (max-width: 480px) {
+    height: 48px;
+    border-radius: 12px;
   }
 `;
 const SearchInput = styled.input`
   width: 100%;
   height: 100%;
-  padding: 0 60px;
+  padding: 0 60px 0 45px;
   background: transparent;
   border: none;
-  font-size: 1.25rem;
-  color: #2d3748;
-  font-family: inherit;
-  &:focus { outline: none; }
-  &::placeholder { 
-    color: #a0aec0; 
-    font-weight: 400;
+  font-size: 1.1rem;
+  color: #222;
+  font-family: 'Inter', 'Poppins', sans-serif;
+  &:focus {
+    outline: none;
   }
-`;
-const SearchInputIcon = styled(FiSearch)`
-  position: absolute;
-  left: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #718096;
-  font-size: 1.25rem;
+  &::placeholder {
+    color: #b0b0b0;
+    font-size: 1rem;
+  }
+  @media (max-width: 768px) {
+    font-size: 1rem;
+    padding: 0 55px 0 42px;
+  }
+  @media (max-width: 480px) {
+    font-size: 0.95rem;
+    padding: 0 50px 0 38px;
+    &::placeholder {
+      font-size: 0.9rem;
+    }
+  }
 `;
 const SearchButton = styled.button`
   position: absolute;
   top: 50%;
-  right: 12px;
+  right: 10px;
   transform: translateY(-50%);
-  height: 40px;
-  padding: 0 16px;
-  border-radius: 6px;
-  background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #4299e1;
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: 1.2rem;
   color: white;
-  font-weight: 500;
   transition: all 0.2s ease;
-  
-  &:hover { 
-    transform: translateY(-50%) scale(1.02);
-    box-shadow: 0 2px 8px rgba(66,153,225,0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  &:hover, &:active {
+    background: #3182ce;
+    transform: translateY(-50%) scale(1.05);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
   }
-  
-  &:active {
-    transform: translateY(-50%) scale(0.98);
+  @media (max-width: 768px) {
+    width: 38px;
+    height: 38px;
+    font-size: 1.1rem;
+    border-radius: 10px;
+  }
+  @media (max-width: 480px) {
+    width: 34px;
+    height: 34px;
+    right: 8px;
+    font-size: 1rem;
   }
 `;
 const CloseButton = styled.button`
   position: absolute;
-  bottom: -60px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 36px;
-  height: 36px;
-  border-radius: 18px;
-  background: rgba(0,0,0,0.7);
-  border: none;
+  top: -15px;
+  right: -15px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #4299e1;
+  border: 2px solid white;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -202,134 +243,59 @@ const CloseButton = styled.button`
   font-size: 1.1rem;
   color: white;
   transition: all 0.2s ease;
-  
-  &:hover { 
-    background: #000;
-    transform: translateX(-50%) scale(1.05);
+  z-index: 2001;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  &:hover, &:active {
+    background: #3182ce;
+    transform: scale(1.1) rotate(90deg);
   }
-  
-  &:active {
-    transform: translateX(-50%) scale(0.95);
-  }
-  
   @media (max-width: 768px) {
-    bottom: 20px;
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
   }
-`;
-const CancelButton = styled.button`
-  position: absolute;
-  top: 0;
-  right: 24px;
-  padding: 8px 16px;
-  background: transparent;
-  border: none;
-  font-size: 1rem;
-  color: #718096;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border-radius: 4px;
-  
-  &:hover {
-    color: #2d3748;
-    background: rgba(0,0,0,0.05);
+  @media (max-width: 480px) {
+    width: 32px;
+    height: 32px;
+    top: -10px;
+    right: -10px;
   }
-  
-  &:active {
-    transform: scale(0.98);
-  }
-`;
-const SearchHint = styled.div`
-  color: #718096;
-  font-size: 0.9rem;
-  font-weight: 400;
-  margin-bottom: 0;
-`;
-const RecentSearchesWrapper = styled.div`
-  position: relative;
-  width: 100%;
-  margin-top: 20px;
-  
-  &:before {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 10px;
-    height: 1px;
-    background: #e2e8f0;
-  }
-`;
-const RecentLabel = styled.div`
-  display: inline-block;
-  background: white;
-  padding: 0 10px;
-  font-size: 0.85rem;
-  color: #718096;
-  position: relative;
-  top: 0;
-  left: 12px;
 `;
 const RecentSearches = styled.div`
   width: 100%;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
   margin-top: 20px;
 `;
 const RecentSearchItem = styled.button`
-  padding: 6px 14px;
-  background: #f7fafc;
+  padding: 8px 16px 8px 14px;
+  background: #f5f7fa;
   border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  color: #4a5568;
+  border-radius: 10px;
+  color: #222;
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: 0.95rem;
   font-weight: 500;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  
-  &:before {
-    content: '${props => props.icon || "🔍"}';
-    margin-right: 6px;
-    font-size: 0.85rem;
-  }
-  
-  &:hover {
-    background: #edf2f7;
-    color: #2d3748;
-    transform: translateY(-1px);
+  gap: 6px;
+  position: relative;
+  &:hover, &:active {
+    background: #e2e8f0;
+    color: #3182ce;
+    border-color: #bcd0ea;
   }
 `;
-const BackButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 16px;
-  padding: 10px 20px;
-  background: #f7fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  color: #4a5568;
-  font-weight: 500;
-  font-size: 0.95rem;
+const RemoveIcon = styled(FiX)`
+  margin-left: 6px;
+  font-size: 1.1em;
+  color: #a0aec0;
   cursor: pointer;
-  transition: all 0.2s ease;
-  
+  transition: color 0.2s;
   &:hover {
-    background: #edf2f7;
-    transform: translateY(-2px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  }
-  
-  &:active {
-    transform: translateY(0);
-  }
-  
-  & svg {
-    margin-right: 8px;
-    font-size: 1.1rem;
+    color: #e53e3e;
   }
 `;
 
@@ -342,15 +308,100 @@ const PHRASES = [
   'Plan Your Journey'
 ];
 
-const Overlay = styled.div`
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.4);
-  z-index: 1999;
-  opacity: ${props => props.isOpen ? 1 : 0};
-  pointer-events: ${props => props.isOpen ? 'all' : 'none'};
-  transition: opacity 0.3s ease;
-  backdrop-filter: blur(2px);
+// Removed overlay component
+
+const SearchInputIcon = styled(FiSearch)`
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #a0aec0;
+  font-size: 1.2rem;
+  pointer-events: none;
+  @media (max-width: 480px) {
+    font-size: 1rem;
+    left: 14px;
+  }
+`;
+
+const SearchHint = styled.div`
+  font-size: 0.85rem;
+  color: #718096;
+  margin-top: 8px;
+  padding-left: 2px;
+  @media (max-width: 480px) {
+    font-size: 0.8rem;
+  }
+`;
+
+const RecentSearchesWrapper = styled.div`
+  margin-top: 16px;
+  width: 100%;
+`;
+
+const RecentLabel = styled.div`
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 10px;
+`;
+
+const BackButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 24px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: #f5f7fa;
+  border: 1px solid #e2e8f0;
+  color: #4a5568;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  gap: 8px;
+  &:hover {
+    background: #e2e8f0;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  &:active {
+    transform: translateY(0px);
+  }
+  @media (max-width: 480px) {
+    font-size: 0.85rem;
+    padding: 8px 16px;
+  }
+`;
+
+const CancelButton = styled.button`
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #f2f2f2;
+  border: none;
+  color: #4a5568;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  &:hover {
+    background: #e2e8f0;
+    transform: scale(1.05);
+  }
+  @media (max-width: 480px) {
+    font-size: 0.85rem;
+    width: 24px;
+    height: 24px;
+    top: 16px;
+    right: 16px;
+  }
 `;
 
 const AnimatedSearchTapBar = () => {
@@ -358,17 +409,15 @@ const AnimatedSearchTapBar = () => {
   const [searchValue, setSearchValue] = useState('');
   const [phraseIdx, setPhraseIdx] = useState(0);
   const [fade, setFade] = useState(true);
-  const inputRef = useRef(null);
-  const navigate = useNavigate();
-  const { updateSearchQuery } = useSearch();
-
-  // Fix: Define recentSearches array
-  const recentSearches = [
+  const [recentSearches, setRecentSearches] = useState([
     'Mountain Treks',
     'Himalayan Adventures',
     'Beginner Friendly',
     'Weekend Getaways'
-  ];
+  ]);
+  const inputRef = useRef(null);
+  const navigate = useNavigate();
+  const { updateSearchQuery } = useSearch();
 
   // Phrase animation logic
   useEffect(() => {
@@ -405,6 +454,9 @@ const AnimatedSearchTapBar = () => {
     updateSearchQuery(term);
     navigate('/search-results');
     setIsOpen(false);
+  };  const handleRemoveRecent = (e, term) => {
+    e.stopPropagation(); // Prevent triggering the parent button's onClick
+    setRecentSearches(recentSearches.filter(t => t !== term));
   };
   // --- Render ---
   return (
@@ -421,16 +473,14 @@ const AnimatedSearchTapBar = () => {
         ) : (
           <FadeOutText>{PHRASES[phraseIdx]}</FadeOutText>
         )}
-        <ArrowIndicator>→</ArrowIndicator>
-      </SearchTapContainer>
-      <Overlay isOpen={isOpen} onClick={() => setIsOpen(false)} />
-      <SearchDialog isOpen={isOpen}>
-        <DialogContent>
-          <CancelButton 
+        <ArrowIndicator>→</ArrowIndicator>      </SearchTapContainer>      <SearchDialog isOpen={isOpen} onClick={(e) => {
+        if (e.target === e.currentTarget) setIsOpen(false);
+      }}>
+        <DialogContent onClick={(e) => e.stopPropagation()}><CancelButton 
             onClick={() => setIsOpen(false)}
             aria-label="Cancel search"
           >
-            Cancel
+            <FiX size={16} />
           </CancelButton>
           <SearchForm onSubmit={handleSearchSubmit}>
             <SearchInputWrapper>
@@ -443,9 +493,8 @@ const AnimatedSearchTapBar = () => {
                 onChange={(e) => setSearchValue(e.target.value)}
                 autoComplete="off"
                 autoCorrect="off"
-              />
-              <SearchButton type="submit">
-                Search
+              />              <SearchButton type="submit" aria-label="Search">
+                <FiSearch size={20} />
               </SearchButton>
             </SearchInputWrapper>
             <SearchHint>Try searching for trek names, locations, difficulty levels, or duration</SearchHint>
@@ -454,19 +503,15 @@ const AnimatedSearchTapBar = () => {
           {recentSearches.length > 0 && (
             <RecentSearchesWrapper>
               <RecentLabel>Recent Searches</RecentLabel>
-              <RecentSearches>
-                {recentSearches.map((term, idx) => {
-                  const icons = ['🏔️', '🥾', '🗻', '🏕️'];
-                  return (
-                    <RecentSearchItem
-                      key={idx}
-                      icon={icons[idx % icons.length]}
-                      onClick={() => handleRecentSearchClick(term)}
-                    >
-                      {term}
-                    </RecentSearchItem>
-                  );
-                })}
+              <RecentSearches>                {recentSearches.map((term, idx) => (
+                  <RecentSearchItem 
+                    key={idx}
+                    onClick={() => handleRecentSearchClick(term)}
+                  >
+                    {term}
+                    <RemoveIcon onClick={(e) => handleRemoveRecent(e, term)} />
+                  </RecentSearchItem>
+                ))}
               </RecentSearches>
             </RecentSearchesWrapper>
           )}
