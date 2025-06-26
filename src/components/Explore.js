@@ -1319,7 +1319,10 @@ const Explore = () => {
   };
 
   // Enhanced Slider Component
-  function SliderWithArrows({ children, data, sectionId }) {
+  function SliderWithArrows({ children, data = [], sectionId }) {
+    // Ensure data is an array even if null/undefined is passed
+    const safeData = Array.isArray(data) ? data : [];
+    
     const sliderRef = useRef(null);
     const [activeIndex, setActiveIndex] = useState(0);
     const [isScrolling, setIsScrolling] = useState(false);
@@ -1339,8 +1342,8 @@ const Explore = () => {
 
         setTimeout(() => {
           if (sliderRef.current) {
-            const newIndex = Math.round(sliderRef.current.scrollLeft / (sliderRef.current.scrollWidth / data.length));
-            setActiveIndex(Math.min(Math.max(newIndex, 0), data.length - 1));
+            const newIndex = Math.round(sliderRef.current.scrollLeft / (sliderRef.current.scrollWidth / safeData.length));
+            setActiveIndex(Math.min(Math.max(newIndex, 0), safeData.length - 1));
             setIsScrolling(false);
           }
         }, 500);
@@ -1350,7 +1353,7 @@ const Explore = () => {
     const handleIndicatorClick = (index) => {
       if (sliderRef.current && !isScrolling) {
         setIsScrolling(true);
-        const cardWidth = sliderRef.current.scrollWidth / data.length;
+        const cardWidth = sliderRef.current.scrollWidth / safeData.length;
         const scrollTo = cardWidth * index;
         
         sliderRef.current.scrollTo({
@@ -1368,11 +1371,11 @@ const Explore = () => {
       const handleScrollUpdate = () => {
         if (sliderRef.current && !isScrolling) {
           const { scrollLeft, scrollWidth } = sliderRef.current;
-          const cardWidth = scrollWidth / data.length;
+          const cardWidth = scrollWidth / safeData.length;
           const newIndex = Math.round(scrollLeft / cardWidth);
           
           if (newIndex !== activeIndex) {
-            setActiveIndex(Math.min(Math.max(newIndex, 0), data.length - 1));
+            setActiveIndex(Math.min(Math.max(newIndex, 0), safeData.length - 1));
           }
         }
       };
@@ -1380,9 +1383,14 @@ const Explore = () => {
       const ref = sliderRef.current;
       if (ref) {
         ref.addEventListener('scroll', handleScrollUpdate);
-        return () => ref.removeEventListener('scroll', handleScrollUpdate);
+        return () => {
+          // Ensure ref still exists when removing the listener
+          if (ref) {
+            ref.removeEventListener('scroll', handleScrollUpdate);
+          }
+        };
       }
-    }, [activeIndex, isScrolling, data.length]);
+    }, [activeIndex, isScrolling, safeData.length]);
 
     return (
       <SliderWrapper>
@@ -1400,17 +1408,17 @@ const Explore = () => {
         
         <RightArrowButton 
           onClick={() => handleScroll('right')}
-          disabled={activeIndex === data.length - 1 || isScrolling}
+          disabled={activeIndex === safeData.length - 1 || isScrolling}
           aria-label="Scroll right"
         >
           <FiChevronRight />
         </RightArrowButton>
         
         <ScrollIndicatorContainer>
-          {data.map((_, idx) => (
+          {safeData.map((_, idx) => (
             <ScrollIndicator 
               key={idx} 
-              active={idx === activeIndex}
+              $active={idx === activeIndex}
               onClick={() => handleIndicatorClick(idx)}
             />
           ))}
@@ -1652,15 +1660,15 @@ const ScrollIndicatorContainer = styled.div`
 `;
 
 const ScrollIndicator = styled.div`
-  width: ${props => props.active ? '24px' : '8px'};
+  width: ${props => props.$active ? '24px' : '8px'};
   height: 8px;
   border-radius: 10px;
-  background: ${props => props.active ? 
+  background: ${props => props.$active ? 
     'linear-gradient(to right, #5390D9, #7400B8)' : 
     'rgba(255, 255, 255, 0.2)'};
   transition: all 0.3s ease;
   cursor: pointer;
-  box-shadow: ${props => props.active ? 
+  box-shadow: ${props => props.$active ? 
     '0 2px 8px rgba(83, 144, 217, 0.3)' : 
     '0 1px 3px rgba(0, 0, 0, 0.2)'};
   

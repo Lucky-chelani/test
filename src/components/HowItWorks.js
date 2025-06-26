@@ -1,8 +1,8 @@
 import React from 'react';
 import styled, { keyframes } from 'styled-components';
-import discover from '../assets/images/logo.png';
+import discover from '../assets/images/trek21.png';
 import book from '../assets/images/trek1.png';
-import connect from '../assets/images/how1.png';
+import connect from '../assets/images/trek22.png';
 import mapPattern from '../assets/images/map-pattren.png';
 import mountainBottomArt from '../assets/images/mountains-bottom-art.png';
 
@@ -278,6 +278,7 @@ const ServiceImg = styled.img`
   width: 65%;
   height: 65%;
   object-fit: cover;
+  border-radius: 50%;
   transition: transform 0.5s ease;
   animation: ${float} 6s ease-in-out infinite;
   

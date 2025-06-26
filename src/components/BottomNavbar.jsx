@@ -60,6 +60,11 @@ const NavbarWrapper = styled.nav`
   height: 65px;
   animation: ${fadeIn} 0.6s ease-out;
   
+  /* Hide navbar when in chatroom */
+  @media (max-width: 768px) {
+    display: ${props => props.$hiddenInChat ? 'none' : 'flex'};
+  }
+  
   /* Enhanced safe area support for iOS */
   padding-bottom: env(safe-area-inset-bottom, 0px);
   
@@ -889,10 +894,14 @@ const BottomNavbar = ({ active, transparent = false }) => {
     return baseItems;
   };
 
+  // Check if we're in a chat room - hide navbar for these paths
+  const isInChatRoom = location.pathname.includes('/community/chat');
+  
   return (
     <>
       <NavbarWrapper 
         ref={navbarRef} 
+        $hiddenInChat={isInChatRoom}
         $scrolled={scrolled} 
         $transparent={transparent}
         $isSafari={isSafari}

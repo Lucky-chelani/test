@@ -628,13 +628,8 @@ const RoleText = styled.div`
   }
 `;
 
-// Badge data with added color gradients
-const badges = [
-  { emoji: '🥾', name: 'First Hike', gradient: 'linear-gradient(135deg, #4CC9F0, #06D6A0)' },
-  { emoji: '🏔️', name: 'Mountain Climber', gradient: 'linear-gradient(135deg, #F72585, #B5179E)' },
-  { emoji: '🌄', name: 'Sunrise Trekker', gradient: 'linear-gradient(135deg, #FFD166, #F79824)' },  { emoji: '🎒', name: 'Backpacker Pro', gradient: 'linear-gradient(135deg, #4361EE, #3A0CA3)' },
-  { emoji: '🏅', name: 'Elite Trekker', gradient: 'linear-gradient(135deg, #FF6B6B, #FFD166)' }
-];
+
+// Role configuration will stay as it defines UI appearance for user roles
 
 // Role configuration
 const roleConfig = {
@@ -752,7 +747,8 @@ const Profile = () => {
                 <span>{roleConfig[userData.role]?.label || 'Explorer'}</span>
               </RoleText>
             )}
-            <ButtonGroup>              <EditButton onClick={() => navigate('/edit-profile')}>
+            <ButtonGroup>              
+              <EditButton onClick={() => navigate('/edit-profile')}>
                 <FaEdit /> Edit Profile
               </EditButton>
               <LogoutButton onClick={handleLogout}>
@@ -770,7 +766,7 @@ const Profile = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <StatValue>8</StatValue>
+            <StatValue>{userData?.stats?.treks || '0'}</StatValue>
             <StatLabel>Treks</StatLabel>
           </StatCard>
           <StatCard
@@ -779,7 +775,7 @@ const Profile = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <StatValue>258 km</StatValue>
+            <StatValue>{userData?.stats?.distance || '0 km'}</StatValue>
             <StatLabel>Total Distance</StatLabel>
           </StatCard>
           <StatCard
@@ -788,53 +784,65 @@ const Profile = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <StatValue>14,856 m</StatValue>
+            <StatValue>{userData?.stats?.elevation || '0 m'}</StatValue>
             <StatLabel>Elevation Gain</StatLabel>
           </StatCard>
         </StatsGrid>
         
         <SectionTitle>Recent Trek History</SectionTitle>
         <TrekHistory>
-          <TrekList>
-            {trekHistory.map((trek, idx) => (
-              <TrekCard 
-                key={trek.id}
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.1 }}
-              >
-                <TrekImage src={trek.image} alt={trek.name} />
-                <TrekInfo>
-                  <TrekName>{trek.name}</TrekName>
-                  <TrekDate>{trek.date}</TrekDate>
-                </TrekInfo>
-                <TrekStats>
-                  <span><FaMapMarkerAlt /> {trek.distance}</span>
-                  <span><FaMountain /> {trek.elevation}</span>
-                  <span><FaClock /> {trek.duration}</span>
-                </TrekStats>
-              </TrekCard>
-            ))}
-          </TrekList>
+          {userData?.trekHistory && userData.trekHistory.length > 0 ? (
+            <TrekList>
+              {userData.trekHistory.map((trek, idx) => (
+                <TrekCard 
+                  key={trek.id || idx}
+                  initial={{ opacity: 0, x: -30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                >
+                  <TrekImage src={trek.image} alt={trek.name} />
+                  <TrekInfo>
+                    <TrekName>{trek.name}</TrekName>
+                    <TrekDate>{trek.date}</TrekDate>
+                  </TrekInfo>
+                  <TrekStats>
+                    <span><FaMapMarkerAlt /> {trek.distance}</span>
+                    <span><FaMountain /> {trek.elevation}</span>
+                    <span><FaClock /> {trek.duration}</span>
+                  </TrekStats>
+                </TrekCard>
+              ))}
+            </TrekList>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '20px', color: 'rgba(255,255,255,0.7)' }}>
+              No trek history available yet.
+            </div>
+          )}
         </TrekHistory>
         
         <BadgesSection>
           <SectionTitle>Achievements</SectionTitle>
           <BadgesGrid>
-            {badges.map((badge, idx) => (
-              <Badge 
-                key={idx}
-                style={{ background: badge.gradient }}
-                whileHover={{ scale: 1.1, y: -5 }}
-                whileTap={{ scale: 0.95 }}
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: idx * 0.1 }}
-              >
-                {badge.emoji}
-                <BadgeTooltip>{badge.name}</BadgeTooltip>
-              </Badge>
-            ))}
+            {userData?.badges && userData.badges.length > 0 ? (
+              userData.badges.map((badge, idx) => (
+                <Badge 
+                  key={idx}
+                  style={{ background: badge.gradient || 'linear-gradient(135deg, #4CC9F0, #06D6A0)' }}
+                  whileHover={{ scale: 1.1, y: -5 }}
+                  whileTap={{ scale: 0.95 }}
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: idx * 0.1 }}
+                >
+                  {badge.emoji}
+                  <BadgeTooltip>{badge.name}</BadgeTooltip>
+                </Badge>
+              ))
+            ) : (
+              <div style={{ textAlign: 'center', padding: '20px', color: 'rgba(255,255,255,0.7)', width: '100%' }}>
+                No achievements earned yet. Start trekking to earn badges!
+              </div>
+            )}
           </BadgesGrid>
         </BadgesSection>
       </Container>
@@ -974,33 +982,4 @@ const TrekStats = styled.div`
   }
 `;
 
-// Sample trek data
-const trekHistory = [
-  {
-    id: 1,
-    name: "Himalayan Expedition",
-    date: "May 15, 2025",
-    image: "https://images.unsplash.com/photo-1526772662000-3f88f10405ff?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-    distance: "32 km",
-    elevation: "1,450 m",
-    duration: "2 days"
-  },
-  {
-    id: 2,
-    name: "Alpine Lake Trek",
-    date: "April 3, 2025",
-    image: "https://images.unsplash.com/photo-1455156218388-5e61b526818b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-    distance: "18 km",
-    elevation: "850 m",
-    duration: "1 day"
-  },
-  {
-    id: 3,
-    name: "Rainforest Adventure",
-    date: "February 22, 2025",
-    image: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-    distance: "26 km",
-    elevation: "620 m",
-    duration: "1.5 days"
-  }
-];
+// Component styles

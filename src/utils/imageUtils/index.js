@@ -6,9 +6,17 @@
  * @returns {string} - A valid URL for display
  */
 export const getValidImageUrl = (imageUrl) => {
-  if (!imageUrl || imageUrl === '') {
-    // Return a default placeholder image if no image is provided
+  // Check for null, undefined, empty strings, and invalid data URLs
+  if (!imageUrl || imageUrl === '' || imageUrl === 'data:;base64,=') {
+    // Return a default placeholder image if no image is provided or it's invalid
     return 'https://via.placeholder.com/800x600?text=Trek+Image+Coming+Soon';
+  }
+  
+  // Handle invalid data URLs (basic validation)
+  if (imageUrl.startsWith('data:') && 
+      (!imageUrl.includes(';base64,') || imageUrl.includes(';base64,='))) {
+    console.warn('Invalid data URL detected, using placeholder instead');
+    return 'https://via.placeholder.com/800x600?text=Image+Error';
   }
   
   // Handle Object URLs (used for previews)

@@ -73,11 +73,17 @@ const SimpleAdmin = () => {
           <Description>
             Manage treks, set featured status, and update trek information.
           </Description>
-        </AdminCard>
-          <AdminCard to="/admin/users">
+        </AdminCard>        <AdminCard to="/admin/users">
           <Title>User Management</Title>
           <Description>
             Manage user accounts, assign organizer roles, and control user permissions.
+          </Description>
+        </AdminCard>
+        
+        <AdminCard to="/admin/coupons">
+          <Title>Coupon Management</Title>
+          <Description>
+            Create and manage discount coupons, track usage, and set validity periods.
           </Description>
         </AdminCard>
       </AdminGrid>

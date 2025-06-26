@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { loadRazorpayScript } from '../services/payment/razorpay';
 import { processPayment, handlePaymentSuccess, handlePaymentFailure } from '../services/payment';
 import { auth } from '../firebase';
+import CouponSection from './CouponSection';
 
 const Container = styled.div`
   max-width: 600px;
@@ -91,6 +92,37 @@ const PaymentTester = () => {
   const [bookingId, setBookingId] = useState(null);
   const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false);
   
+  // Coupon related states
+  const [activeCoupon, setActiveCoupon] = useState(null);
+  const [originalAmount, setOriginalAmount] = useState('100');
+  const [discountAmount, setDiscountAmount] = useState(0);
+    // Handle coupon application
+  const handleApplyCoupon = (coupon) => {
+    if (coupon) {
+      setActiveCoupon(coupon);
+      setDiscountAmount(coupon.calculatedDiscount);
+      
+      // Update the amount after discount
+      const newAmount = Math.max(parseFloat(originalAmount) - coupon.calculatedDiscount, 0).toFixed(2);
+      setAmount(newAmount);
+      
+      setMessage(`Coupon applied! You saved ₹${coupon.calculatedDiscount}`);
+      setMessageType('success');
+    } else {
+      setActiveCoupon(null);
+      setDiscountAmount(0);
+      setAmount(originalAmount);
+      setMessage(null);
+    }
+  };
+  
+  // Update original amount whenever amount changes from input
+  useEffect(() => {
+    if (!activeCoupon) {
+      setOriginalAmount(amount);
+    }
+  }, [amount, activeCoupon]);
+  
   useEffect(() => {
     // Load Razorpay script when component mounts
     const loadScript = async () => {
@@ -110,8 +142,7 @@ const PaymentTester = () => {
       setEmail(auth.currentUser.email || '');
     }
   }, []);
-  
-  const handleSubmit = async (e) => {
+    const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!isRazorpayLoaded) {
@@ -120,9 +151,30 @@ const PaymentTester = () => {
       return;
     }
     
-    // Basic validation
-    if (!amount || parseInt(amount) <= 0 || !name || !email || !phone) {
-      setMessage('Please fill in all fields with valid values.');
+    // Enhanced validation
+    if (!amount || parseFloat(amount) <= 0) {
+      setMessage('Please enter a valid amount greater than 0.');
+      setMessageType('error');
+      return;
+    }
+    
+    if (!name || !email || !phone) {
+      setMessage('Please fill in all personal information fields.');
+      setMessageType('error');
+      return;
+    }
+    
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setMessage('Please enter a valid email address.');
+      setMessageType('error');
+      return;
+    }
+    
+    // Phone validation - simple check for now
+    if (phone.length < 10) {
+      setMessage('Please enter a valid phone number.');
       setMessageType('error');
       return;
     }
@@ -136,8 +188,8 @@ const PaymentTester = () => {
         id: 'test-trek-123',
         name: 'Test Trek',
         location: 'Test Location',
-        numericPrice: parseInt(amount) || 100,
-        price: `₹${parseInt(amount) || 100}`,
+        numericPrice: parseInt(originalAmount) || 100,
+        price: `₹${parseInt(originalAmount) || 100}`,
         image: '/m.png',
         duration: '1 day',
         difficulty: 'Easy',
@@ -150,13 +202,50 @@ const PaymentTester = () => {
         email,
         contactNumber: phone,
         participants: 1,
-        startDate: new Date().toISOString().split('T')[0]
+        startDate: new Date().toISOString().split('T')[0],
+        // Include coupon information if available
+        coupon: activeCoupon ? {
+          id: activeCoupon.id,
+          code: activeCoupon.code,
+          discount: discountAmount,
+          discountType: activeCoupon.discountType,
+          originalAmount: parseFloat(originalAmount),
+          finalAmount: parseFloat(amount)
+        } : null
       };
+        // Validate coupon one more time before proceeding
+      if (activeCoupon) {
+        // Check if coupon is still valid (in case it expired during session)
+        const couponValidationMessage = validateCouponBeforePayment();
+        
+        if (couponValidationMessage) {
+          setMessage(couponValidationMessage);
+          setMessageType('error');
+          setIsProcessing(false);
+          return;
+        }
+      }
       
       const result = await processPayment(mockTrek, mockBookingDetails);
       
       if (result.success) {
         setBookingId(result.orderId);
+        
+        // If we have a coupon, store it in session to show in the receipt later
+        if (activeCoupon) {
+          try {
+            sessionStorage.setItem('lastAppliedCoupon', JSON.stringify({
+              code: activeCoupon.code,
+              discount: discountAmount,
+              originalAmount: parseFloat(originalAmount),
+              finalAmount: parseFloat(amount)
+            }));
+          } catch (err) {
+            // Ignore session storage errors
+            console.log('Could not save coupon to session:', err);
+          }
+        }
+        
         setMessage('Payment window opened. Complete the payment process in the Razorpay window.');
       } else {
         setMessage(`Payment initialization failed: ${result.error}`);
@@ -170,17 +259,64 @@ const PaymentTester = () => {
       setIsProcessing(false);
     }
   };
-    // Set up handlers for Razorpay response
+  
+  // Validate coupon before proceeding with payment
+  const validateCouponBeforePayment = () => {
+    if (!activeCoupon) return null;
+    
+    // Check if the discount amount makes sense
+    if (discountAmount <= 0) {
+      return 'Invalid coupon discount amount. Please remove and reapply the coupon.';
+    }
+    
+    // Check if discount is greater than original amount
+    if (discountAmount >= parseFloat(originalAmount)) {
+      return 'Discount amount cannot be greater than or equal to the original amount.';
+    }
+    
+    // Check if the final amount makes sense
+    if (parseFloat(amount) < 0 || isNaN(parseFloat(amount))) {
+      return 'Invalid final amount after discount. Please remove and reapply the coupon.';
+    }
+    
+    return null; // No validation error
+  };
+  // Set up handlers for Razorpay response
   useEffect(() => {
     const handleSuccess = async function(response) {
       try {
         setMessage('Processing payment verification...');
         
         // Handle successful payment
-        if (bookingId) {
-          await handlePaymentSuccess(bookingId, response);
-          setMessage('Payment successful! Your test payment was completed.');
+        if (bookingId) {        // If we have a coupon and it's valid, make sure the coupon data is included in the response
+        if (activeCoupon) {
+          if (!response.coupon) {
+            response.coupon = {
+              id: activeCoupon.id,
+              code: activeCoupon.code,
+              discount: discountAmount,
+              discountType: activeCoupon.discountType,
+              originalAmount: parseFloat(originalAmount),
+              finalAmount: parseFloat(amount)
+            };
+          }
+        }
+          
+          const result = await handlePaymentSuccess(bookingId, response);
+          
+          // Create a detailed success message with receipt info
+          let successMessage = 'Payment successful! Your test payment was completed.';
+          if (activeCoupon) {
+            successMessage += `\n\nAmount: ₹${originalAmount}\nDiscount (${activeCoupon.code}): -₹${discountAmount.toFixed(2)}\nFinal Amount: ₹${amount}`;
+          }
+          
+          setMessage(successMessage);
           setMessageType('success');
+          
+          // Clear the coupon after successful payment
+          setActiveCoupon(null);
+          setDiscountAmount(0);
+          setAmount(originalAmount);
         }
       } catch (error) {
         console.error('Payment verification error:', error);
@@ -215,8 +351,7 @@ const PaymentTester = () => {
       window.onRazorpayFailure = null;
     };
   }, [bookingId]); // Re-establish handlers if bookingId changes
-  
-  return (
+    return (
     <Container>
       <Title>Razorpay Payment Test</Title>
       <Form onSubmit={handleSubmit}>
@@ -225,11 +360,101 @@ const PaymentTester = () => {
           <Input 
             type="number" 
             min="1" 
-            value={amount} 
-            onChange={(e) => setAmount(e.target.value)}
+            value={originalAmount} 
+            onChange={(e) => {
+              const newAmount = e.target.value;
+              setOriginalAmount(newAmount);
+              
+              // If there's an active coupon, recalculate the discount
+              if (activeCoupon) {
+                let discount = 0;
+                if (activeCoupon.discountType === 'percentage') {
+                  discount = (parseFloat(newAmount) * activeCoupon.discountValue / 100);
+                  if (activeCoupon.maxDiscount && discount > activeCoupon.maxDiscount) {
+                    discount = activeCoupon.maxDiscount;
+                  }
+                } else {
+                  discount = activeCoupon.discountValue;
+                  if (discount > parseFloat(newAmount)) {
+                    discount = parseFloat(newAmount);
+                  }
+                }
+                
+                setDiscountAmount(discount);
+                setAmount(Math.max(parseFloat(newAmount) - discount, 0).toFixed(2));
+              } else {
+                setAmount(newAmount);
+              }
+            }}
             placeholder="Enter amount in INR"
           />
         </FormGroup>
+        
+        {/* Display the coupon section */}
+        <CouponSection 
+          orderTotal={parseFloat(originalAmount)} 
+          onApplyCoupon={handleApplyCoupon}
+          theme={{ 
+            mainColor: '#3399cc', 
+            hoverColor: '#2388bb',
+            gradientLight: 'linear-gradient(135deg, rgba(51, 153, 204, 0.1), rgba(33, 122, 168, 0.1))'
+          }}
+        />
+          {/* Display price breakdown if discount is applied */}
+        {activeCoupon && (
+          <div style={{
+            padding: '15px',
+            backgroundColor: '#f8f9fa',
+            borderRadius: '5px',
+            marginBottom: '20px',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+            border: '1px solid rgba(0, 0, 0, 0.05)'
+          }}>
+            <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <span style={{ fontWeight: 'bold' }}>Receipt Preview</span>
+              <span style={{ 
+                fontSize: '12px', 
+                background: '#e6f7ff', 
+                color: '#0066cc', 
+                padding: '3px 8px',
+                borderRadius: '50px',
+                display: 'inline-block' 
+              }}>
+                Coupon Applied
+              </span>
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <span>Original amount:</span>
+              <span>₹{originalAmount}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: '#2e7d32' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <span>Discount ({activeCoupon.code}):</span>
+                <span style={{ 
+                  fontSize: '11px', 
+                  background: '#e8f5e9', 
+                  color: '#2e7d32', 
+                  padding: '2px 6px',
+                  borderRadius: '50px',
+                  display: 'inline-block' 
+                }}>
+                  {activeCoupon.discountType === 'percentage' ? `${activeCoupon.discountValue}%` : 'Fixed'}
+                </span>
+              </span>
+              <span>-₹{discountAmount.toFixed(2)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', marginTop: '10px', paddingTop: '10px', borderTop: '1px dashed #ddd' }}>
+              <span>Final amount:</span>
+              <span style={{ fontSize: '1.1em', color: '#0066cc' }}>₹{amount}</span>
+            </div>
+            
+            <div style={{ marginTop: '10px', fontSize: '12px', color: '#666', fontStyle: 'italic' }}>
+              This discount will be applied when you complete the payment
+            </div>
+          </div>
+        )}
+        
         <FormGroup>
           <Label>Name</Label>
           <Input 

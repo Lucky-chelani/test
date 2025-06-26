@@ -23,6 +23,37 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+/**
+ * Ensures a string is a valid Firestore document ID
+
+* This is a critical utility that guarantees a valid ID in all cases
+ * @param {any} id - The potential document ID
+ * @returns {string} - A sanitized document ID or fallback ID if input is invalid
+ */
+export const getSafeDocumentId = (id) => {
+  // Handle null, undefined, or non-string values
+  if (!id || typeof id !== 'string' || id.trim() === '') {
+    // Generate a reliable fallback ID with timestamp for uniqueness
+    return `fallback_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+  }
+  
+  // Replace invalid characters with underscores
+  // Firestore IDs can't contain: ., /, [, ], #, * characters
+  const safeId = id.replace(/[./#[\]* ]/g, '_');
+  
+  // Ensure ID isn't too long (Firestore has a 1500 byte limit)
+  if (safeId.length > 100) {
+    return safeId.substring(0, 100);
+  }
+  
+  // Final safety check - should never happen but just in case
+  if (!safeId || safeId.trim() === '') {
+    return `emergency_fallback_${Date.now()}`;
+  }
+  
+  return safeId;
+};
+
 // Helper function to ensure collections exist with error handling
 export const ensureCollectionExists = async (collectionName) => {
   try {

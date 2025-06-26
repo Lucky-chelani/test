@@ -1,4 +1,4 @@
-import { db } from "../firebase";
+import { db, auth } from "../firebase";
 import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, setDoc } from "firebase/firestore";
 
 /**
@@ -147,11 +147,16 @@ export const unsubscribeEmail = async (email) => {
  */
 export const checkFirestoreAvailability = async () => {
   try {
-    // Try to access a test document (will only check permission, not actually write)
-    const testRef = doc(db, "system_status", "availability_test");
+    // Check if we're authenticated first
+    if (!auth.currentUser) {
+      console.log("Not authenticated, assuming Firestore is unavailable to the current user");
+      return false;
+    }
     
-    // Just try to read it - we don't care if it exists, just that we can access Firestore
-    await getDocs(query(collection(db, "system_status"), where("__name__", "==", "availability_test")));
+    // Use a more reliable collection to check
+    // Try to read the treks collection which is publicly readable
+    const trekQuery = query(collection(db, "treks"), where("featured", "==", true));
+    await getDocs(trekQuery);
     
     return true;
   } catch (error) {

@@ -157,3 +157,106 @@ exports.createOrder = functions.https.onRequest((request, response) => {
     }
   });
 });
+
+// Review-related functions
+exports.onReviewCreate = functions.firestore
+  .document('reviews/{reviewId}')
+  .onCreate(async (snapshot, context) => {
+    try {
+      // Get review data
+      const reviewData = snapshot.data();
+      const { trekId } = reviewData;
+      
+      // If trekId is missing, don't proceed
+      if (!trekId) return null;
+      
+      // Update trek rating
+      return await updateTrekRating(trekId);
+    } catch (error) {
+      console.error('Error in onReviewCreate:', error);
+      return null;
+    }
+  });
+
+exports.onReviewUpdate = functions.firestore
+  .document('reviews/{reviewId}')
+  .onUpdate(async (change, context) => {
+    try {
+      // Get before and after data
+      const beforeData = change.before.data();
+      const afterData = change.after.data();
+      
+      // Only proceed if rating changed
+      if (beforeData.rating === afterData.rating) {
+        return null;
+      }
+      
+      // Update trek rating
+      return await updateTrekRating(afterData.trekId);
+    } catch (error) {
+      console.error('Error in onReviewUpdate:', error);
+      return null;
+    }
+  });
+
+exports.onReviewDelete = functions.firestore
+  .document('reviews/{reviewId}')
+  .onDelete(async (snapshot, context) => {
+    try {
+      // Get review data
+      const reviewData = snapshot.data();
+      const { trekId } = reviewData;
+      
+      // If trekId is missing, don't proceed
+      if (!trekId) return null;
+      
+      // Update trek rating
+      return await updateTrekRating(trekId);
+    } catch (error) {
+      console.error('Error in onReviewDelete:', error);
+      return null;
+    }
+  });
+
+/**
+ * Calculate average rating and update trek document
+ * @param {string} trekId - Trek ID
+ */
+async function updateTrekRating(trekId) {
+  // Reference to the firestore
+  const db = admin.firestore();
+  
+  // Get all published reviews for this trek
+  const reviewsQuery = await db.collection('reviews')
+    .where('trekId', '==', trekId)
+    .where('status', '==', 'published')
+    .get();
+  
+  // Calculate average rating
+  let totalRating = 0;
+  let reviewCount = reviewsQuery.size;
+  
+  // If no reviews, set rating to 0
+  if (reviewCount === 0) {
+    return await db.collection('treks').doc(trekId).update({
+      rating: 0,
+      reviewCount: 0,
+      ratingUpdatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+  }
+  
+  // Sum up all ratings
+  reviewsQuery.forEach(doc => {
+    totalRating += doc.data().rating;
+  });
+  
+  // Calculate average
+  const averageRating = parseFloat((totalRating / reviewCount).toFixed(1));
+  
+  // Update trek document
+  return await db.collection('treks').doc(trekId).update({
+    rating: averageRating,
+    reviewCount: reviewCount,
+    ratingUpdatedAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+}

@@ -16,6 +16,16 @@ const slideIn = keyframes`
   to { transform: translateX(0); opacity: 1; }
 `;
 
+const shimmerEffect = keyframes`
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+`;
+
+const spin = keyframes`
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+`;
+
 const glow = keyframes`
   0% { box-shadow: 0 0 5px rgba(255, 75, 31, 0.5); }
   50% { box-shadow: 0 0 20px rgba(255, 75, 31, 0.8); }
@@ -34,9 +44,16 @@ const Page = styled.div`
   background-size: cover;
   background-repeat: repeat;
   min-height: 100vh;
+  height: 100%;
+  width: 100%;
   color: #fff;
   padding-top: 80px;
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
   
   &:before {
     content: '';
@@ -47,6 +64,10 @@ const Page = styled.div`
     bottom: 0;
     background: radial-gradient(circle at center, rgba(10, 26, 47, 0.4) 0%, rgba(10, 26, 47, 0.9) 100%);
     pointer-events: none;
+  }
+  
+  @media (max-width: 768px) {
+    padding-top: 0; // Remove top padding on mobile for full screen
   }
 `;
 
@@ -66,10 +87,18 @@ const ChatContainer = styled.div`
   z-index: 1;
   
   @media (max-width: 768px) {
-    height: calc(100vh - 80px);
+    height: 100%;
     border-radius: 0;
     margin: 0;
     max-width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /* Ensure it's not affected by the soft keyboard */
+    position: fixed;
+    overflow: hidden;
   }
 `;
 
@@ -129,6 +158,13 @@ const MessageContainer = styled.div`
   flex-direction: column;
   gap: 10px;
   scroll-behavior: smooth;
+  position: relative;
+  
+  @media (max-width: 768px) {
+    /* Ensures content doesn't shift when keyboard appears */
+    height: 0;
+    flex: 1 1 auto;
+  }
   
   &::-webkit-scrollbar {
     width: 8px;
@@ -182,6 +218,17 @@ const ChatForm = styled.form`
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   gap: 15px;
   align-items: center;
+  position: relative;
+  z-index: 5;
+  
+  @media (max-width: 768px) {
+    /* Ensures the input stays at the bottom even when keyboard is open */
+    position: sticky;
+    bottom: 0;
+    width: 100%;
+    padding: 15px;
+    box-sizing: border-box;
+  }
 `;
 
 const MessageInput = styled.input`
@@ -194,6 +241,13 @@ const MessageInput = styled.input`
   font-size: 1rem;
   outline: none;
   transition: all 0.3s;
+  
+  @media (max-width: 768px) {
+    /* Better handling of input on mobile */
+    padding: 12px 16px;
+    font-size: 16px; /* Prevents iOS zoom on input focus */
+    -webkit-appearance: none; /* Remove iOS default styling */
+  }
   
   &:focus {
     background: rgba(255, 255, 255, 0.15);
@@ -254,11 +308,30 @@ const MessageWrapper = styled.div`
   position: relative;
   
   ${props => props.$isLocal && css`
-    opacity: 0.8;
+    opacity: 0.7;
   `}
   
   ${props => props.$sendFailed && css`
     opacity: 0.6;
+  `}
+  
+  /* Special visual indicator for sending state to improve UX */
+  ${props => props.$isSending && css`
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      right: ${props.$isCurrentUser ? '40px' : 'auto'};
+      left: ${props.$isCurrentUser ? 'auto' : '40px'};
+      width: 24px;
+      height: 2px;
+      background: linear-gradient(to right, 
+        rgba(255, 255, 255, 0) 0%, 
+        rgba(255, 255, 255, 0.9) 50%, 
+        rgba(255, 255, 255, 0) 100%);
+      border-radius: 1px;
+      animation: ${shimmerEffect} 1.5s infinite linear;
+    }
   `}
 `;
 
@@ -309,6 +382,25 @@ const MessageBubble = styled.div`
   border: 1px solid ${props => props.$isCurrentUser ? 
     'rgba(128, 255, 219, 0.3)' : 
     'rgba(255, 255, 255, 0.1)'};
+  
+  /* Subtle animation for sending state */
+  ${props => props.$isLocal && props.$sending && css`
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.1) 50%,
+        transparent 100%
+      );
+      animation: ${shimmerEffect} 2s infinite;
+    }
+  `}
   
   &::before {
     content: '';
@@ -493,7 +585,7 @@ const ChatRoom = () => {
   const location = useLocation();
   const { room } = location.state || {};
   const messageContainerRef = useRef(null);
-    const [newMessage, setNewMessage] = useState('');
+  const [newMessage, setNewMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [localMessages, setLocalMessages] = useState([]);
   const [error, setError] = useState('');
@@ -502,13 +594,49 @@ const ChatRoom = () => {
   const [roomData, setRoomData] = useState(null);
   const [isUserMember, setIsUserMember] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
-  // Scroll to bottom when messages change
+  // Handle keyboard visibility
   useEffect(() => {
+    const handleResize = () => {
+      // On mobile, when keyboard opens, the window height decreases
+      // We can detect this by checking if the window height is significantly smaller than the screen height
+      const isKeyboard = window.innerHeight < window.screen.height * 0.75;
+      setIsKeyboardVisible(isKeyboard);
+      
+      // When keyboard appears, scroll to bottom after a small delay
+      if (isKeyboard) {
+        setTimeout(() => {
+          scrollToBottom(true); // Force scroll
+        }, 300);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Improved scroll to bottom function
+  const scrollToBottom = (force = false) => {
     if (messageContainerRef.current) {
-      messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+      const scrollContainer = messageContainerRef.current;
+      
+      // Check if we're already near the bottom or if force=true
+      const isNearBottom = scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight < 100;
+      
+      if (isNearBottom || force) {
+        // Use requestAnimationFrame for smoother scrolling
+        requestAnimationFrame(() => {
+          scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        });
+      }
     }
-  }, [messages, localMessages]);
+  };
+
+  // Scroll to bottom when messages change or keyboard status changes
+  useEffect(() => {
+    scrollToBottom(true);
+  }, [messages, localMessages, isKeyboardVisible]);
   
   // Fetch room data and set up message listener
   useEffect(() => {
@@ -556,7 +684,9 @@ const ChatRoom = () => {
               if (!snapshot.empty) {
                 const messageData = snapshot.docs.map(doc => {
                   const data = doc.data();
-                  return {
+                  
+                  // Process the server data
+                  const processedData = {
                     ...data,
                     id: doc.id,
                     // Convert server timestamp to JS Date if it exists
@@ -564,9 +694,21 @@ const ChatRoom = () => {
                       (typeof data.timestamp.toDate === 'function' ? data.timestamp.toDate() : data.timestamp) : 
                       new Date()
                   };
+                  
+                  // If this message has a clientMessageId, check if we have a local pending message to remove
+                  if (data.clientMessageId) {
+                    // Schedule removal of any matching local message
+                    setTimeout(() => {
+                      setLocalMessages(prev => 
+                        prev.filter(msg => msg.id !== data.clientMessageId)
+                      );
+                    }, 100);
+                  }
+                  
+                  return processedData;
                 });
                 
-                // Deduplicate messages based on their IDs
+                // Set the messages from server
                 setMessages(messageData);
               }
               setLoading(false);
@@ -600,7 +742,7 @@ const ChatRoom = () => {
     fetchRoomData();
   }, [roomId, navigate]);
   // Enhanced message handling
-  // Handle message submission with improved error handling
+  // Enhanced message submission with better handling of local/server message duplication
   const handleSendMessage = async (e) => {
     e.preventDefault();
     
@@ -624,40 +766,51 @@ const ChatRoom = () => {
     const messageText = newMessage.trim();
     setNewMessage('');
     
+    // Create a client-side message ID that includes both a timestamp and content hash
+    // This helps with deduplication and message tracking
+    const now = new Date();
+    const contentHash = messageText.split('').reduce((acc, char) => 
+      (acc * 31 + char.charCodeAt(0)) & 0xFFFFFFFF, 0).toString(16).substring(0, 8);
+    const localMessageId = `local-${now.getTime()}-${contentHash}`;
+    
     // Add temporary local message for immediate feedback
     const tempMessage = {
-      id: `temp-${Date.now()}`,
+      id: localMessageId,
       text: messageText,
       userId: auth.currentUser.uid,
       userName: auth.currentUser.displayName || 'Anonymous',
       userPhoto: auth.currentUser.photoURL || null,
       isLocal: true, // Mark as local/pending
-      timestamp: new Date()
+      timestamp: now,
+      sending: true, // Flag to show sending state
+      sentTime: now.getTime() // Keep track of when this was sent for cleanup
     };
     
+    // Add to local messages
     setLocalMessages(prev => [...prev, tempMessage]);
-      try {
+    
+    try {
       // Calculate expiration time (8 hours from now)
       const expirationTime = new Date();
       expirationTime.setHours(expirationTime.getHours() + 8);
       
-      // Send to Firestore with a timeout to prevent hanging requests
-      const sendPromise = addDoc(collection(db, `chatrooms/${roomDocId}/messages`), {
-        text: tempMessage.text,
+      // Send to Firestore
+      await addDoc(collection(db, `chatrooms/${roomDocId}/messages`), {
+        text: messageText,
         userId: auth.currentUser.uid,
         userName: auth.currentUser.displayName || 'Anonymous',
         userPhoto: auth.currentUser.photoURL || null,
         timestamp: serverTimestamp(),
         expiresAt: Timestamp.fromDate(expirationTime), // Add expiration timestamp
-        ttl: '8 hours' // Add readable TTL for UI purposes
+        ttl: '8 hours', // Add readable TTL for UI purposes
+        clientMessageId: localMessageId // Include client ID to help with deduplication
       });
       
-      // Wait for the message to be sent
-      await sendPromise;
-      
-      // Once confirmed sent, remove the local message
-      // Only remove matching ID to avoid removing other local messages
-      setLocalMessages(prev => prev.filter(msg => msg.id !== tempMessage.id));
+      // After successful send, remove the local message - but give it a slight delay
+      // to allow Firebase to sync the new message first
+      setTimeout(() => {
+        setLocalMessages(prev => prev.filter(msg => msg.id !== localMessageId));
+      }, 500); // Short delay to allow Firebase to sync
     } catch (err) {
       console.error('Error sending message:', err);
       
@@ -725,18 +878,34 @@ const ChatRoom = () => {
       setLoading(false);
     }
   };
-    // Deduplicate and group messages by date
-  // First, deduplicate messages by creating a map keyed by message ID
+    // Enhanced deduplication - check for duplicate content to avoid showing the same message twice
+  // First, add all server messages
   const messageMap = new Map();
+  const contentTimeMap = new Map(); // To track message content+user combinations
   
   // Add Firebase messages first (they take precedence over local messages)
   messages.forEach(message => {
     messageMap.set(message.id, message);
+    
+    // Create a unique key using user ID, message content and approximate time
+    const timeWindow = Math.floor((message.timestamp?.getTime() || 0) / 10000); // Group by 10-second windows
+    const contentKey = `${message.userId}-${message.text}-${timeWindow}`;
+    contentTimeMap.set(contentKey, message.id);
   });
   
-  // Then add local messages only if they don't already exist in Firebase messages
+  // Then add local messages only if they don't exist in Firebase messages with similar content/time
   localMessages.forEach(message => {
-    if (!messageMap.has(message.id)) {
+    // Don't add local message if exact ID match exists (shouldn't happen, but just in case)
+    if (messageMap.has(message.id)) {
+      return;
+    }
+    
+    // Check if a similar message (same user, same content, similar time) exists in Firebase messages
+    const timeWindow = Math.floor((message.timestamp?.getTime() || 0) / 10000);
+    const contentKey = `${message.userId}-${message.text}-${timeWindow}`;
+    
+    // Only add if no similar message exists from server
+    if (!contentTimeMap.has(contentKey)) {
       messageMap.set(message.id, message);
     }
   });
@@ -762,6 +931,35 @@ const ChatRoom = () => {
     groups[date].push(message);
     return groups;
   }, {});
+  
+  // Cleanup stale local messages (those that never got a server response)
+  useEffect(() => {
+    if (localMessages.length === 0) return;
+    
+    // Check for any local messages that have been around too long (over 30 seconds)
+    const now = Date.now();
+    const staleTimeout = 30000; // 30 seconds
+    
+    const newLocalMessages = localMessages.filter(msg => {
+      // Keep messages that are less than 30 seconds old
+      return !msg.sentTime || now - msg.sentTime < staleTimeout;
+    });
+    
+    // If we removed any stale messages, update state
+    if (newLocalMessages.length !== localMessages.length) {
+      setLocalMessages(newLocalMessages);
+    }
+    
+    // Run this check every 10 seconds
+    const cleanupInterval = setInterval(() => {
+      setLocalMessages(prev => {
+        const currentTime = Date.now();
+        return prev.filter(msg => !msg.sentTime || currentTime - msg.sentTime < staleTimeout);
+      });
+    }, 10000);
+    
+    return () => clearInterval(cleanupInterval);
+  }, [localMessages]);
   
   return (
     <Page>
@@ -821,6 +1019,7 @@ const ChatRoom = () => {
                       $isCurrentUser={isCurrentUser}
                       $isLocal={message.isLocal}
                       $sendFailed={message.sendFailed}
+                      $isSending={message.isLocal && message.sending}
                     >                      <Avatar
                         src={message.userPhoto}
                         $isCurrentUser={isCurrentUser}
@@ -830,11 +1029,14 @@ const ChatRoom = () => {
                           $isCurrentUser={isCurrentUser}
                           $isLocal={message.isLocal}
                           $sendFailed={message.sendFailed}
+                          $sending={message.sending}
                         >
                           <MessageText>{message.text}</MessageText>
                         </MessageBubble>
                           <MessageMeta $isCurrentUser={isCurrentUser}>                          <UserName $isCurrentUser={isCurrentUser}>{message.userName}</UserName>
-                          <MessageTimeText>{formatTime(message.timestamp)}</MessageTimeText>
+                          <MessageTimeText>
+                            {message.isLocal && message.sending ? 'Sending...' : formatTime(message.timestamp)}
+                          </MessageTimeText>
                         </MessageMeta>
                         
                         {message.sendFailed && (                          <MessageStatus $isCurrentUser={isCurrentUser}>

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import styled, { keyframes, css } from 'styled-components';
+import React, { useState, useEffect, useCallback } from 'react';
+import styled, { keyframes } from 'styled-components';
 import { FiX, FiCalendar, FiUser, FiPhone, FiMessageSquare, FiCreditCard, FiCheck, FiAlertCircle } from 'react-icons/fi';
 import { processBookingPayment, completeBookingPayment, handleBookingPaymentFailure } from '../utils/bookingService';
 import { loadRazorpayScript } from '../services/payment/razorpay';
 import { auth } from '../firebase';
+import CouponSection from './CouponSection';
 
 // Animations
 const fadeIn = keyframes`
@@ -340,17 +341,20 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
     specialRequests: ''
   });
   const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingId, setBookingId] = useState(null);
   const [paymentError, setPaymentError] = useState(null);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  
+  // Coupon related states
+  const [activeCoupon, setActiveCoupon] = useState(null);
+  const [originalAmount, setOriginalAmount] = useState(0);
+  const [discountAmount, setDiscountAmount] = useState(0);
 
   // Get the number of days from the start of the current month to create a minimum date
   const today = new Date();
   const minBookingDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-  
-  useEffect(() => {
+    useEffect(() => {
     const getCurrentUser = async () => {
       if (auth.currentUser) {
         setFormData(prevData => ({
@@ -364,13 +368,21 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
     if (isOpen) {
       getCurrentUser();
       
+      // Reset coupon state when modal opens
+      setActiveCoupon(null);
+      setDiscountAmount(0);
+      
+      // Set original amount based on trek price
+      const basePrice = trek?.numericPrice || parseInt(trek?.price?.replace(/[^0-9]/g, '')) || 0;
+      setOriginalAmount(basePrice);
+      
       // Load Razorpay script when modal opens
       loadRazorpayScript().catch(err => {
         console.error("Failed to load Razorpay script:", err);
         setPaymentError("Failed to load payment gateway. Please try again.");
       });
     }
-  }, [isOpen]);
+  }, [isOpen, trek]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -422,25 +434,64 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
       setStep(2);
     }
   };
-
   const calculateTotalPrice = () => {
     const basePrice = trek?.numericPrice || parseInt(trek?.price?.replace(/[^0-9]/g, '')) || 0;
-    return basePrice * formData.participants;
+    const subtotal = basePrice * formData.participants;
+    
+    // If there's an active coupon, apply the discount
+    if (activeCoupon) {
+      return Math.max(subtotal - discountAmount, 0);
+    }
+    return subtotal;
   };
-
-  const handlePaymentProcess = async () => {
+  
+  // Handle coupon application
+  const handleApplyCoupon = (coupon) => {
+    if (coupon) {
+      setActiveCoupon(coupon);
+      setDiscountAmount(coupon.calculatedDiscount);
+      setPaymentError(null);
+    } else {
+      setActiveCoupon(null);
+      setDiscountAmount(0);
+    }
+  };  const handlePaymentProcess = async () => {
     try {
       setIsProcessingPayment(true);
       setPaymentError(null);
       
-      // Process payment through Razorpay
+      // Calculate final amounts
+      const total = calculateTotalPrice();
+      const baseAmount = trek?.numericPrice * formData.participants || total;
+      
+      // Process payment through Razorpay with coupon data if available
       const paymentResult = await processBookingPayment(trek, {
         ...formData,
-        amount: calculateTotalPrice()
+        amount: total,
+        // Include coupon information if available
+        coupon: activeCoupon ? {
+          id: activeCoupon.id,
+          code: activeCoupon.code,
+          discount: discountAmount,
+          discountType: activeCoupon.discountType,
+          originalAmount: baseAmount,
+          finalAmount: total
+        } : null
       });
       
       if (paymentResult.success) {
-        setBookingId(paymentResult.orderId);
+        // Store bookingId in component state
+        const orderId = paymentResult.orderId || `order_${Date.now()}`;
+        setBookingId(orderId);
+        
+        // Also store it in global variable for redundancy/recovery
+        window.lastRazorpayBookingId = orderId;
+        
+        console.log('Payment initiated with booking ID:', orderId);
+        
+        // Log all places where the bookingId is stored
+        console.log('BookingID stored in: 1) Component state:', orderId, 
+                   '2) Global variable:', window.lastRazorpayBookingId);
         
         // Razorpay will open its payment window automatically
         // We'll handle success in a callback from Razorpay
@@ -453,27 +504,73 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
     } finally {
       setIsProcessingPayment(false);
     }
-  };
-
-  const handlePaymentSuccess = async (response) => {
+  };// Define handlePaymentSuccess as a useCallback to fix the dependency warning
+  const handlePaymentSuccess = useCallback(async (response) => {
     try {
       setIsProcessingPayment(true);
       
-      // Verify and complete the payment
-      await completeBookingPayment(bookingId, response);
+      if (!bookingId) {
+        console.warn('⚠️ No bookingId set in component state before payment success');
+      }
+      
+      // Make sure we're sending the bookingId through ALL possible paths for maximum redundancy
+      const paymentResponse = {
+        ...response,
+        bookingId: bookingId || response.bookingId || response.razorpay_order_id,
+        orderId: bookingId || response.razorpay_order_id, 
+        verifiedBookingId: bookingId, // Add a dedicated field that won't be accidentally overwritten
+        // Store in notes as well for triple redundancy
+        notes: {
+          ...(response.notes || {}),
+          bookingId: bookingId || response.notes?.bookingId,
+          backupId: bookingId // Another backup path
+        }
+      };
+      
+      // Also set the global backup variable for extra redundancy
+      window.lastRazorpayBookingId = bookingId || 
+                                     response.bookingId || 
+                                     response.razorpay_order_id || 
+                                     response.notes?.bookingId;
+      
+      console.log('Processing payment success with bookingId:', bookingId, 'and response:', paymentResponse);
+      
+      // Double-check that we have a valid ID to use (any of these should work)
+      let effectiveBookingId = bookingId || 
+                              paymentResponse.bookingId || 
+                              paymentResponse.razorpay_order_id ||
+                              paymentResponse.notes?.bookingId || 
+                              paymentResponse.notes?.backupId ||
+                              window.lastRazorpayBookingId;
+                              
+      // Always ensure we have SOME bookingId, even if we need to generate one
+      if (!effectiveBookingId) {
+        const fallbackId = `fallback_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+        console.warn(`⚠️ No bookingId found in any path, using fallback: ${fallbackId}`);
+        effectiveBookingId = fallbackId;
+        
+        // Update the response object with the fallback ID
+        paymentResponse.bookingId = fallbackId;
+        paymentResponse.fallbackIdGenerated = true;
+      }
+      
+      console.log('✅ Final booking ID for payment verification:', effectiveBookingId);
+      
+      // Verify and complete the payment - pass both parameters
+      await completeBookingPayment(effectiveBookingId, paymentResponse);
       
       // Show success message
       setPaymentSuccess(true);
       
       // Notify parent component
       if (onBookingSuccess) {
-        onBookingSuccess(bookingId);
+        onBookingSuccess(effectiveBookingId || bookingId);
       }
       
       // Close modal after 3 seconds
       setTimeout(() => {
         onClose();
-        // Reset form state
+      // Reset form state
         setStep(1);
         setFormData({
           startDate: '',
@@ -485,6 +582,8 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
         });
         setPaymentSuccess(false);
         setBookingId(null);
+        setActiveCoupon(null);
+        setDiscountAmount(0);
       }, 3000);
     } catch (error) {
       console.error("Payment verification error:", error);
@@ -492,9 +591,10 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
     } finally {
       setIsProcessingPayment(false);
     }
-  };
+  }, [bookingId, onBookingSuccess, onClose]); // completeBookingPayment is an imported function, not a dependency
 
-  const handlePaymentFailure = async (error) => {
+  // Define handlePaymentFailure as a useCallback to fix the dependency warning
+  const handlePaymentFailure = useCallback(async (error) => {
     try {
       if (bookingId) {
         await handleBookingPaymentFailure(bookingId, error);
@@ -504,24 +604,67 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
       console.error("Error handling payment failure:", err);
       setPaymentError("Payment failed: " + (error.description || error.message || "Unknown error"));
     }
-  };
+  }, [bookingId]); // handleBookingPaymentFailure is an imported function, not a dependency
   // Set up global handlers for Razorpay response
   useEffect(() => {
+    // Capture the current bookingId in closure for use in handlers
+    const currentBookingId = bookingId;
+    
+    // Store it globally as early as possible, even before payment starts
+    if (currentBookingId) {
+      console.log('🔑 Pre-storing bookingId in global storage:', currentBookingId);
+      window.lastRazorpayBookingId = currentBookingId;
+    }
+    
     // Setting up global handlers for Razorpay
     window.onRazorpaySuccess = function(response) {
-      handlePaymentSuccess(response);
+      console.log('👋 Razorpay success callback triggered with response:', response);
+      console.log('👋 Current component bookingId:', currentBookingId);
+      
+      // Add the bookingId to the response through multiple reliable paths for maximum redundancy
+      const enhancedResponse = {
+        ...response,
+        // Critical ID fields
+        bookingId: currentBookingId || response.bookingId || response.razorpay_order_id,
+        verifiedBookingId: currentBookingId, // Add an explicit verified field
+        orderId: currentBookingId || response.razorpay_order_id,
+        // Backup in notes object too
+        notes: {
+          ...(response.notes || {}),
+          bookingId: currentBookingId || response.notes?.bookingId,
+          backupId: currentBookingId, // Another backup path
+          timestamp: Date.now()
+        }
+      };
+      
+      console.log('✅ Enhanced Razorpay response with bookingId:', enhancedResponse);
+      
+      // Always store in global variable for redundancy
+      window.lastRazorpayBookingId = currentBookingId || 
+                                     response.bookingId || 
+                                     response.razorpay_order_id || 
+                                     response.notes?.bookingId;
+      
+      // Use our handler with the enhanced response                               
+      handlePaymentSuccess(enhancedResponse);
     };
 
     window.onRazorpayFailure = function(response) {
       handlePaymentFailure(response);
     };
     
+    // Always store current booking ID in global context for backup access
+    if (currentBookingId) {
+      window.lastRazorpayBookingId = currentBookingId;
+    }
+    
     // Cleanup function to remove handlers when component unmounts
     return () => {
       window.onRazorpaySuccess = null;
       window.onRazorpayFailure = null;
+      // Don't clear window.lastRazorpayBookingId as it might be needed for recovery
     };
-  }, [bookingId]); // Re-establish handlers if bookingId changes
+  }, [bookingId, handlePaymentSuccess, handlePaymentFailure]);
 
   if (!isOpen) return null;
 
@@ -641,19 +784,37 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
           
           {/* Payment Section - Step 2 */}
           {step === 2 && (
-            <>
+            <>              {/* Coupon Section */}
+              <CouponSection 
+                orderTotal={trek?.numericPrice * formData.participants} 
+                onApplyCoupon={handleApplyCoupon}
+                theme={{ 
+                  mainColor: '#3399cc', 
+                  hoverColor: '#2388bb',
+                  gradientLight: 'linear-gradient(135deg, rgba(51, 153, 204, 0.1), rgba(33, 122, 168, 0.1))'
+                }}
+              />
+                
               <PriceSummary>
                 <PriceItem>
                   <span>Trek Fee</span>
                   <span>₹{trek?.numericPrice} x {formData.participants}</span>
                 </PriceItem>
+                
+                {/* Discount row - only show if coupon is applied */}
+                {activeCoupon && (
+                  <PriceItem style={{ color: 'green' }}>
+                    <span>Discount ({activeCoupon.code})</span>
+                    <span>-₹{discountAmount.toFixed(2)}</span>
+                  </PriceItem>
+                )}
+                
                 <PriceTotal>
                   <span>Total</span>
                   <span>₹{calculateTotalPrice()}</span>
                 </PriceTotal>
               </PriceSummary>
-              
-              {/* Payment Status Messages */}
+                {/* Payment Status Messages */}
               {paymentError && (
                 <ErrorMessage>
                   <FiAlertCircle size={20} />
@@ -665,6 +826,11 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
                 <SuccessMessage>
                   <FiCheck size={20} />
                   Payment successful! Your booking is confirmed.
+                  {activeCoupon && (
+                    <div style={{ marginTop: '10px', fontSize: '0.9em' }}>
+                      Coupon applied: {activeCoupon.code} (Saved: ₹{discountAmount.toFixed(2)})
+                    </div>
+                  )}
                 </SuccessMessage>
               )}
             </>

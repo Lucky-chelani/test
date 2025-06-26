@@ -24,7 +24,12 @@
     "start": "cross-env NODE_OPTIONS=--openssl-legacy-provider react-scripts start",
     "build": "cross-env NODE_OPTIONS=--openssl-legacy-provider react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "deploy": "firebase deploy",
+    "deploy:rules": "firebase deploy --only firestore:rules",
+    "deploy:indexes": "firebase deploy --only firestore:indexes",
+    "deploy:functions": "cd functions && npm install && cd .. && firebase deploy --only functions",
+    "deploy:hosting": "firebase deploy --only hosting"
   },
   "eslintConfig": {
     "extends": [

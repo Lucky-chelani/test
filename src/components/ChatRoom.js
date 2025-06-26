@@ -1,32 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import styled, { keyframes,css } from 'styled-components';
-import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import { auth, db } from '../firebase';
-import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, getDoc, updateDoc, where, deleteDoc, Timestamp, getDocs, arrayUnion } from 'firebase/firestore';
-import mapPattern from '../assets/images/map-pattren.png';
-import user1 from '../assets/images/trek1.png'; // Placeholder
+import React from 'react';
+import { Navigate } from 'react-router-dom';
+import ImprovedChatRoom from './ChatRoom.improved';
 
-const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-`;
-
-const slideIn = keyframes`
-  from { transform: translateX(30px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-`;
-
-const glow = keyframes`
-  0% { box-shadow: 0 0 5px rgba(255, 75, 31, 0.5); }
-  50% { box-shadow: 0 0 20px rgba(255, 75, 31, 0.8); }
-  100% { box-shadow: 0 0 5px rgba(255, 75, 31, 0.5); }
-`;
-
-const typing = keyframes`
-  0% { opacity: 0.3; }
-  50% { opacity: 1; }
-  100% { opacity: 0.3; }
-`;
+// This file now exports the improved ChatRoom component
 
 const Page = styled.div`
   background: #000 url(${mapPattern});
@@ -429,14 +405,12 @@ const formatTime = (timestamp) => {
   return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 };
 
+// Using the improved ChatRoom component for better mobile keyboard handling
+import ImprovedChatRoom from './ChatRoom.improved';
+
 const ChatRoom = () => {
-  const { roomId } = useParams();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [room, setRoom] = useState(location.state?.room || null);
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [error, setError] = useState('');  const [loading, setLoading] = useState(false);
+  // We're redirecting to the improved version which has better keyboard handling
+  return <ImprovedChatRoom />;
   const [localMessages, setLocalMessages] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [isUserMember, setIsUserMember] = useState(false);

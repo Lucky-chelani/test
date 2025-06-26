@@ -36,6 +36,7 @@ import PaymentTester from './components/PaymentTester'; // Import PaymentTester 
 import MockPaymentTester from './components/MockPaymentTester'; // Import MockPaymentTester component
 import RazorpayDebugger from './components/RazorpayDebugger'; // Import RazorpayDebugger component
 import UserAdmin from './components/UserAdmin'; // Import UserAdmin component
+import CouponAdmin from './components/CouponAdmin'; // Import CouponAdmin component
 import OrganizerTreks from './components/OrganizerTreks'; // Import OrganizerTreks component
 import AccessControl from './components/AccessControl'; // Import AccessControl component
 import OrganizerDashboard from './components/OrganizerDashboard'; // Import OrganizerDashboard
@@ -190,11 +191,18 @@ function App() {
               </AccessControl>
             </PageTransition>
           } />
-          
-          <Route path="/admin/trek-categories" element={
+            <Route path="/admin/trek-categories" element={
             <PageTransition>
               <AccessControl requiredRole="admin">
                 <TrekCategoryAdmin />
+              </AccessControl>
+            </PageTransition>
+          } />
+          
+          <Route path="/admin/coupons" element={
+            <PageTransition>
+              <AccessControl requiredRole="admin">
+                <CouponAdmin />
               </AccessControl>
             </PageTransition>
           } />

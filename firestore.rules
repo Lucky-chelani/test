@@ -15,8 +15,7 @@ service cloud.firestore {
              'members' in chatroom.data && 
              chatroom.data.members.hasAny([userId]);
     }
-    
-    // Chatrooms collection
+      // Chatrooms collection
     match /chatrooms/{chatroomId} {
       allow read: if request.auth != null;
       allow write: if request.auth != null;
@@ -34,11 +33,20 @@ service cloud.firestore {
         
         // Allow users to delete their own messages
         allow update, delete: if request.auth != null
-          && resource.data.userId == request.auth.uid;
+          && (
+            resource.data.userId == request.auth.uid ||
+            isAdmin(request.auth.uid)
+          );
           
-        // Allow automatic deletion of expired messages
-        allow delete: if request.auth != null
-          && resource.data.expiresAt < request.time;
+        // Allow automatic deletion of expired messages by any authenticated user
+        // This is needed for the message cleanup service
+        allow delete: if request.auth != null &&
+          (resource.data.expiresAt < request.time ||
+           (
+             // Allow system cleanup on messages older than 8 hours
+             resource.data.timestamp is timestamp && 
+             resource.data.timestamp < request.time - duration.value(8, 'h')
+           ));
       }
     }
     
@@ -126,8 +134,7 @@ service cloud.firestore {
         (request.auth.token.email in ['luckychelani950@gmail.com', 'test@example.com', 'youremail@example.com'] ||
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
     }
-    
-    // Users collection with role-based permissions
+      // Users collection with role-based permissions
     match /users/{userId} {
       // Users can create/read/update their own profiles
       allow create, read, update: if request.auth != null && request.auth.uid == userId;
@@ -140,6 +147,64 @@ service cloud.firestore {
          !("role" in request.resource.data) || 
          request.resource.data.role == resource.data.role || 
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+      // Coupons collection with role-based permissions
+    match /coupons/{couponId} {
+      // Any authenticated user can read coupons for validation purposes
+      allow read: if request.auth != null;
+      
+      // Only admins can create/update/delete coupons
+      allow create, update, delete: if request.auth != null && (
+        // Admin email check
+        (request.auth.token.email in ['luckychelani950@gmail.com', 'test@example.com', 'youremail@example.com']) ||
+        // Admin role check
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+      
+      // Allow coupon usage updates (increment usage count) for any authenticated user
+      // This is specifically to allow usage count updates during checkout
+      allow update: if request.auth != null &&
+        // Only allow updates to the usageCount and updatedAt fields
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usageCount', 'updatedAt']) &&
+        // Ensure usageCount can only be incremented
+        request.resource.data.usageCount > resource.data.usageCount;
+    }
+    
+    // System status collection - for system health checks and availability tests
+    match /system_status/{docId} {
+      // Allow reading by any authenticated user
+      allow read: if request.auth != null;
+      
+      // Allow admins to write system status documents
+      allow create, update, delete: if request.auth != null && (
+        (request.auth.token.email in ['luckychelani950@gmail.com', 'test@example.com', 'youremail@example.com']) ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+    }
+    
+    // Reviews collection rules
+    match /reviews/{reviewId} {
+      // Anyone can read reviews
+      allow read: if true;
+      
+      // Only authenticated users can create reviews
+      allow create: if request.auth != null && 
+        // Ensure user is setting their own userId
+        request.resource.data.userId == request.auth.uid &&
+        // Validate required fields
+        request.resource.data.trekId is string &&
+        request.resource.data.rating is number && 
+        request.resource.data.rating >= 1 && 
+        request.resource.data.rating <= 5;
+      
+      // Users can only edit/delete their own reviews
+      allow update, delete: if request.auth != null && 
+        resource.data.userId == request.auth.uid;
+        
+      // Allow marking reviews as helpful
+      allow update: if request.auth != null &&
+        // Only allow updates to the helpful and helpfulBy fields
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['helpful', 'helpfulBy']);
     }
     
     // Default rule - deny all other access

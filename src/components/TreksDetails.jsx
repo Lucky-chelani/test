@@ -29,6 +29,7 @@ import { getValidImageUrl } from "../utils/images";
 import BookingModal from "./BookingModal";
 import { saveBooking } from "../utils/bookingService";
 import OrganizerCard from "./OrganizerCard"; // Import the OrganizerCard component
+import Reviews from "./Reviews"; // Import the Reviews component
 
 // Animations
 const fadeIn = keyframes`
@@ -1179,6 +1180,7 @@ const ModernContent = styled.div`
   padding: 4rem 0 6rem;
   z-index: 5;
   box-shadow: 0 -50px 100px -20px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(180deg,#f9fafc 60%,#eaf1fa 100%);
   
   &::before {
     content: '';
@@ -1267,7 +1269,7 @@ const TwoColumnLayout = styled.div`
 const MainContentArea = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 2.5rem;
+  gap: 3.5rem;
   position: relative;
   
   &:before {
@@ -1297,8 +1299,9 @@ const Section = styled.section`
   background: white;
   border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
-  border: 1px solid rgba(0, 0, 0, 0.03);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06),0 1.5px 8px rgba(90,112,183,0.04);
+  border: 1.5px solid #e3e8f0;
+  margin-bottom: 2.5rem;
   transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
   position: relative;
   
@@ -1593,12 +1596,13 @@ const GalleryImage = styled.div`
   background-size: cover;
   background-position: center;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform 0.3s cubic-bezier(.4,2,.6,1), box-shadow 0.3s;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
   
   &:hover {
-    transform: translateY(-5px) scale(1.02);
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+    transform: scale(1.07);
+    box-shadow: 0 8px 32px rgba(90,112,183,0.18);
+    z-index: 2;
   }
   
   &:after {
@@ -1760,7 +1764,7 @@ const ReviewerAvatar = styled.div`
   width: 45px;
   height: 45px;
   border-radius: 50%;
-  background: var(--primary-color);
+  background: linear-gradient(135deg, #5A70B7 0%, #42A04B 100%);
   color: white;
   display: flex;
   align-items: center;
@@ -1800,6 +1804,8 @@ const ReviewText = styled.div`
 // Sidebar
 const Sidebar = styled.aside`
   position: relative;
+  max-width: 400px;
+  margin: 0 auto;
   
   @media (max-width: 991px) {
     order: -1;
@@ -1811,8 +1817,7 @@ const BookingCard = styled.div`
   background: white;
   border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.08),
-              0 5px 20px rgba(90, 112, 183, 0.06);
+  box-shadow: 0 16px 48px rgba(90,112,183,0.13), 0 2px 8px rgba(66,160,75,0.08);
   border: 1px solid rgba(0, 0, 0, 0.03);
   position: sticky;
   top: 100px;
@@ -1894,6 +1899,7 @@ const Price = styled.div`
   align-items: flex-start;
   line-height: 1;
   margin-bottom: 0.5rem;
+  color: #111;:
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   position: relative;
   
@@ -1941,6 +1947,7 @@ const Price = styled.div`
 `;
 
 const PriceCaption = styled.div`
+  color: #111;
   font-size: 0.9rem;
   opacity: 0.8;
 `;
@@ -2115,11 +2122,11 @@ const BookNowBtn = styled.button`
   
   svg {
     font-size: 1.3rem;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease
     z-index: 2;
   }
   
-  &:active {
+  &:
     transform: translateY(-2px);
     box-shadow: 0 8px 15px rgba(66, 160, 75, 0.35);
   }
@@ -2128,7 +2135,7 @@ const BookNowBtn = styled.button`
 const BookingActions = styled.div`
   display: flex;
   gap: 1rem;
-  margin-top: 1.5rem;
+  margin-top:  1.5rem;
 `;
 
 const BookingActionButton = styled.button`
@@ -2157,7 +2164,7 @@ const BookingActionButton = styled.button`
   }
 `;
 
-// Modern Loading Components
+// --- LOADING & ERROR COMPONENTS ---
 const ModernLoadingContainer = styled.div`
   display: flex;
   align-items: center;
@@ -2170,7 +2177,6 @@ const ModernLoadingContainer = styled.div`
     rgba(90, 112, 183, 0.01) 100%
   );
 `;
-
 const LoadingWrapper = styled.div`
   display: flex;
   flex-direction: column;
@@ -2181,14 +2187,12 @@ const LoadingWrapper = styled.div`
   text-align: center;
   animation: ${fadeIn} 0.6s ease-out;
 `;
-
 const LoadingLogo = styled.div`
   font-size: 4rem;
   margin-bottom: 1.5rem;
   animation: ${floatAnimation} 3s ease-in-out infinite;
   filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.1));
 `;
-
 const LoadingMessage = styled.h2`
   font-size: 1.8rem;
   font-weight: 700;
@@ -2199,7 +2203,6 @@ const LoadingMessage = styled.h2`
   -webkit-text-fill-color: transparent;
   background-clip: text;
 `;
-
 const LoadingBar = styled.div`
   width: 100%;
   height: 8px;
@@ -2208,7 +2211,6 @@ const LoadingBar = styled.div`
   overflow: hidden;
   margin-bottom: 1.5rem;
 `;
-
 const LoadingProgress = styled.div`
   height: 100%;
   width: 30%;
@@ -2217,15 +2219,12 @@ const LoadingProgress = styled.div`
   animation: ${shimmerEffect} 1.5s infinite;
   background-size: 200% 100%;
 `;
-
 const LoadingHint = styled.p`
   font-size: 1rem;
   color: #64748b;
   max-width: 280px;
   line-height: 1.5;
 `;
-
-// Error Components
 const ModernErrorContainer = styled.div`
   display: flex;
   align-items: center;
@@ -2234,7 +2233,6 @@ const ModernErrorContainer = styled.div`
   background-color: #f9fafc;
   background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%235a70b7' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 `;
-
 const ErrorContent = styled.div`
   display: flex;
   flex-direction: column;
@@ -2248,27 +2246,23 @@ const ErrorContent = styled.div`
   box-shadow: 0 15px 50px rgba(0, 0, 0, 0.08);
   animation: ${fadeIn} 0.6s ease-out;
 `;
-
 const ErrorIconWrapper = styled.div`
   font-size: 4rem;
   margin-bottom: 1.5rem;
   animation: ${floatAnimation} 3s ease-in-out infinite;
 `;
-
 const ErrorHeading = styled.h1`
   font-size: 2.2rem;
   font-weight: 700;
   color: #1a2238;
   margin-bottom: 1.5rem;
 `;
-
 const ErrorText = styled.p`
   font-size: 1.1rem;
   color: #64748b;
   margin-bottom: 2rem;
   line-height: 1.7;
 `;
-
 const ErrorDescription = styled.div`
   font-size: 0.95rem;
   color: #94a3b8;
@@ -2278,24 +2272,20 @@ const ErrorDescription = styled.div`
   border-radius: 8px;
   display: inline-block;
 `;
-
 const ErrorCodeBlock = styled.span`
   font-family: monospace;
   color: #5a70b7;
   font-weight: 600;
 `;
-
 const ErrorActions = styled.div`
   display: flex;
   gap: 1.5rem;
-  
   @media (max-width: 576px) {
     flex-direction: column;
     gap: 1rem;
     width: 100%;
   }
 `;
-
 const ErrorPrimaryButton = styled.button`
   padding: 0.75rem 2rem;
   background: var(--primary-color);
@@ -2305,17 +2295,14 @@ const ErrorPrimaryButton = styled.button`
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  
   &:hover {
     background: #4a5d9b;
     transform: translateY(-2px);
   }
-  
   @media (max-width: 576px) {
     width: 100%;
   }
 `;
-
 const ErrorSecondaryButton = styled.button`
   padding: 0.75rem 2rem;
   background: white;
@@ -2325,16 +2312,28 @@ const ErrorSecondaryButton = styled.button`
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  
   &:hover {
     background: #f8fafc;
     transform: translateY(-2px);
   }
-  
   @media (max-width: 576px) {
     width: 100%;
   }
 `;
+// --- END LOADING & ERROR COMPONENTS ---
+
+// --- UI IMPROVEMENTS START ---
+// 1. Add subtle animated overlay to Hero section
+const AnimatedOverlay = styled.div`
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 3;
+  background: linear-gradient(120deg, rgba(90,112,183,0.08) 0%, rgba(66,160,75,0.10) 100%);
+  animation: ${gradientMove} 8s ease-in-out infinite;
+  opacity: 0.7;
+`;
+// --- UI IMPROVEMENTS END ---
 
 // Modern Page Component
 export default function TrekDetails() {  const { id } = useParams();
@@ -2673,6 +2672,19 @@ export default function TrekDetails() {  const { id } = useParams();
     return 0;
   };
   
+  // Function to handle share button click
+  const handleShareButtonClick = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: trekTitle,
+        text: 'Check out this amazing trek!',
+        url: window.location.href,
+      }).catch((error) => console.error('Error sharing:', error));
+    } else {
+      alert('Sharing is not supported in this browser.');
+    }
+  };
+  
   if (loading) {
     return (
       <ModernPageContainer>
@@ -2827,7 +2839,7 @@ export default function TrekDetails() {  const { id } = useParams();
             </HeaderTitle>
           </HeaderLeft>
           <HeaderRight>
-            <ActionBtn isScrolled={navScrolled} aria-label="Share">
+            <ActionBtn isScrolled={navScrolled} aria-label="Share" onClick={handleShareButtonClick}>
               <FiShare2 />
             </ActionBtn>
             <ActionBtn isScrolled={navScrolled} aria-label="Save">
@@ -2846,6 +2858,7 @@ export default function TrekDetails() {  const { id } = useParams();
             isLoading={!imageLoaded}
           />
         </HeroParallax>
+        <AnimatedOverlay />
         <HeroVignette />
         <HeroWave />
         <HeroContentWrapper>
@@ -2877,21 +2890,18 @@ export default function TrekDetails() {  const { id } = useParams();
             {trekDescription}
           </HeroDesc>
           
-          <HeroActions>          <HeroPrimaryBtn onClick={handleBookButtonClick}>
-            Book This Trek
-            <FiArrowLeft style={{ transform: 'rotate(180deg)' }} />
-          </HeroPrimaryBtn>
-            <HeroSecondaryBtn>
-              <FiHeart />
-              Save for Later
-            </HeroSecondaryBtn>
+          <HeroActions>
+            <HeroPrimaryBtn onClick={handleBookButtonClick}>
+              Book This Trek
+              <FiArrowLeft style={{ transform: 'rotate(180deg)' }} />
+            </HeroPrimaryBtn>
           </HeroActions>
         </HeroContentWrapper>
       </ModernHero>      {/* Content */}
-      <ModernContent>
+      <ModernContent style={{background:'linear-gradient(180deg,#f9fafc 60%,#eaf1fa 100%)'}}>
         <ContentContainer>
           <TwoColumnLayout>
-            <MainContentArea>
+            <MainContentArea style={{gap:'3.5rem'}}>
               {/* Stats */}
               <QuickStats>
                 <StatCard color="var(--primary-color)" colorRgb="90, 112, 183">
@@ -2964,9 +2974,12 @@ export default function TrekDetails() {  const { id } = useParams();
                   </SectionTitle>
                 </SectionHeader>
                 <SectionBody>
-                  <ul>
+                  <ul style={{paddingLeft: '0'}}>
                     {highlights.map((highlight, idx) => (
-                      <li key={idx}>{highlight}</li>
+                      <li key={idx} style={{display:'flex',alignItems:'center',marginBottom:'1rem',listStyle:'none'}}>
+                        <span style={{marginRight:'0.7rem',color:'var(--secondary-color)',fontSize:'1.2em'}}><FiStar /></span>
+                        {highlight}
+                      </li>
                     ))}
                   </ul>
                 </SectionBody>
@@ -3050,55 +3063,8 @@ export default function TrekDetails() {  const { id } = useParams();
                   </SectionTitle>
                 </SectionHeader>
                 <SectionBody>
-                  <ReviewsSummary>
-                    <RatingBig>
-                      <RatingNumber>{trekRating}</RatingNumber>
-                      <RatingStars>
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <BsStarFill
-                            key={i}
-                            style={{
-                              color: i < Math.round(trekRating) ? '#FFB800' : '#ddd',
-                              fontSize: '1.5rem'
-                            }}
-                          />
-                        ))}
-                      </RatingStars>
-                      <RatingText>{trekReviews} reviews</RatingText>
-                    </RatingBig>
-                    <RatingBreakdown>
-                      {/* Optionally add breakdown here */}
-                    </RatingBreakdown>
-                  </ReviewsSummary>
-                  <ReviewsContainer>
-                    {reviewsData.map((review) => (
-                      <ReviewCard key={review.id}>
-                        <ReviewHeader>
-                          <ReviewerInfo>
-                            <ReviewerAvatar>
-                              {review.author?.charAt(0) || "?"}
-                            </ReviewerAvatar>
-                            <ReviewerDetails>
-                              <ReviewerName>{review.author}</ReviewerName>
-                              <ReviewDate>{review.date}</ReviewDate>
-                            </ReviewerDetails>
-                          </ReviewerInfo>
-                          <ReviewRating>
-                            {Array.from({ length: 5 }).map((_, i) => (
-                              <BsStarFill
-                                key={i}
-                                style={{
-                                  color: i < review.rating ? '#FFB800' : '#ddd',
-                                  fontSize: '1rem'
-                                }}
-                              />
-                            ))}
-                          </ReviewRating>
-                        </ReviewHeader>
-                        <ReviewText>{review.text}</ReviewText>
-                      </ReviewCard>
-                    ))}
-                  </ReviewsContainer>
+                  {/* Using the Firebase-backed Reviews component */}
+                  <Reviews trekId={String(id)} />
                 </SectionBody>
               </Section>
             </MainContentArea>          {/* Sidebar */}
@@ -3106,7 +3072,7 @@ export default function TrekDetails() {  const { id } = useParams();
               <BookingCard>
                 <BookingHeader>                  <PriceTag>
                     <Price>
-                      ₹{trekPrice} <span>per person</span>
+                      {trekPrice} <span>per person</span>
                     </Price>
                     <PriceCaption>
                       Based on {trekDays} {trekDays === 1 ? 'day' : 'days'}
