@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Function Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 16px;
+        }
+        input::placeholder, textarea::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        button {
+            background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(22, 160, 133, 0.4);
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background: rgba(46, 204, 113, 0.2);
+            border: 1px solid #2ecc71;
+        }
+        .error {
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid #e74c3c;
+        }
+        .loading {
+            text-align: center;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📧 Email Function Tester</h1>
+        <p>Test the Firebase email function with sample data:</p>
+        
+        <div class="form-group">
+            <label for="email">Email Address:</label>
+            <input type="email" id="email" placeholder="test@example.com" value="test@gmail.com">
+        </div>
+        
+        <div class="form-group">
+            <label for="name">Customer Name:</label>
+            <input type="text" id="name" placeholder="John Doe" value="Test User">
+        </div>
+        
+        <div class="form-group">
+            <label for="trekTitle">Trek Title:</label>
+            <input type="text" id="trekTitle" placeholder="Bhrigu Lake Trek" value="Bhrigu Lake Trek">
+        </div>
+        
+        <div class="form-group">
+            <label for="bookingId">Booking ID:</label>
+            <input type="text" id="bookingId" placeholder="TEST123" value="TEST123">
+        </div>
+        
+        <button onclick="testEmail()">🚀 Test Email Function</button>
+        <button onclick="populateSampleData()">📝 Fill Sample Data</button>
+        
+        <div id="result" class="result"></div>
+    </div>
+
+    <script type="module">
+        // Firebase configuration (replace with your config)
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAEWfJaOJtLHOEfhO9eZ2aNAm7K6XN5ZZQ",
+            authDomain: "trovia-142e1.firebaseapp.com",
+            projectId: "trovia-142e1",
+            storageBucket: "trovia-142e1.appspot.com",
+            messagingSenderId: "548230347688",
+            appId: "1:548230347688:web:0123456789abcdef"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const functions = getFunctions(app);
+
+        window.testEmail = async function() {
+            const email = document.getElementById('email').value;
+            const name = document.getElementById('name').value;
+            const trekTitle = document.getElementById('trekTitle').value;
+            const bookingId = document.getElementById('bookingId').value;
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.innerHTML = '⏳ Sending test email...';
+            
+            try {
+                const sendEmail = httpsCallable(functions, 'sendBookingConfirmationEmail');
+                
+                const testData = {
+                    booking: {
+                        id: bookingId,
+                        name: name,
+                        email: email,
+                        contactNumber: "+91 9876543210",
+                        startDate: "2025-07-15",
+                        participants: 2,
+                        totalAmount: 4500,
+                        paymentId: "pay_test123",
+                        status: "confirmed",
+                        paymentStatus: "completed",
+                        specialRequests: "None",
+                        discountAmount: 500,
+                        createdAt: new Date().toISOString()
+                    },
+                    trek: {
+                        title: trekTitle,
+                        location: "Manali, Himachal Pradesh",
+                        duration: "3 Days 2 Nights",
+                        difficulty: "Moderate",
+                        imageUrl: "https://example.com/trek-image.jpg",
+                        description: "Beautiful high-altitude lake trek"
+                    }
+                };
+                
+                console.log('📤 Sending test data:', testData);
+                
+                const result = await sendEmail(testData);
+                
+                console.log('✅ Email result:', result);
+                
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
+                    <h3>✅ Success!</h3>
+                    <p>Email sent successfully to: <strong>${email}</strong></p>
+                    <p>Check the Firebase console logs for more details.</p>
+                `;
+                
+            } catch (error) {
+                console.error('❌ Error sending email:', error);
+                
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <h3>❌ Error</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p><strong>Code:</strong> ${error.code || 'Unknown'}</p>
+                    <pre>${JSON.stringify(error, null, 2)}</pre>
+                `;
+            }
+        };
+        
+        window.populateSampleData = function() {
+            document.getElementById('email').value = 'test@gmail.com';
+            document.getElementById('name').value = 'Test User';
+            document.getElementById('trekTitle').value = 'Bhrigu Lake Trek';
+            document.getElementById('bookingId').value = 'TEST_' + Date.now();
+        };
+    </script>
+</body>
+</html>

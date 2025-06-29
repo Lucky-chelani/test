@@ -45,6 +45,7 @@ import OrganizerAddTrek from './components/OrganizerAddTrek'; // Import Organize
 import OrganizerEditTrek from './components/OrganizerEditTrek'; // Import OrganizerEditTrek component
 import OrganizerProfile from './components/OrganizerProfile'; // Import OrganizerProfile component
 import EditProfile from './components/EditProfile'; // Import EditProfile component
+import BookingConfirmation from './components/BookingConfirmation'; // Import BookingConfirmation component
 
 // Page transition wrapper component
 const PageTransition = ({ children }) => {
@@ -298,6 +299,11 @@ function App() {
           <Route path="/organizer/:id" element={
             <PageTransition>
               <OrganizerProfile />
+            </PageTransition>
+          } />
+          <Route path="/booking-confirmation/:bookingId" element={
+            <PageTransition>
+              <BookingConfirmation />
             </PageTransition>
           } />
         </Routes>

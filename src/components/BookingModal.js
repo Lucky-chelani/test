@@ -1,16 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { FiX, FiCalendar, FiUser, FiPhone, FiMessageSquare, FiCreditCard, FiCheck, FiAlertCircle } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import { FiX, FiCalendar, FiUser, FiPhone, FiMessageSquare, FiCreditCard, FiCheck, FiAlertCircle, FiInfo } from 'react-icons/fi';
 import { processBookingPayment, completeBookingPayment, handleBookingPaymentFailure } from '../utils/bookingService';
 import { loadRazorpayScript } from '../services/payment/razorpay';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import CouponSection from './CouponSection';
+import emailService from '../services/emailService';
 
 // Animations
 const fadeIn = keyframes`
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(30px);
   }
   to {
     opacity: 1;
@@ -21,9 +24,59 @@ const fadeIn = keyframes`
 const scaleIn = keyframes`
   from {
     opacity: 0;
-    transform: scale(0.9);
+    transform: scale(0.8) translateY(40px);
   }
   to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+`;
+
+const slideInFromLeft = keyframes`
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+`;
+
+const slideInFromRight = keyframes`
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+`;
+
+const shimmer = keyframes`
+  0% { background-position: -200px 0; }
+  100% { background-position: calc(200px + 100%) 0; }
+`;
+
+const pulse = keyframes`
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+`;
+
+const bounceIn = keyframes`
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
     opacity: 1;
     transform: scale(1);
   }
@@ -36,91 +89,173 @@ const ModalOverlay = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(51, 153, 204, 0.1) 100%);
+  backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 2rem;
+  padding: 1rem;
   overflow-y: auto;
-  animation: ${fadeIn} 0.3s ease-out;
+  animation: ${fadeIn} 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 `;
 
 const ModalContainer = styled.div`
-  background: white;
-  border-radius: 12px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 24px;
   width: 100%;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  animation: ${scaleIn} 0.3s ease-out;
+  max-width: 650px;
+  max-height: 95vh;
+  overflow: hidden;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  animation: ${scaleIn} 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   display: flex;
   flex-direction: column;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #3399cc, #00b4db, #3399cc);
+    background-size: 200% 100%;
+    animation: ${shimmer} 2s infinite linear;
+  }
 `;
 
 const ModalHeader = styled.div`
-  padding: 1.5rem;
-  border-bottom: 1px solid #eee;
+  padding: 2rem 2rem 1rem;
+  background: linear-gradient(135deg, rgba(51, 153, 204, 0.05) 0%, rgba(0, 180, 219, 0.05) 100%);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  position: sticky;
-  top: 0;
-  background: white;
-  z-index: 1;
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
+  position: relative;
+  border-bottom: 1px solid rgba(51, 153, 204, 0.1);
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, #3399cc, #00b4db);
+    border-radius: 1px;
+  }
 `;
 
 const ModalTitle = styled.h2`
   margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #333;
+  font-size: 1.75rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #2c5aa0 0%, #3399cc 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: -0.025em;
+  animation: ${slideInFromLeft} 0.6s ease-out;
 `;
 
 const CloseButton = styled.button`
-  background: none;
-  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(51, 153, 204, 0.2);
   cursor: pointer;
-  font-size: 1.5rem;
-  color: #666;
-  padding: 0.5rem;
+  font-size: 1.2rem;
+  color: #64748b;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: ${slideInFromRight} 0.6s ease-out;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 
   &:hover {
-    background: #f0f0f0;
-    color: #333;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+    color: white;
+    border-color: #ff6b6b;
+    transform: scale(1.1) rotate(90deg);
+    box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+  }
+  
+  &:active {
+    transform: scale(0.95);
   }
 `;
 
 const ModalBody = styled.div`
-  padding: 1.5rem;
+  padding: 2rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 2rem;
+  overflow-y: auto;
+  flex: 1;
+  
+  /* Custom scrollbar */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: rgba(51, 153, 204, 0.1);
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #3399cc, #00b4db);
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #2388bb, #0095b6);
+  }
 `;
 
 const TrekInfo = styled.div`
   display: flex;
   align-items: center;
-  gap: 1rem;
-  background: #f9f9f9;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
+  gap: 1.5rem;
+  background: linear-gradient(135deg, rgba(51, 153, 204, 0.05) 0%, rgba(0, 180, 219, 0.05) 100%);
+  padding: 1.5rem;
+  border-radius: 16px;
+  border: 2px solid rgba(51, 153, 204, 0.1);
+  position: relative;
+  overflow: hidden;
+  animation: ${fadeIn} 0.6s ease-out 0.2s both;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    animation: ${shimmer} 2s infinite;
+  }
 `;
 
 const TrekImage = styled.img`
-  width: 80px;
-  height: 60px;
-  border-radius: 6px;
+  width: 100px;
+  height: 80px;
+  border-radius: 12px;
   object-fit: cover;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease;
+  
+  &:hover {
+    transform: scale(1.05);
+  }
 `;
 
 const TrekDetails = styled.div`
@@ -128,209 +263,607 @@ const TrekDetails = styled.div`
 `;
 
 const TrekName = styled.h3`
-  margin: 0 0 0.25rem;
-  font-size: 1.2rem;
-  font-weight: 600;
+  margin: 0 0 0.5rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #2c5aa0 0%, #3399cc 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 `;
 
 const TrekLocation = styled.p`
   margin: 0;
-  color: #666;
-  font-size: 0.9rem;
+  color: #64748b;
+  font-size: 1rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  
+  &::before {
+    content: '📍';
+    font-size: 0.9rem;
+  }
 `;
 
 const Form = styled.form`
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.75rem;
+  animation: ${fadeIn} 0.6s ease-out 0.3s both;
 `;
 
 const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  position: relative;
 `;
 
 const Label = styled.label`
-  font-weight: 500;
-  font-size: 0.95rem;
-  color: #444;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #2c5aa0;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: -0.01em;
 
   svg {
-    color: #666;
+    color: #3399cc;
+    font-size: 1.1rem;
   }
 `;
 
 const Input = styled.input`
-  padding: 0.75rem 1rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  border: 2px solid rgba(51, 153, 204, 0.2);
+  border-radius: 12px;
   font-size: 1rem;
-  transition: border-color 0.2s;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   outline: none;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  &::placeholder {
+    color: #94a3b8;
+    font-weight: 400;
+  }
 
   &:focus {
     border-color: #3399cc;
+    background: #ffffff;
+    box-shadow: 
+      0 0 0 4px rgba(51, 153, 204, 0.1),
+      0 4px 12px rgba(51, 153, 204, 0.15);
+    transform: translateY(-2px);
+  }
+  
+  &:hover:not(:focus) {
+    border-color: rgba(51, 153, 204, 0.4);
+    transform: translateY(-1px);
   }
 `;
 
 const Select = styled.select`
-  padding: 0.75rem 1rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  border: 2px solid rgba(51, 153, 204, 0.2);
+  border-radius: 12px;
   font-size: 1rem;
-  transition: border-color 0.2s;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   outline: none;
-  background: white;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  cursor: pointer;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 
   &:focus {
     border-color: #3399cc;
+    background: #ffffff;
+    box-shadow: 
+      0 0 0 4px rgba(51, 153, 204, 0.1),
+      0 4px 12px rgba(51, 153, 204, 0.15);
+    transform: translateY(-2px);
+  }
+  
+  &:hover:not(:focus) {
+    border-color: rgba(51, 153, 204, 0.4);
+    transform: translateY(-1px);
   }
 `;
 
 const Textarea = styled.textarea`
-  padding: 0.75rem 1rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  border: 2px solid rgba(51, 153, 204, 0.2);
+  border-radius: 12px;
   font-size: 1rem;
-  transition: border-color 0.2s;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   outline: none;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   resize: vertical;
-  min-height: 80px;
+  min-height: 100px;
+  
+  &::placeholder {
+    color: #94a3b8;
+    font-weight: 400;
+  }
 
   &:focus {
     border-color: #3399cc;
+    background: #ffffff;
+    box-shadow: 
+      0 0 0 4px rgba(51, 153, 204, 0.1),
+      0 4px 12px rgba(51, 153, 204, 0.15);
+    transform: translateY(-2px);
+  }
+  
+  &:hover:not(:focus) {
+    border-color: rgba(51, 153, 204, 0.4);
+    transform: translateY(-1px);
+  }
+`;
+
+const FieldHelpText = styled.div`
+  font-size: 0.9rem;
+  color: #2c5aa0;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, rgba(51, 153, 204, 0.08) 0%, rgba(0, 180, 219, 0.08) 100%);
+  padding: 12px 16px;
+  border-radius: 12px;
+  border-left: 4px solid #3399cc;
+  font-weight: 500;
+  animation: ${fadeIn} 0.5s ease-out;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: ${shimmer} 3s infinite;
+  }
+  
+  svg {
+    color: #3399cc;
+    margin-right: 8px;
+    font-size: 1rem;
+  }
+`;
+
+const AvailableDatesContainer = styled.div`
+  margin-top: 12px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(51, 153, 204, 0.05) 0%, rgba(0, 180, 219, 0.05) 100%);
+  border-radius: 16px;
+  border: 2px solid rgba(51, 153, 204, 0.2);
+  box-shadow: 
+    0 4px 12px rgba(51, 153, 204, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  animation: ${bounceIn} 0.6s ease-out;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #3399cc, #00b4db, #3399cc);
+    background-size: 200% 100%;
+    animation: ${shimmer} 2s infinite linear;
+  }
+`;
+
+const AvailableDatesTitle = styled.div`
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2c5aa0;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  svg {
+    color: #3399cc;
+    font-size: 1.1rem;
+  }
+`;
+
+const AvailableDatesList = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+`;
+
+const AvailableDateChip = styled.button`
+  background: ${props => props.selected 
+    ? 'linear-gradient(135deg, #3399cc 0%, #00b4db 100%)' 
+    : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)'
+  };
+  color: ${props => props.selected ? 'white' : '#2c5aa0'};
+  border: 2px solid ${props => props.selected ? '#3399cc' : 'rgba(51, 153, 204, 0.3)'};
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: ${props => props.selected 
+    ? '0 6px 20px rgba(51, 153, 204, 0.3)' 
+    : '0 2px 8px rgba(51, 153, 204, 0.1)'
+  };
+  transform: ${props => props.selected ? 'translateY(-2px)' : 'translateY(0)'};
+  position: relative;
+  min-width: 90px;
+  text-align: center;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+  }
+  
+  &:hover {
+    background: ${props => props.selected 
+      ? 'linear-gradient(135deg, #2388bb 0%, #0095b6 100%)' 
+      : 'linear-gradient(135deg, #3399cc 0%, #00b4db 100%)'
+    };
+    color: white;
+    border-color: #3399cc;
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(51, 153, 204, 0.3);
+    
+    &::before {
+      left: 100%;
+    }
+  }
+  
+  &:active {
+    transform: translateY(-1px) scale(0.98);
+    box-shadow: 0 4px 12px rgba(51, 153, 204, 0.2);
+  }
+  
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(51, 153, 204, 0.2);
   }
 `;
 
 const PriceSummary = styled.div`
-  margin-top: 1rem;
-  background: #f9f9f9;
-  padding: 1.25rem;
-  border-radius: 8px;
+  margin-top: 1.5rem;
+  background: linear-gradient(135deg, rgba(51, 153, 204, 0.05) 0%, rgba(0, 180, 219, 0.05) 100%);
+  padding: 1.75rem;
+  border-radius: 16px;
+  border: 2px solid rgba(51, 153, 204, 0.15);
+  position: relative;
+  overflow: hidden;
+  animation: ${fadeIn} 0.6s ease-out 0.4s both;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #3399cc, #00b4db, #3399cc);
+    background-size: 200% 100%;
+    animation: ${shimmer} 2s infinite linear;
+  }
 `;
 
 const PriceItem = styled.div`
   display: flex;
   justify-content: space-between;
-  padding: 0.5rem 0;
-  font-size: 1rem;
+  align-items: center;
+  padding: 0.75rem 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #2c5aa0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  &:not(:last-child) {
+    border-bottom: 1px solid rgba(51, 153, 204, 0.1);
+  }
 `;
 
 const PriceTotal = styled(PriceItem)`
-  margin-top: 0.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid #eee;
+  margin-top: 0.75rem;
+  padding-top: 1.25rem;
+  border-top: 2px solid rgba(51, 153, 204, 0.2);
   font-weight: 700;
-  font-size: 1.2rem;
+  font-size: 1.4rem;
+  color: #2c5aa0;
+  background: linear-gradient(135deg, rgba(51, 153, 204, 0.08) 0%, rgba(0, 180, 219, 0.08) 100%);
+  margin: 0.75rem -1.75rem -1.75rem;
+  padding: 1.25rem 1.75rem;
+  border-radius: 0 0 14px 14px;
+  
+  span:last-child {
+    background: linear-gradient(135deg, #3399cc 0%, #00b4db 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 `;
 
 const ModalFooter = styled.div`
-  padding: 1.5rem;
-  border-top: 1px solid #eee;
+  padding: 1.75rem 2rem;
+  background: linear-gradient(135deg, rgba(51, 153, 204, 0.02) 0%, rgba(0, 180, 219, 0.02) 100%);
+  border-top: 2px solid rgba(51, 153, 204, 0.1);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  position: sticky;
-  bottom: 0;
-  background: white;
-  z-index: 1;
-  border-bottom-left-radius: 12px;
-  border-bottom-right-radius: 12px;
+  gap: 1rem;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, #3399cc, #00b4db);
+    border-radius: 1px;
+  }
 `;
 
 const Button = styled.button`
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
+  padding: 1rem 2rem;
+  border-radius: 12px;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: -0.01em;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+  }
+  
+  &:hover::before {
+    left: 100%;
+  }
 `;
 
 const CancelButton = styled(Button)`
-  background: #f0f0f0;
-  border: none;
-  color: #444;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  border: 2px solid #cbd5e1;
+  color: #475569;
+  min-width: 120px;
 
   &:hover {
-    background: #e0e0e0;
+    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+    border-color: #94a3b8;
+    color: #334155;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(71, 85, 105, 0.15);
+  }
+  
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(71, 85, 105, 0.1);
   }
 `;
 
 const ProceedButton = styled(Button)`
-  background: #3399cc;
-  border: none;
+  background: linear-gradient(135deg, #3399cc 0%, #00b4db 100%);
+  border: 2px solid #3399cc;
   color: white;
-  min-width: 140px;
+  min-width: 180px;
+  box-shadow: 0 4px 15px rgba(51, 153, 204, 0.3);
 
   &:hover {
-    background: #2388bb;
-    transform: translateY(-2px);
+    background: linear-gradient(135deg, #2388bb 0%, #0095b6 100%);
+    border-color: #2388bb;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(51, 153, 204, 0.4);
   }
 
   &:disabled {
-    background: #a0a0a0;
+    background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+    border-color: #94a3b8;
     cursor: not-allowed;
     transform: none;
+    box-shadow: none;
+    
+    &:hover {
+      transform: none;
+      box-shadow: none;
+    }
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(51, 153, 204, 0.3);
   }
 `;
 
 const PaymentButton = styled(ProceedButton)`
-  background: #5cb85c;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-color: #10b981;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
 
   &:hover {
-    background: #4cae4c;
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    border-color: #059669;
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+  }
+  
+  &:active:not(:disabled) {
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
   }
 `;
 
 const ErrorMessage = styled.div`
-  color: #d9534f;
-  background-color: #ffebee;
-  border: 1px solid #ffcdd2;
-  padding: 1rem;
-  border-radius: 8px;
-  font-size: 0.95rem;
+  color: #dc2626;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%);
+  border: 2px solid rgba(239, 68, 68, 0.2);
+  padding: 1.25rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 500;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
+  animation: ${bounceIn} 0.5s ease-out;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  svg {
+    color: #dc2626;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
 `;
 
 const SuccessMessage = styled.div`
-  color: #4caf50;
-  background-color: #e8f5e9;
-  border: 1px solid #c8e6c9;
-  padding: 1rem;
-  border-radius: 8px;
-  font-size: 0.95rem;
+  color: #059669;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%);
+  border: 2px solid rgba(16, 185, 129, 0.2);
+  padding: 1.25rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 500;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  animation: ${bounceIn} 0.5s ease-out;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: ${shimmer} 2s infinite;
+  }
+  
+  svg {
+    color: #059669;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  
+  div {
+    line-height: 1.5;
+  }
+`;
+
+const StepIndicator = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  animation: ${fadeIn} 0.6s ease-out 0.1s both;
+`;
+
+const Step = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: ${props => props.active ? '#3399cc' : '#94a3b8'};
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+`;
+
+const StepNumber = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: ${props => props.active 
+    ? 'linear-gradient(135deg, #3399cc 0%, #00b4db 100%)' 
+    : props.completed 
+      ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+      : '#e2e8f0'
+  };
+  color: ${props => (props.active || props.completed) ? 'white' : '#64748b'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+  box-shadow: ${props => props.active 
+    ? '0 4px 12px rgba(51, 153, 204, 0.3)' 
+    : 'none'
+  };
+`;
+
+const StepConnector = styled.div`
+  width: 40px;
+  height: 2px;
+  background: ${props => props.completed 
+    ? 'linear-gradient(90deg, #10b981, #059669)' 
+    : '#e2e8f0'
+  };
+  transition: all 0.3s ease;
 `;
 
 const LoadingIndicator = styled.div`
   display: inline-block;
-  width: 1.5rem;
-  height: 1.5rem;
-  border: 3px solid rgba(255,255,255,.3);
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 3px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
-  border-top-color: #fff;
-  animation: spin 1s ease-in-out infinite;
+  border-top-color: #ffffff;
+  animation: spin 1s linear infinite;
   
   @keyframes spin {
-    to { transform: rotate(360deg); }
+    to { 
+      transform: rotate(360deg); 
+    }
   }
 `;
 
 // Main Component
 const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     startDate: '',
@@ -354,6 +887,76 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
   // Get the number of days from the start of the current month to create a minimum date
   const today = new Date();
   const minBookingDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  
+  // Create a function to check if a date is available for booking
+  const isDateAvailable = (dateString) => {
+    const date = new Date(dateString);
+    
+    // Check if the date is in the past
+    if (date < today) {
+      return false;
+    }
+    
+    // If specific available dates are defined, check against them FIRST (highest priority)
+    if (trek.availableDates && Array.isArray(trek.availableDates) && trek.availableDates.length > 0) {
+      const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      console.log("Checking if date", formattedDate, "is in available dates:", trek.availableDates);
+      return trek.availableDates.includes(formattedDate);
+    }
+    
+    // Fallback to available months check if no specific dates are set
+    if (trek.availableMonths && Array.isArray(trek.availableMonths) && trek.availableMonths.length > 0) {
+      const month = date.getMonth(); // 0-indexed (January is 0)
+      return trek.availableMonths.includes(month);
+    }
+    
+    // If neither availableDates nor availableMonths are defined, allow all future dates
+    return true;
+  };
+  
+  // Function to get availability display text
+  const getAvailabilityDisplay = () => {
+    // If specific dates are available, show date count
+    if (trek.availableDates && trek.availableDates.length > 0) {
+      const futureDates = trek.availableDates.filter(dateStr => {
+        const date = new Date(dateStr);
+        return date >= today;
+      });
+      
+      if (futureDates.length === 0) {
+        return 'No dates currently available';
+      }
+      
+      if (futureDates.length <= 5) {
+        // Show actual dates if there are 5 or fewer
+        return futureDates.map(dateStr => {
+          const date = new Date(dateStr);
+          return date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric' 
+          });
+        }).join(', ');
+      } else {
+        return `${futureDates.length} specific dates available`;
+      }
+    }
+    
+    // Fallback to available months
+    if (trek.availableMonths && trek.availableMonths.length > 0) {
+      const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+      
+      return trek.availableMonths
+        .sort((a, b) => a - b)
+        .map(monthIndex => monthNames[monthIndex])
+        .join(', ');
+    }
+    
+    return 'All year';
+  };
     useEffect(() => {
     const getCurrentUser = async () => {
       if (auth.currentUser) {
@@ -383,12 +986,28 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
       });
     }
   }, [isOpen, trek]);
-
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.startDate) {
       newErrors.startDate = "Start date is required";
+    } else if (!isDateAvailable(formData.startDate)) {
+      if (trek.availableDates && Array.isArray(trek.availableDates) && trek.availableDates.length > 0) {
+        const futureDates = trek.availableDates.filter(dateStr => {
+          const date = new Date(dateStr);
+          return date >= today;
+        });
+        
+        if (futureDates.length === 0) {
+          newErrors.startDate = "No dates are currently available for this trek.";
+        } else {
+          newErrors.startDate = "This date is not available for booking. Please select from the available dates shown below.";
+        }
+      } else if (trek.availableMonths && Array.isArray(trek.availableMonths) && trek.availableMonths.length > 0) {
+        newErrors.startDate = `This trek is only available during: ${getAvailabilityDisplay()}`;
+      } else {
+        newErrors.startDate = "Selected date is not available for booking.";
+      }
     }
     
     if (!formData.name) {
@@ -413,16 +1032,64 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    // Special handling for date input to provide immediate feedback
+    if (name === 'startDate' && value) {
+      const isValidDate = isDateAvailable(value);
+      if (!isValidDate) {
+        // Set a temporary error to provide immediate feedback
+        if (trek.availableDates && Array.isArray(trek.availableDates) && trek.availableDates.length > 0) {
+          const futureDates = trek.availableDates.filter(dateStr => {
+            const date = new Date(dateStr);
+            return date >= today;
+          });
+          
+          setErrors(prevErrors => ({
+            ...prevErrors,
+            startDate: futureDates.length === 0 
+              ? "No dates are currently available for this trek."
+              : "This date is not available for booking. Please select from the available dates shown below."
+          }));
+        } else {
+          setErrors(prevErrors => ({
+            ...prevErrors,
+            startDate: `This trek is only available during: ${getAvailabilityDisplay()}`
+          }));
+        }
+      } else {
+        // Clear the error if the date is valid
+        setErrors(prevErrors => ({
+          ...prevErrors,
+          startDate: undefined
+        }));
+      }
+    }
+    
     setFormData(prevData => ({
       ...prevData,
       [name]: value
     }));
     
-    // Clear error when field is edited
-    if (errors[name]) {
+    // Clear error when field is edited (except for the special date handling above)
+    if (errors[name] && name !== 'startDate') {
       setErrors(prevErrors => ({
         ...prevErrors,
         [name]: undefined
+      }));
+    }
+  };
+
+  const handleDateChipClick = (dateString) => {
+    setFormData(prevData => ({
+      ...prevData,
+      startDate: dateString
+    }));
+    
+    // Clear date error if it exists
+    if (errors.startDate) {
+      setErrors(prevErrors => ({
+        ...prevErrors,
+        startDate: undefined
       }));
     }
   };
@@ -557,7 +1224,92 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
       console.log('✅ Final booking ID for payment verification:', effectiveBookingId);
       
       // Verify and complete the payment - pass both parameters
-      await completeBookingPayment(effectiveBookingId, paymentResponse);
+      const completedBooking = await completeBookingPayment(effectiveBookingId, paymentResponse);
+      
+      // Send confirmation email
+      try {
+        console.log('📧 Sending booking confirmation email...');
+        console.log('🔍 Current formData:', formData);
+        console.log('🔍 Completed booking data:', completedBooking);
+        
+        // Fetch the complete booking data directly from Firestore to ensure we have all fields
+        console.log('🔄 Fetching complete booking data from Firestore...');
+        const bookingRef = doc(db, 'bookings', effectiveBookingId);
+        const bookingSnap = await getDoc(bookingRef);
+        
+        let completeBookingData = null;
+        if (bookingSnap.exists()) {
+          completeBookingData = { id: bookingSnap.id, ...bookingSnap.data() };
+          console.log('✅ Retrieved complete booking data from Firestore:', completeBookingData);
+        } else {
+          console.warn('⚠️ Booking not found in Firestore, using available data');
+          completeBookingData = completedBooking || formData;
+        }
+        
+        // Prepare booking data for email with multiple fallbacks
+        const emailBookingData = {
+          id: effectiveBookingId,
+          bookingId: effectiveBookingId,
+          name: completeBookingData.name || 
+                completeBookingData.userName || 
+                completedBooking?.name || 
+                formData.name || 
+                'Customer',
+          email: completeBookingData.email || 
+                 completeBookingData.userEmail || 
+                 completedBooking?.email || 
+                 formData.email,
+          contactNumber: completeBookingData.contactNumber || 
+                        completeBookingData.phoneNumber || 
+                        completedBooking?.contactNumber || 
+                        formData.contactNumber || 
+                        'Not provided',
+          startDate: completeBookingData.startDate || 
+                     completeBookingData.trekDate || 
+                     completedBooking?.startDate || 
+                     formData.startDate || 
+                     'Date not specified',
+          participants: completeBookingData.participants || 
+                       completeBookingData.numberOfParticipants || 
+                       completedBooking?.participants || 
+                       formData.participants || 
+                       1,
+          totalAmount: completeBookingData.totalAmount || 
+                      completeBookingData.amount || 
+                      calculateTotalPrice(),
+          paymentId: paymentResponse.razorpay_payment_id,
+          status: 'confirmed',
+          paymentStatus: 'completed',
+          specialRequests: completeBookingData.specialRequests || 
+                          completeBookingData.notes || 
+                          completedBooking?.specialRequests || 
+                          formData.specialRequests || 
+                          'None',
+          discountAmount: discountAmount,
+          createdAt: completeBookingData.createdAt || new Date().toISOString()
+        };
+        
+        console.log('📤 Email booking data prepared with fallbacks:', emailBookingData);
+        
+        // Validate that we have the minimum required data for email
+        if (!emailBookingData.email) {
+          console.error('❌ Cannot send email: No email address available');
+          console.warn('⚠️ Email sending skipped due to missing email address');
+          return;
+        }
+        
+        // Send the email
+        const emailSent = await emailService.sendConfirmationEmail(emailBookingData, trek);
+        
+        if (emailSent) {
+          console.log('✅ Booking confirmation email sent successfully');
+        } else {
+          console.warn('⚠️ Failed to send confirmation email, but booking was successful');
+        }
+      } catch (emailError) {
+        console.error('❌ Error sending confirmation email:', emailError);
+        // Don't fail the booking process if email fails
+      }
       
       // Show success message
       setPaymentSuccess(true);
@@ -567,7 +1319,10 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
         onBookingSuccess(effectiveBookingId || bookingId);
       }
       
-      // Close modal after 3 seconds
+      // Navigate to booking confirmation page
+      navigate(`/booking-confirmation/${effectiveBookingId}`);
+      
+      // Close modal after a brief delay
       setTimeout(() => {
         onClose();
       // Reset form state
@@ -591,7 +1346,7 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
     } finally {
       setIsProcessingPayment(false);
     }
-  }, [bookingId, onBookingSuccess, onClose]); // completeBookingPayment is an imported function, not a dependency
+  }, [bookingId, onBookingSuccess, onClose, navigate]); // Added navigate to dependencies
 
   // Define handlePaymentFailure as a useCallback to fix the dependency warning
   const handlePaymentFailure = useCallback(async (error) => {
@@ -599,12 +1354,37 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
       if (bookingId) {
         await handleBookingPaymentFailure(bookingId, error);
       }
+      
+      // Send payment failure email if we have user email
+      if (formData.email && formData.name) {
+        try {
+          console.log('📧 Sending payment failure email...');
+          
+          const emailBookingData = {
+            id: bookingId || 'unknown',
+            name: formData.name,
+            email: formData.email,
+            contactNumber: formData.contactNumber,
+            startDate: formData.startDate,
+            participants: formData.participants,
+            totalAmount: calculateTotalPrice(),
+            errorMessage: error.description || error.message || "Payment processing failed"
+          };
+          
+          await emailService.sendPaymentFailureEmail(emailBookingData, trek, error.description || error.message || "Payment failed");
+          console.log('✅ Payment failure email sent successfully');
+        } catch (emailError) {
+          console.error('❌ Error sending payment failure email:', emailError);
+          // Don't fail the error handling if email fails
+        }
+      }
+      
       setPaymentError(error.description || error.message || "Payment failed");
     } catch (err) {
       console.error("Error handling payment failure:", err);
       setPaymentError("Payment failed: " + (error.description || error.message || "Unknown error"));
     }
-  }, [bookingId]); // handleBookingPaymentFailure is an imported function, not a dependency
+  }, [bookingId, formData, trek, calculateTotalPrice]); // Added dependencies for email functionality
   // Set up global handlers for Razorpay response
   useEffect(() => {
     // Capture the current bookingId in closure for use in handlers
@@ -679,6 +1459,23 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
         </ModalHeader>
         
         <ModalBody>
+          {/* Step Indicator */}
+          <StepIndicator>
+            <Step active={step === 1}>
+              <StepNumber active={step === 1} completed={step > 1}>
+                {step > 1 ? <FiCheck /> : '1'}
+              </StepNumber>
+              <span>Booking Details</span>
+            </Step>
+            <StepConnector completed={step > 1} />
+            <Step active={step === 2}>
+              <StepNumber active={step === 2}>
+                2
+              </StepNumber>
+              <span>Payment</span>
+            </Step>
+          </StepIndicator>
+
           {/* Trek Information */}
           <TrekInfo>
             <TrekImage src={trek?.image} alt={trek?.name} />
@@ -704,6 +1501,46 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
                   min={minBookingDate}
                 />
                 {errors.startDate && <span style={{ color: 'red', fontSize: '0.9rem' }}>{errors.startDate}</span>}
+                <FieldHelpText>
+                  <FiInfo size={14} style={{ marginRight: '6px' }} />
+                  <strong>Available dates:</strong> {getAvailabilityDisplay()}
+                </FieldHelpText>
+                
+                {/* Show clickable date chips if specific dates are available and not too many */}
+                {trek.availableDates && trek.availableDates.length > 0 && trek.availableDates.length <= 12 && (
+                  <AvailableDatesContainer>
+                    <AvailableDatesTitle>
+                      <FiCalendar size={16} />
+                      Click any date below to select:
+                    </AvailableDatesTitle>
+                    <AvailableDatesList>
+                      {trek.availableDates
+                        .filter(dateStr => {
+                          const date = new Date(dateStr);
+                          return date >= today; // Only show future dates
+                        })
+                        .sort((a, b) => new Date(a) - new Date(b)) // Sort chronologically
+                        .map(dateStr => {
+                          const date = new Date(dateStr);
+                          const displayDate = date.toLocaleDateString('en-US', { 
+                            weekday: 'short',
+                            month: 'short', 
+                            day: 'numeric'
+                          });
+                          return (
+                            <AvailableDateChip
+                              key={dateStr}
+                              type="button"
+                              selected={formData.startDate === dateStr}
+                              onClick={() => handleDateChipClick(dateStr)}
+                            >
+                              {displayDate}
+                            </AvailableDateChip>
+                          );
+                        })}
+                    </AvailableDatesList>
+                  </AvailableDatesContainer>
+                )}
               </FormGroup>
               
               <FormGroup>
@@ -791,7 +1628,12 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
                 theme={{ 
                   mainColor: '#3399cc', 
                   hoverColor: '#2388bb',
-                  gradientLight: 'linear-gradient(135deg, rgba(51, 153, 204, 0.1), rgba(33, 122, 168, 0.1))'
+                  gradientLight: 'linear-gradient(135deg, rgba(51, 153, 204, 0.1), rgba(33, 122, 168, 0.1))',
+                  textColor: '#2c5aa0',
+                  inputBackground: '#ffffff',
+                  inputBorder: 'rgba(51, 153, 204, 0.2)',
+                  inputText: '#2c5aa0',
+                  placeholderColor: '#94a3b8'
                 }}
               />
                 

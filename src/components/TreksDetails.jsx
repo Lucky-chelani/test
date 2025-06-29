@@ -7,7 +7,9 @@ import { onAuthStateChanged } from "firebase/auth";
 import { FiClock, FiMapPin, FiCalendar, FiUsers, FiArrowLeft, FiStar, FiCheck, FiX, 
   FiCamera, FiShare2, FiHeart, FiInfo, FiChevronRight, FiChevronDown, FiCompass, 
   FiBookmark, FiDownload, FiPhone, FiMail, FiArrowRight, FiShield, FiMap, FiTarget, 
-  FiSun, FiCloud, FiDroplet, FiThermometer, FiMinimize2, FiMaximize2, FiWind } from 'react-icons/fi';
+  FiSun, FiCloud, FiDroplet, FiThermometer, FiMinimize2, FiMaximize2, FiWind, FiImage,
+  FiArrowUp, FiHome, FiChevronLeft } from 'react-icons/fi';
+import ImageCarousel from './ImageCarousel';
 import { FaMountain, FaLeaf, FaWater, FaSnowflake, FaCompass, FaRoute, FaFlag, 
   FaMoneyBillWave, FaShieldAlt, FaMapMarkedAlt, FaRegCalendarAlt, FaRegClock, 
   FaLayerGroup, FaImage, FaRegImages, FaCampground, FaHiking, FaChevronRight, 
@@ -15,16 +17,11 @@ import { FaMountain, FaLeaf, FaWater, FaSnowflake, FaCompass, FaRoute, FaFlag,
   FaCloudRain, FaCloudMoon, FaTent, FaFire, FaComment, FaMedal, FaRunning,
   FaMountain as FaMtnSolid, FaLocationArrow, FaUmbrellaBeach, FaRegSnowflake, 
   FaOpencart, FaShoppingBasket, FaShoppingCart, FaAward, FaBuffer } from 'react-icons/fa';
-import { BsArrowUpRight, BsCalendarCheck, BsPeopleFill, BsCalendarEvent, BsStarFill,
-  BsLightning, BsDropletFill, BsGraphUp, BsMap, BsCheckCircleFill, BsXCircleFill,
-  BsChevronDown, BsInfoCircle, BsCardImage, BsPlayFill, BsArrowRightShort } from 'react-icons/bs';
-import { IoFitness, IoTimeOutline, IoLayersOutline, IoLocationOutline, IoCalendarClearOutline,
-  IoInformationCircle, IoWarning, IoThumbsUp, IoSnow, IoPricetags, IoEasel, IoMap } from 'react-icons/io5';
-import { MdOutlineWaterDrop, MdOutlineAccountTree, MdExplore, MdOutlineLocalActivity,
-  MdOutlineBeachAccess, MdOutlineFactCheck, MdTimeline, MdCheckCircleOutline } from 'react-icons/md';
-import { GiMountainRoad, GiMountainClimbing, GiRiver, GiCampingTent, GiHiking, 
-  GiTreeBranch, GiSummits, GiBackpack, GiPathDistance, GiShield } from 'react-icons/gi';
-import mapPattern from "../assets/images/map-pattren.png";
+import { BsArrowUpRight } from 'react-icons/bs';
+import { FiAlertTriangle } from 'react-icons/fi';
+// MUI icons removed (unused)
+// Game icons removed (unused)
+// Unused map pattern import removed
 import { getValidImageUrl } from "../utils/images";
 import BookingModal from "./BookingModal";
 import { saveBooking } from "../utils/bookingService";
@@ -489,7 +486,7 @@ const ActionBtn = styled.button`
   }
 `;
 
-const BookBtn = styled.button`
+const BookNowBtn = styled.button`
   background: var(--secondary-color);
   color: white;
   border: none;
@@ -610,9 +607,6 @@ const HeroImgWrapper = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: url(${props => props.image || 'https://via.placeholder.com/800x600?text=Trek+Image+Coming+Soon'});
-  background-size: cover;
-  background-position: center;
   transform: scale(1.1);
   transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), filter 0.8s ease;
   filter: ${props => props.isLoading ? 'blur(30px) brightness(1.1)' : 'blur(0px)'};
@@ -654,6 +648,14 @@ const HeroImgWrapper = styled.div`
     pointer-events: none;
     mix-blend-mode: overlay;
     opacity: 0.8;
+  }
+  
+  .hero-img-legacy {
+    width: 100%;
+    height: 100%;
+    background-image: url(${props => props.image || 'https://via.placeholder.com/800x600?text=Trek+Image+Coming+Soon'});
+    background-size: cover;
+    background-position: center;
   }
 `;
 
@@ -1496,6 +1498,53 @@ const QuickStats = styled.div`
   }
 `;
 
+// Detailed Description Components
+const DetailedDescription = styled.div`
+  color: rgba(0, 0, 0, 0.85);
+  line-height: 1.6;
+  font-size: 1rem;
+  
+  p {
+    margin-bottom: 1rem;
+    text-align: justify;
+  }
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
+const AvailableMonths = styled.div`
+  p {
+    margin-bottom: 1.5rem;
+    color: rgba(0, 0, 0, 0.85);
+  }
+`;
+
+const MonthsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+`;
+
+const Month = styled.div`
+  padding: 12px;
+  text-align: center;
+  background: ${props => props.isAvailable ? 'rgba(72, 187, 120, 0.1)' : 'rgba(0, 0, 0, 0.05)'};
+  border-radius: 8px;
+  font-weight: ${props => props.isAvailable ? '600' : 'normal'};
+  color: ${props => props.isAvailable ? 'rgba(72, 187, 120, 1)' : 'rgba(0, 0, 0, 0.4)'};
+  border: 1px solid ${props => props.isAvailable ? 'rgba(72, 187, 120, 0.3)' : 'transparent'};
+`;
+
 // Timeline Components
 const Timeline = styled.div`
   display: flex;
@@ -1552,11 +1601,6 @@ const TimelineContent = styled.div`
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
   border: 1px solid rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
-  
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
-  }
 `;
 
 const TimelineTitle = styled.h4`
@@ -1570,6 +1614,37 @@ const TimelineDescription = styled.p`
   margin: 0;
   color: var(--text-muted);
   line-height: 1.6;
+`;
+
+const TimelineLocation = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+`;
+
+const TimelineDetails = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+`;
+
+const TimelineDetail = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
+  
+  svg {
+    color: rgba(255, 255, 255, 0.6);
+  }
 `;
 
 // Gallery Components
@@ -2058,64 +2133,6 @@ const BookingButton = styled.button`
     }
     
     svg {
-      transform: translateX(3px);
-    }
-  }
-  
-  svg {
-    font-size: 1.2rem;
-    transition: transform 0.3s ease;
-    z-index: 2;
-  }
-  
-  span {
-    z-index: 2;
-  }
-`;
-
-const BookNowBtn = styled.button`
-  width: 100%;
-  height: 56px;
-  background: var(--secondary-color);
-  color: white;
-  border: none;
-  border-radius: 28px;
-  font-weight: 700;
-  font-size: 1.1rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  box-shadow: 0 12px 25px rgba(66, 160, 75, 0.35);
-  position: relative;
-  overflow: hidden;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  margin-top: 1.5rem;
-  
-  &:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
-    transform: translateX(-100%);
-    transition: transform 0.6s ease;
-    z-index: 1;
-  }
-  
-  &:hover {
-    transform: translateY(-5px);
-    background: #37924f;
-    box-shadow: 0 15px 30px rgba(66, 160, 75, 0.45);
-    
-    &:before {
-      transform: translateX(100%);
-    }
-    
-    svg {
       transform: translateX(5px);
     }
   }
@@ -2124,11 +2141,6 @@ const BookNowBtn = styled.button`
     font-size: 1.3rem;
     transition: transform 0.3s ease
     z-index: 2;
-  }
-  
-  &:
-    transform: translateY(-2px);
-    box-shadow: 0 8px 15px rgba(66, 160, 75, 0.35);
   }
 `;
 
@@ -2335,8 +2347,263 @@ const AnimatedOverlay = styled.div`
 `;
 // --- UI IMPROVEMENTS END ---
 
+// --- GALLERY MODAL STYLES START ---
+const galleryModal = `
+  .gallery-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(10px);
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .gallery-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+  }
+
+  .gallery-modal-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+  }
+
+  .gallery-close-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: white;
+    font-size: 24px;
+    z-index: 10;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+  }
+
+  .gallery-close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+  }
+
+  .gallery-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: white;
+    font-size: 32px;
+    z-index: 10;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+  }
+
+  .gallery-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-50%) scale(1.1);
+  }
+
+  .gallery-prev-btn {
+    left: 20px;
+  }
+
+  .gallery-next-btn {
+    right: 20px;
+  }
+
+  .gallery-image-container {
+    position: relative;
+    width: 90%;
+    height: 80%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .gallery-main-image {
+    position: absolute;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 10px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transform: scale(0.9);
+    transition: all 0.4s ease;
+  }
+
+  .gallery-main-image.active {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .gallery-counter {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+    z-index: 10;
+  }
+
+  .gallery-thumbnails {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    max-width: 90%;
+    overflow-x: auto;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    z-index: 10;
+  }
+
+  .gallery-thumbnails::-webkit-scrollbar {
+    display: none;
+  }
+
+  .gallery-thumbnail {
+    background: none;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    overflow: hidden;
+    width: 60px;
+    height: 60px;
+  }
+
+  .gallery-thumbnail:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: scale(1.1);
+  }
+
+  .gallery-thumbnail.active {
+    border-color: #4ECDC4;
+    box-shadow: 0 0 20px rgba(78, 205, 196, 0.5);
+  }
+
+  .gallery-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+  }
+
+  /* Mobile optimizations */
+  @media (max-width: 768px) {
+    .gallery-modal-content {
+      padding: 10px;
+    }
+
+    .gallery-image-container {
+      width: 95%;
+      height: 70%;
+    }
+
+    .gallery-nav-btn {
+      width: 50px;
+      height: 50px;
+      font-size: 24px;
+    }
+
+    .gallery-prev-btn {
+      left: 10px;
+    }
+
+    .gallery-next-btn {
+      right: 10px;
+    }
+
+    .gallery-close-btn {
+      top: 10px;
+      right: 10px;
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+    }
+
+    .gallery-counter {
+      bottom: 90px;
+      font-size: 12px;
+      padding: 6px 12px;
+    }
+
+    .gallery-thumbnails {
+      bottom: 10px;
+      max-width: 95%;
+      padding: 8px;
+    }
+
+    .gallery-thumbnail {
+      width: 50px;
+      height: 50px;
+    }
+  }
+`;
+
+// Apply gallery modal styles globally
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.type = 'text/css';
+  styleSheet.innerText = galleryModal;
+  document.head.appendChild(styleSheet);
+}
+// --- GALLERY MODAL STYLES END ---
+
 // Modern Page Component
-export default function TrekDetails() {  const { id } = useParams();
+export default function TrekDetails() {  
+  const { id } = useParams();
   const navigate = useNavigate();
   const [trek, setTrek] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -2384,15 +2651,40 @@ export default function TrekDetails() {  const { id } = useParams();
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
-    // Preload trek image
+    // Preload trek images
   useEffect(() => {
     if (trek || fallbackData) {
-      const imgSrc = trek?.image || fallbackData?.image;
-      if (imgSrc) {
+      console.log("Trek details - image data:", trek?.imageUrls, trek?.image);
+      
+      // First check for multiple images - make sure we have valid URLs
+      const imageUrls = Array.isArray(trek?.imageUrls) 
+        ? trek.imageUrls.filter(url => url && typeof url === 'string')
+        : [];
+      
+      // Fall back to single image if no imageUrls array
+      const singleImgSrc = trek?.image || fallbackData?.image;
+      
+      if (imageUrls.length > 0) {
+        // Preload first image (cover image)
+        const coverImg = new Image();
+        coverImg.src = getValidImageUrl(imageUrls[0]);
+        coverImg.onload = () => setImageLoaded(true);
+        
+        // Preload other images in the background
+        imageUrls.slice(1).forEach(url => {
+          const img = new Image();
+          img.src = getValidImageUrl(url);
+        });
+        
+        // Fall back to setting imageLoaded after a timeout
+        const timer = setTimeout(() => setImageLoaded(true), 3000);
+        return () => clearTimeout(timer);
+      } else if (singleImgSrc) {
+        // Legacy single image handling
         const img = new Image();
-        img.src = getValidImageUrl(imgSrc); // Use getValidImageUrl on the source
+        img.src = getValidImageUrl(singleImgSrc);
         img.onload = () => setImageLoaded(true);
-        // Fall back to setting imageLoaded after a timeout, in case the image fails to load
+        
         const timer = setTimeout(() => setImageLoaded(true), 3000);
         return () => clearTimeout(timer);
       } else {
@@ -2567,6 +2859,7 @@ export default function TrekDetails() {  const { id } = useParams();
           clearTimeout(loadingTimeout);
           setTrek(fallbackData);
           setLoading(false);
+          setError("Could not load trek details. Please try again later.");
         }
       }
     };
@@ -2577,7 +2870,7 @@ export default function TrekDetails() {  const { id } = useParams();
       isMounted = false;
       clearTimeout(loadingTimeout);
     };
-  }, [id, fallbackData, generateSampleReviews]);
+  }, [id, fallbackData, generateSampleReviews]); // Removed loading from dependencies to prevent infinite loop
     
   // Create sample itinerary based on days
   const generateItinerary = useCallback((days, title) => {
@@ -2666,7 +2959,7 @@ export default function TrekDetails() {  const { id } = useParams();
     if (typeof price === "number") return price;
     if (typeof price === "string") {
       // Remove both dollar and rupee symbols as well as any commas
-      const numericPrice = parseFloat(price.replace(/^[\$₹]/, "").replace(/,/g, ""));
+      const numericPrice = parseFloat(price.replace(/^[$₹]/, "").replace(/,/g, ""));
       return isNaN(numericPrice) ? 0 : numericPrice;
     }
     return 0;
@@ -2685,20 +2978,119 @@ export default function TrekDetails() {  const { id } = useParams();
     }
   };
   
+  // Gallery modal state
+  const [isGalleryModalOpen, setIsGalleryModalOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  // Function to handle gallery image click
+  const handleGalleryImageClick = (index) => {
+    setCurrentImageIndex(index);
+    setIsGalleryModalOpen(true);
+  };
+  
+  // Function to navigate to previous image
+  const goToPreviousImage = () => {
+    const images = trek?.imageUrls?.filter(url => url && typeof url === 'string') || [];
+    setCurrentImageIndex((prevIndex) => 
+      prevIndex === 0 ? images.length - 1 : prevIndex - 1
+    );
+  };
+  
+  // Function to navigate to next image
+  const goToNextImage = () => {
+    const images = trek?.imageUrls?.filter(url => url && typeof url === 'string') || [];
+    setCurrentImageIndex((prevIndex) => 
+      prevIndex === images.length - 1 ? 0 : prevIndex + 1
+    );
+  };
+  
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (isGalleryModalOpen) {
+        if (e.key === 'ArrowLeft') {
+          goToPreviousImage();
+        } else if (e.key === 'ArrowRight') {
+          goToNextImage();
+        } else if (e.key === 'Escape') {
+          setIsGalleryModalOpen(false);
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [isGalleryModalOpen]);
+  
+  // Handle touch/swipe navigation
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  
+  const minSwipeDistance = 50;
+  
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+  
+  const onTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+  
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe) {
+      goToNextImage();
+    } else if (isRightSwipe) {
+      goToPreviousImage();
+    }
+  };
+  
+  // Render loading state
   if (loading) {
     return (
-      <ModernPageContainer>
-        <ModernLoadingContainer>
-          <LoadingWrapper>
-            <LoadingLogo>⛰️</LoadingLogo>
-            <LoadingMessage>Loading adventure details...</LoadingMessage>
-            <LoadingBar>
-              <LoadingProgress />
-            </LoadingBar>
-            <LoadingHint>Hang tight! We're preparing your trek details.</LoadingHint>
-          </LoadingWrapper>
-        </ModernLoadingContainer>
-      </ModernPageContainer>
+      <ModernLoadingContainer>
+        <LoadingWrapper>
+          <LoadingLogo>
+            <FaMountain size={48} />
+          </LoadingLogo>
+          <LoadingMessage>Loading Trek Details...</LoadingMessage>
+          <LoadingBar>
+            <LoadingProgress />
+          </LoadingBar>
+          <LoadingHint>Preparing your adventure...</LoadingHint>
+        </LoadingWrapper>
+      </ModernLoadingContainer>
+    );
+  }
+  
+  // Render error state
+  if (error) {
+    return (
+      <ModernErrorContainer>
+        <ErrorContent>
+          <ErrorIconWrapper>
+            <FiAlertTriangle size={60} />
+          </ErrorIconWrapper>
+          <ErrorHeading>Oops! Something went wrong</ErrorHeading>
+          <ErrorText>{error}</ErrorText>
+          <ErrorDescription>
+            We're having trouble loading this trek. Please try again later.
+          </ErrorDescription>
+          <ErrorActions>
+            <ErrorPrimaryButton onClick={() => navigate('/')}>
+              Return to Home
+            </ErrorPrimaryButton>
+            <ErrorSecondaryButton onClick={() => window.location.reload()}>
+              Try Again
+            </ErrorSecondaryButton>
+          </ErrorActions>
+        </ErrorContent>
+      </ModernErrorContainer>
     );
   }
 
@@ -2772,6 +3164,12 @@ export default function TrekDetails() {  const { id } = useParams();
         return;
       }
       
+      // Get the proper trek title/name - ensure it's never missing
+      const trekName = trek?.title || trek?.name || id.replace(/-/g, ' ')
+        .split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        
+      console.log(`Saving booking for trek: ${trekName} (ID: ${trek.id || id})`);
+      
       // Save booking to Firestore with complete trek data
       const completeBookingData = {
         ...bookingData,
@@ -2779,11 +3177,11 @@ export default function TrekDetails() {  const { id } = useParams();
         userEmail: authUser.email,
         userDisplayName: authUser.displayName,
         
-        // Trek details
-        trekId: trek.id,
-        trekTitle: trek.title,
+        // Trek details - ensure these are always properly set
+        trekId: trek.id || id,
+        trekName: trekName, // Ensure consistent name is used
+        trekTitle: trekName, // Set both fields for consistency
         trekImage: trekImage,
-        trekData: trek, // Pass the entire trek object
         
         // Formatted trek details for display
         trekDays: trekDays,
@@ -2800,13 +3198,19 @@ export default function TrekDetails() {  const { id } = useParams();
         bookingPlatform: 'web',
       };
       
+      // Remove any properties that are undefined to prevent Firestore errors
+      Object.keys(completeBookingData).forEach(key => {
+        if (completeBookingData[key] === undefined) {
+          delete completeBookingData[key];
+        }
+      });
+      
       const savedBooking = await saveBooking(completeBookingData);
       
       console.log("Booking saved successfully:", savedBooking);
       
-      // Optional: Navigate to a booking confirmation page
-      // navigate(`/booking-confirmation/${savedBooking.id}`);
-        // Optional: Show a success toast or notification
+      // Navigate to the booking confirmation page
+      navigate(`/booking-confirmation/${savedBooking.id}`);
     } catch (error) {
       console.error("Error saving booking:", error);
     }
@@ -2856,7 +3260,24 @@ export default function TrekDetails() {  const { id } = useParams();
             image={trekImage} 
             className={imageLoaded ? 'loaded' : ''}
             isLoading={!imageLoaded}
-          />
+          >
+            {/* Use ImageCarousel if multiple images exist, otherwise fall back to legacy single image */}
+            {trek && Array.isArray(trek.imageUrls) && trek.imageUrls.filter(url => url && typeof url === 'string').length > 0 ? (
+              <>
+                <ImageCarousel 
+                  images={trek.imageUrls.filter(url => url && typeof url === 'string')} 
+                  initialIndex={Math.min(trek.coverIndex || 0, trek.imageUrls.filter(url => url && typeof url === 'string').length - 1)}
+                  autoplay={true}
+                  interval={6000}
+                />
+                {console.log("Rendering ImageCarousel with images:", trek.imageUrls.filter(url => url && typeof url === 'string'))}
+              </>
+            ) : trek?.image ? (
+              <div className="hero-img-legacy" />
+            ) : (
+              <div className="hero-img-fallback">No images available</div>
+            )}
+          </HeroImgWrapper>
         </HeroParallax>
         <AnimatedOverlay />
         <HeroVignette />
@@ -2985,6 +3406,59 @@ export default function TrekDetails() {  const { id } = useParams();
                 </SectionBody>
               </Section>
 
+              {/* Detailed Description Section */}
+              {trek.detailedDescription && (
+              <Section>
+                <SectionHeader>
+                  <SectionTitle>
+                    <FiInfo />
+                    Detailed Description
+                  </SectionTitle>
+                </SectionHeader>
+                <SectionBody>
+                  <DetailedDescription>
+                    {trek.detailedDescription.split('\n').map((paragraph, idx) => (
+                      paragraph.trim() && <p key={idx}>{paragraph}</p>
+                    ))}
+                  </DetailedDescription>
+                </SectionBody>
+              </Section>
+              )}
+
+              {/* Available Months Section */}
+              {trek.availableMonths && trek.availableMonths.length > 0 && (
+              <Section>
+                <SectionHeader>
+                  <SectionTitle>
+                    <FiCalendar />
+                    Best Time to Visit
+                  </SectionTitle>
+                </SectionHeader>
+                <SectionBody>
+                  <AvailableMonths>
+                    {(() => {
+                      const monthNames = [
+                        'January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'
+                      ];
+                      return (
+                        <>
+                          <p>This trek is best experienced during the following months:</p>
+                          <MonthsGrid>
+                            {monthNames.map((month, idx) => (
+                              <Month key={idx} isAvailable={trek.availableMonths.includes(idx)}>
+                                {month}
+                              </Month>
+                            ))}
+                          </MonthsGrid>
+                        </>
+                      );
+                    })()}
+                  </AvailableMonths>
+                </SectionBody>
+              </Section>
+              )}
+
               {/* Itinerary Section */}
               <Section>
                 <SectionHeader>
@@ -2998,8 +3472,40 @@ export default function TrekDetails() {  const { id } = useParams();
                     {itinerary.map((item, idx) => (
                       <TimelineItem key={idx}>
                         <TimelineContent>
-                          <TimelineTitle>{item.title}</TimelineTitle>
+                          <TimelineTitle>
+                            <span>{item.title}</span>
+                            {item.location && (
+                              <TimelineLocation>
+                                <FiMapPin size={14} />
+                                {item.location}
+                              </TimelineLocation>
+                            )}
+                          </TimelineTitle>
                           <TimelineDescription>{item.description}</TimelineDescription>
+                          
+                          {/* Additional itinerary details */}
+                          {(item.distance || item.elevation || item.accommodation) && (
+                            <TimelineDetails>
+                              {item.distance && (
+                                <TimelineDetail>
+                                  <FiCompass size={14} />
+                                  Distance: {item.distance} km
+                                </TimelineDetail>
+                              )}
+                              {item.elevation && (
+                                <TimelineDetail>
+                                  <FiArrowUp size={14} />
+                                  Elevation: {item.elevation} m
+                                </TimelineDetail>
+                              )}
+                              {item.accommodation && (
+                                <TimelineDetail>
+                                  <FiHome size={14} />
+                                  Stay: {item.accommodation}
+                                </TimelineDetail>
+                              )}
+                            </TimelineDetails>
+                          )}
                         </TimelineContent>
                       </TimelineItem>
                     ))}
@@ -3042,13 +3548,18 @@ export default function TrekDetails() {  const { id } = useParams();
                 <SectionHeader>
                   <SectionTitle>
                     <FaRegImages />
-                    Gallery
+                    Photo Gallery
+                    
                   </SectionTitle>
                 </SectionHeader>
                 <SectionBody>
                   <Gallery>
-                    {[trekImage, ...(trek?.gallery || [])].slice(0, 6).map((img, idx) => (
-                      <GalleryImage key={idx} src={getValidImageUrl(img)} />
+                    {trek && Array.isArray(trek.imageUrls) && trek.imageUrls.filter(url => url && typeof url === 'string').map((img, idx) => (
+                      <GalleryImage 
+                        key={idx} 
+                        src={getValidImageUrl(img)} 
+                        onClick={() => handleGalleryImageClick(idx)}
+                      />
                     ))}
                   </Gallery>
                 </SectionBody>
@@ -3162,6 +3673,97 @@ export default function TrekDetails() {  const { id } = useParams();
         }}
         onBookingSuccess={handleBookingSuccess}
       />
+
+      {/* Gallery Modal */}
+      {isGalleryModalOpen && (
+        <div 
+          className="gallery-modal"
+          onClick={() => setIsGalleryModalOpen(false)}
+        >
+          <div className="gallery-modal-overlay" />
+          <div className="gallery-modal-content">
+            {/* Close button */}
+            <button 
+              className="gallery-close-btn"
+              onClick={() => setIsGalleryModalOpen(false)}
+              aria-label="Close gallery"
+            >
+              <FiX size={24} />
+            </button>
+            
+            {/* Navigation buttons */}
+            <button 
+              className="gallery-nav-btn gallery-prev-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                goToPreviousImage();
+              }}
+              aria-label="Previous image"
+            >
+              <FiChevronLeft size={32} />
+            </button>
+            
+            <button 
+              className="gallery-nav-btn gallery-next-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                goToNextImage();
+              }}
+              aria-label="Next image"
+            >
+              <FiChevronRight size={32} />
+            </button>
+            
+            {/* Main image */}
+            <div 
+              className="gallery-image-container"
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {trek?.imageUrls?.filter(url => url && typeof url === 'string').map((imageUrl, index) => (
+                <img
+                  key={index}
+                  src={imageUrl}
+                  alt={`${trek.title} - ${index + 1}`}
+                  className={`gallery-main-image ${index === currentImageIndex ? 'active' : ''}`}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+              ))}
+            </div>
+            
+            {/* Image counter */}
+            <div className="gallery-counter">
+              {currentImageIndex + 1} / {trek?.imageUrls?.filter(url => url && typeof url === 'string').length || 0}
+            </div>
+            
+            {/* Thumbnail strip */}
+            <div className="gallery-thumbnails">
+              {trek?.imageUrls?.filter(url => url && typeof url === 'string').map((imageUrl, index) => (
+                <button
+                  key={index}
+                  className={`gallery-thumbnail ${index === currentImageIndex ? 'active' : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentImageIndex(index);
+                  }}
+                >
+                  <img
+                    src={imageUrl}
+                    alt={`Thumbnail ${index + 1}`}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </ModernPageContainer>
   );
 }

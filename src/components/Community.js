@@ -4,8 +4,9 @@ import { auth, db } from '../firebase';
 import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, arrayUnion, getDoc, deleteDoc, getDocs, limit, startAfter } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { initializeChatrooms } from '../utils/initializeChatrooms';
-import { FiUsers, FiMessageCircle, FiX, FiPlus, FiChevronLeft, FiChevronRight, FiMapPin, FiArrowRight } from 'react-icons/fi';
+import { FiUsers, FiMessageCircle, FiX, FiPlus, FiChevronLeft, FiChevronRight, FiMapPin, FiArrowRight, FiLock } from 'react-icons/fi';
 import ImageOverlay from './ImageOverlay';
+import CreateCommunityModal from './CreateCommunityModal';
 import { 
   Page, PageContainer, Header, HeaderTitle, HeaderSubtitle, HeadingIconContainer,
   CardsContainer, Card, CardImageContainer, CardImage, CardContent, CardHeader,
@@ -28,6 +29,7 @@ const Community = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [roomToDelete, setRoomToDelete] = useState(null);
@@ -39,6 +41,35 @@ const Community = () => {
   
   const scrollRef = useRef(null);
   const navigate = useNavigate();
+
+  // Check if current user is an admin
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        if (currentUser.email === 'luckychelani950@gmail.com') {
+          setIsAdmin(true);
+          return;
+        }
+
+        try {
+          const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+          if (userDoc.exists() && userDoc.data().role === 'admin') {
+            setIsAdmin(true);
+          } else {
+            setIsAdmin(false);
+          }
+        } catch (err) {
+          console.error('Error checking admin status:', err);
+          setIsAdmin(false);
+        }
+      } else {
+        setIsAdmin(false);
+      }
+    };
+
+    checkAdminStatus();
+  }, []);
   
   // Fetch chatrooms from Firestore with optimized pagination
   useEffect(() => {
@@ -244,10 +275,23 @@ const Community = () => {
             </div>
           </HeaderTitle>
           
-          <CreateButton onClick={() => setShowCreateModal(true)}>
-            <FiPlus size={18} />
-            <span>Create Community</span>
-          </CreateButton>
+          {isAdmin ? (
+            <CreateButton onClick={() => setShowCreateModal(true)}>
+              <FiPlus size={18} />
+              <span>Create Community</span>
+            </CreateButton>
+          ) : (
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px', 
+              color: '#666',
+              fontSize: '0.9rem' 
+            }}>
+              <FiLock size={16} />
+              <span>Communities are managed by admins</span>
+            </div>
+          )}
         </Header>
 
         {error && (
@@ -274,14 +318,26 @@ const Community = () => {
             <EmptyState>
               <FiMessageCircle size={60} opacity={0.4} />
               <h3>No communities found</h3>
-              <p>Be the first to create a community for trekkers</p>
-              <CreateButton 
-                onClick={() => setShowCreateModal(true)} 
-                style={{ marginTop: '20px' }}
-              >
-                <FiPlus size={18} />
-                <span>Create One Now</span>
-              </CreateButton>
+              {isAdmin ? (
+                <>
+                  <p>You can create a new community or manage communities in the admin panel</p>
+                  <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '20px' }}>
+                    <CreateButton onClick={() => setShowCreateModal(true)}>
+                      <FiPlus size={18} />
+                      <span>Create Community</span>
+                    </CreateButton>
+                    <CreateButton 
+                      onClick={() => navigate('/admin/communities')} 
+                      style={{ background: '#4a5568', borderColor: '#4a5568' }}
+                    >
+                      <FiLock size={18} />
+                      <span>Admin Panel</span>
+                    </CreateButton>
+                  </div>
+                </>
+              ) : (
+                <p>Communities will appear here once created by administrators</p>
+              )}
             </EmptyState>
           ) : (
             chatrooms.map((room) => (
@@ -337,6 +393,29 @@ const Community = () => {
           >
             {isLoadingMore ? 'Loading...' : 'Load More Communities'}
           </LoadMoreButton>
+        )}
+
+        {/* Create Community Modal */}
+        {isAdmin && showCreateModal && (
+          <CreateCommunityModal 
+            isOpen={showCreateModal} 
+            onClose={() => setShowCreateModal(false)} 
+            onSuccess={(newCommunity) => {
+              setSuccess(`Community "${newCommunity.name}" has been created successfully!`);
+              // Refresh the list to include the new community
+              setChatrooms(prevRooms => [
+                {
+                  ...newCommunity,
+                  isNew: true,
+                  memberCount: 0,
+                  messageCount: 0,
+                  cachedImageUrl: getValidImageUrl(newCommunity.img)
+                },
+                ...prevRooms
+              ]);
+            }}
+            onError={(msg) => setError(msg)}
+          />
         )}
       </PageContainer>
     </Page>

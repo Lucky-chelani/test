@@ -11,8 +11,9 @@ import {
   orderBy,
   where
 } from "firebase/firestore";
-import { FiTrash, FiEdit, FiSave, FiX, FiCheckCircle, FiXCircle, FiLogIn, FiLogOut } from 'react-icons/fi';
+import { FiTrash, FiEdit, FiSave, FiX, FiCheckCircle, FiXCircle, FiLogIn, FiLogOut, FiPlus, FiRefreshCw } from 'react-icons/fi';
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
+import CreateCommunityModal from "./CreateCommunityModal";
 
 // Styled components for the admin interface
 const AdminContainer = styled.div`
@@ -301,6 +302,8 @@ const CommunityAdmin = () => {
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState(null);
   const [savingId, setSavingId] = useState(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -318,6 +321,7 @@ const CommunityAdmin = () => {
   const fetchCommunities = async () => {
     try {
       setLoading(true);
+      setError(null);
       
       const communitiesRef = collection(db, "chatrooms");
       const q = query(communitiesRef, orderBy("name", "asc"));
@@ -365,8 +369,10 @@ const CommunityAdmin = () => {
   
   const toggleFeaturedStatus = async (community) => {
     try {
-      setSavingId(community.id);
-      const communityRef = doc(db, "chatrooms", community.id);
+      setSavingId(community.docId);
+      const communityRef = doc(db, "chatrooms", community.docId);
+      
+      console.log(`Updating featured status for community: ${community.name} (ID: ${community.docId})`);
       
       await updateDoc(communityRef, {
         featured: !community.featured
@@ -374,13 +380,17 @@ const CommunityAdmin = () => {
       
       // Update local state
       setCommunities(communities.map(c => 
-        c.id === community.id ? {...c, featured: !c.featured} : c
+        c.docId === community.docId ? {...c, featured: !c.featured} : c
       ));
       
       setSavingId(null);
+      
+      // Show success message
+      setSuccessMessage(`Community "${community.name}" ${!community.featured ? 'added to' : 'removed from'} featured`);
+      setTimeout(() => setSuccessMessage(""), 3000); // Clear message after 3 seconds
     } catch (err) {
       console.error("Error updating featured status:", err);
-      setError("Failed to update featured status");
+      setError(`Failed to update featured status: ${err.message}`);
       setSavingId(null);
     }
   };
@@ -392,17 +402,36 @@ const CommunityAdmin = () => {
     
     try {
       setSavingId(communityId);
-      const communityRef = doc(db, "chatrooms", communityId);
-      await deleteDoc(communityRef);
       
-      // Update local state
-      setCommunities(communities.filter(c => c.id !== communityId));
+      // We need to use the docId for Firestore operations
+      const communityRef = doc(db, "chatrooms", communityId);
+      console.log(`Attempting to delete community with ID: ${communityId}`);
+      
+      await deleteDoc(communityRef);
+      console.log(`Community deleted successfully`);
+      
+      // Update local state - use both id and docId to ensure we filter correctly
+      const deletedCommunity = communities.find(c => c.docId === communityId || c.id === communityId);
+      setCommunities(communities.filter(c => c.docId !== communityId && c.id !== communityId));
       setSavingId(null);
+      
+      // Show success message
+      setSuccessMessage(`Community "${deletedCommunity?.name || 'Unknown'}" was deleted`);
+      setTimeout(() => setSuccessMessage(""), 3000); // Clear message after 3 seconds
     } catch (err) {
       console.error("Error deleting community:", err);
-      setError("Failed to delete community");
+      setError(`Failed to delete community: ${err.message}`);
       setSavingId(null);
     }
+  };
+  
+  const handleCommunityCreated = (newCommunity) => {
+    // Add the new community to the state
+    setCommunities([newCommunity, ...communities]);
+    
+    // Show success message
+    setSuccessMessage(`Community "${newCommunity.name}" was created successfully`);
+    setTimeout(() => setSuccessMessage(""), 3000); // Clear message after 3 seconds
   };
   
   if (!user) {
@@ -447,8 +476,13 @@ const CommunityAdmin = () => {
       <Header>
         <Title>Community Admin</Title>
         <ButtonsContainer>
+          <Button onClick={() => setShowCreateModal(true)} primary>
+            <FiPlus />
+            Create Community
+          </Button>
           <Button onClick={fetchCommunities} disabled={loading}>
-            Refresh Data
+            <FiRefreshCw />
+            Refresh
           </Button>
           <Button onClick={handleLogout}>
             <FiLogOut />
@@ -457,7 +491,48 @@ const CommunityAdmin = () => {
         </ButtonsContainer>
       </Header>
       
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {error && (
+        <div style={{
+          background: '#fee2e2', 
+          color: '#ef4444',
+          padding: '12px 20px',
+          borderRadius: '8px',
+          marginBottom: '20px'
+        }}>
+          {error}
+          <span 
+            style={{float: 'right', cursor: 'pointer'}} 
+            onClick={() => setError(null)}
+          >
+            <FiX />
+          </span>
+        </div>
+      )}
+      
+      {successMessage && (
+        <div style={{
+          background: '#dcfce7', 
+          color: '#16a34a',
+          padding: '12px 20px',
+          borderRadius: '8px',
+          marginBottom: '20px'
+        }}>
+          {successMessage}
+          <span 
+            style={{float: 'right', cursor: 'pointer'}} 
+            onClick={() => setSuccessMessage("")}
+          >
+            <FiX />
+          </span>
+        </div>
+      )}
+      
+      {/* Create Community Modal */}
+      <CreateCommunityModal 
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={handleCommunityCreated}
+      />
       
       <CommunitiesTable>
         <TableHeader>
@@ -497,8 +572,8 @@ const CommunityAdmin = () => {
                     </IconButton>
                     <IconButton
                       danger
-                      onClick={() => deleteCommunity(community.id)}
-                      disabled={savingId === community.id}
+                      onClick={() => deleteCommunity(community.docId)}
+                      disabled={savingId === community.docId}
                       title="Delete community"
                     >
                       <FiTrash />
@@ -540,8 +615,8 @@ const CommunityAdmin = () => {
                   </IconButton>
                   <IconButton
                     danger
-                    onClick={() => deleteCommunity(community.id)}
-                    disabled={savingId === community.id}
+                    onClick={() => deleteCommunity(community.docId)}
+                    disabled={savingId === community.docId}
                     title="Delete community"
                   >
                     <FiTrash />

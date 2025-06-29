@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { FaStar, FaThumbsUp, FaEdit, FaTrash, FaExclamationCircle } from 'react-icons/fa';
+import { FaStar, FaThumbsUp, FaTrash, FaExclamationCircle } from 'react-icons/fa';
 import ReviewService from '../services/ReviewService';
 
 const fadeIn = keyframes`
@@ -90,11 +90,16 @@ const ReviewContent = styled.div`
 `;
 
 const ReviewText = styled.p`
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1rem;
+  color:rgb(252, 252, 252);
+  font-size: 1.1rem;
+  font-weight: 400;
   line-height: 1.6;
   margin-bottom: ${props => props.noActions ? '0' : '15px'};
   white-space: pre-wrap;
+  border: 1px solid rgba(255, 255, 255, 0.97);
+  padding: 12px;
+  background-color: rgb(220, 220, 220);
+  border-radius: 8px;
   
   &:empty {
     display: none;
@@ -102,10 +107,14 @@ const ReviewText = styled.p`
 `;
 
 const NoCommentMessage = styled.p`
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.6);
   font-style: italic;
   font-size: 0.9rem;
   margin-bottom: ${props => props.noActions ? '0' : '15px'};
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
 const ReviewActions = styled.div`
@@ -231,7 +240,7 @@ const ConfirmButton = styled.button`
   }
 `;
 
-const ReviewCard = ({ review, currentUserId, onEdit, onDelete, noActions }) => {
+const ReviewCard = ({ review, currentUserId, onDelete, noActions }) => {
   const [isHelpful, setIsHelpful] = useState(
     review.helpfulBy?.includes(currentUserId) || false
   );
@@ -263,11 +272,6 @@ const ReviewCard = ({ review, currentUserId, onEdit, onDelete, noActions }) => {
     setLoading(false);
   };
   
-  // Handle editing review
-  const handleEdit = () => {
-    if (onEdit) onEdit(review);
-  };
-  
   // Request delete confirmation
   const requestDelete = () => {
     setShowDeleteConfirm(true);
@@ -292,6 +296,9 @@ const ReviewCard = ({ review, currentUserId, onEdit, onDelete, noActions }) => {
     }
   };
   
+  // Debug the full review object
+  console.log('Full review object in ReviewCard:', review);
+  
   return (
     <ReviewCardContainer>
       <ReviewHeader>
@@ -314,11 +321,12 @@ const ReviewCard = ({ review, currentUserId, onEdit, onDelete, noActions }) => {
         </RatingStars>
       </ReviewHeader>
       <ReviewContent>
-        {review.comment ? (
-          <ReviewText noActions={noActions}>{review.comment}</ReviewText>
-        ) : (
-          <NoCommentMessage noActions={noActions}>No additional comments provided.</NoCommentMessage>
-        )}
+        {console.log('Review comment:', review.comment, typeof review.comment)}
+        
+        {/* Force review comment to display regardless of content */}
+        <ReviewText noActions={noActions}>
+          {review.comment || "No comment provided"}
+        </ReviewText>
         
         {!noActions && (
           <ReviewActions>
@@ -333,9 +341,6 @@ const ReviewCard = ({ review, currentUserId, onEdit, onDelete, noActions }) => {
             
             {isOwner && (
               <OwnerActions>
-                <ActionButton className="edit" onClick={handleEdit}>
-                  <FaEdit />
-                </ActionButton>
                 <ActionButton className="delete" onClick={requestDelete}>
                   <FaTrash />
                 </ActionButton>

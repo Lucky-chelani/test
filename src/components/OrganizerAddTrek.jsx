@@ -12,10 +12,14 @@ import {
   where
 } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
-import { uploadImage } from '../utils/images';
+import { uploadImage, uploadMultipleImages } from '../utils/images';
 import initializeCategories from '../utils/initializeCategories';
 import { prepareTrekData } from '../utils/trekUtils';
 import { FiUpload, FiImage, FiAlertTriangle, FiCheck } from 'react-icons/fi';
+import MultipleImagesUploader from './MultipleImagesUploader';
+import ItineraryManager from './ItineraryManager';
+import MonthAvailability from './MonthAvailability';
+import DateAvailabilitySelector from './DateAvailabilitySelector';
 import { FaMountain } from 'react-icons/fa';
 import mapPattern from '../assets/images/map-pattren.png';
 
@@ -276,25 +280,32 @@ const OrganizerAddTrek = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [categories, setCategories] = useState([]);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [imageFile, setImageFile] = useState(null);
-  const fileInputRef = useRef(null);
+  const [trekImages, setTrekImages] = useState([]);
+  const [coverImageIndex, setCoverImageIndex] = useState(0);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    detailedDescription: '',
     location: '',
     difficulty: 'medium',
     days: 1,
     category: '',
-    startDate: '',
-    endDate: '',
     price: 0,
     rating: 4.0,
     reviews: 0,
     status: 'active',
-    itinerary: []
+    itinerary: [],
+    availableMonths: [],
+    availableDates: [], // New field for specific available dates
+    highlights: [],
+    includedServices: [],
+    excludedServices: [],
+    equipmentNeeded: [],
+    fitnessLevel: 'moderate',
+    ageRestriction: { min: 12, max: 65 }
   });
   
   // Check authentication and authorization
@@ -362,29 +373,67 @@ const OrganizerAddTrek = () => {
     }));
   };
   
-  const handleImageChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setImageFile(file);
-      
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleItineraryChange = (newItinerary) => {
+    setFormData(prev => ({
+      ...prev,
+      itinerary: newItinerary,
+      days: newItinerary.length // Update days count to match itinerary length
+    }));
+  };
+  
+  const handleMonthsChange = (months) => {
+    setFormData(prev => ({
+      ...prev,
+      availableMonths: months
+    }));
+  };
+  
+  const handleAvailableDatesChange = (dates) => {
+    setFormData(prev => ({
+      ...prev,
+      availableDates: dates
+    }));
+  };
+  
+  const handleImagesChange = (data) => {
+    setTrekImages(data.images);
+    setCoverImageIndex(data.coverIndex);
   };
   
   const handleImageUpload = async (trekId) => {
-    if (!imageFile) return '';
+    if (!trekImages || trekImages.length === 0) return { imageUrl: '', imageUrls: [] };
     
     try {
-      const path = `treks/${trekId}`;
-      const imageUrl = await uploadImage(imageFile, path);
-      return imageUrl;
+      setLoading(true);
+      setUploadProgress(0);
+      
+      // Get all files to upload
+      const filesToUpload = trekImages
+        .filter(img => img.file)
+        .map(img => img.file);
+      
+      // If no files, just return
+      if (filesToUpload.length === 0) return { imageUrl: '', imageUrls: [] };
+      
+      // Upload all images
+      const imageUrls = await uploadMultipleImages(
+        filesToUpload,
+        trekId,
+        (progress) => setUploadProgress(progress),
+        null
+      );
+      
+      // Return the cover image url and all image urls
+      const coverImageUrl = imageUrls[coverImageIndex] || imageUrls[0] || '';
+      
+      return {
+        imageUrl: coverImageUrl, // For backward compatibility
+        imageUrls: imageUrls,
+        coverIndex: coverImageIndex
+      };
     } catch (error) {
-      console.error('Error uploading image:', error);
-      throw new Error('Failed to upload trek image');
+      console.error('Error uploading images:', error);
+      throw new Error('Failed to upload trek images');
     }
   };
   
@@ -397,9 +446,9 @@ const OrganizerAddTrek = () => {
       return;
     }
     
-    // Check if image is uploaded
-    if (!imageFile) {
-      setError('Please upload a trek image.');
+    // Check if images are uploaded
+    if (!trekImages || trekImages.length === 0) {
+      setError('Please upload at least one trek image.');
       return;
     }
     
@@ -410,14 +459,20 @@ const OrganizerAddTrek = () => {
     try {
       // Generate a unique ID based on the title
       const trekId = generateSlug(formData.title);
-        // Upload image first
-      const imageUrl = await handleImageUpload(trekId);
+      
+      // Upload images first
+      const { imageUrl, imageUrls, coverIndex } = await handleImageUpload(trekId);
       
       // Prepare complete trek data with enriched organizer information
       const trekData = await prepareTrekData(
-        { ...formData, id: trekId }, // Include the generated ID
+        { 
+          ...formData, 
+          id: trekId,
+          imageUrls: imageUrls,
+          coverIndex: coverIndex 
+        },
         user,
-        imageUrl,
+        imageUrl, // For backward compatibility
         categories
       );
       
@@ -429,23 +484,27 @@ const OrganizerAddTrek = () => {
       setFormData({
         title: '',
         description: '',
+        detailedDescription: '',
         location: '',
         difficulty: 'medium',
         days: 1,
         category: '',
-        startDate: '',
-        endDate: '',
         price: 0,
         rating: 4.0,
         reviews: 0,
         status: 'active',
-        itinerary: []
+        itinerary: [],
+        availableMonths: [],
+        availableDates: [], // Reset available dates
+        highlights: [],
+        includedServices: [],
+        excludedServices: [],
+        equipmentNeeded: [],
+        fitnessLevel: 'moderate',
+        ageRestriction: { min: 12, max: 65 }
       });
-      setImagePreview(null);
-      setImageFile(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      setTrekImages([]);
+      setCoverImageIndex(0);
       
       // Redirect after 2 seconds
       setTimeout(() => {
@@ -575,59 +634,73 @@ const OrganizerAddTrek = () => {
           
           <FormRow>
             <FormGroup>
-              <Label htmlFor="startDate">Start Date</Label>
+              <Label htmlFor="price">Price (₹)</Label>
               <Input
-                type="date"
-                id="startDate"
-                name="startDate"
-                value={formData.startDate}
+                type="number"
+                id="price"
+                name="price"
+                value={formData.price}
                 onChange={handleInputChange}
+                min="0"
               />
             </FormGroup>
             
             <FormGroup>
-              <Label htmlFor="endDate">End Date</Label>
+              <Label htmlFor="days">Duration (days)</Label>
               <Input
-                type="date"
-                id="endDate"
-                name="endDate"
-                value={formData.endDate}
+                type="number"
+                id="days"
+                name="days"
+                value={formData.days}
                 onChange={handleInputChange}
+                min="1"
               />
             </FormGroup>
           </FormRow>
           
           <FormGroup>
-            <Label htmlFor="price">Price (₹)</Label>
-            <Input
-              type="number"
-              id="price"
-              name="price"
-              value={formData.price}
-              onChange={handleInputChange}
-              min="0"
+            <Label>Trek Images*</Label>
+            <MultipleImagesUploader
+              onImagesChange={handleImagesChange}
+              maxFiles={10}
+              maxSize={10}
             />
           </FormGroup>
           
           <FormGroup>
-            <Label>Trek Image*</Label>
-            <ImageUploadContainer onClick={() => fileInputRef.current.click()}>
-              <FiImage style={{ fontSize: '2rem', marginBottom: '10px' }} />
-              <p>Click to upload an image</p>
-              <input
-                type="file"
-                ref={fileInputRef}
-                accept="image/*"
-                onChange={handleImageChange}
-                style={{ display: 'none' }}
-              />
-              {imagePreview && (
-                <ImagePreview>
-                  <img src={imagePreview} alt="Selected Trek" />
-                </ImagePreview>
-              )}
-            </ImageUploadContainer>
+            <Label>Detailed Description</Label>
+            <TextArea
+              id="detailedDescription"
+              name="detailedDescription"
+              value={formData.detailedDescription}
+              onChange={handleInputChange}
+              placeholder="Provide more detailed information about the trek experience, terrain, special attractions, etc."
+              style={{ minHeight: "150px" }}
+            />
           </FormGroup>
+          
+          {/* Month Availability Selector */}
+          <MonthAvailability 
+            availableMonths={formData.availableMonths}
+            onChange={handleMonthsChange}
+          />
+          
+          {/* Date Availability Selector */}
+          <FormGroup>
+            <DateAvailabilitySelector
+              selectedDates={formData.availableDates}
+              onChange={handleAvailableDatesChange}
+              label="Trek Available Dates"
+              minDate={new Date().toISOString().split('T')[0]} // Today as minimum date
+              maxDate={new Date(new Date().setFullYear(new Date().getFullYear() + 2)).toISOString().split('T')[0]} // 2 years from now as max
+            />
+          </FormGroup>
+          
+          {/* Itinerary Manager */}
+          <ItineraryManager 
+            itinerary={formData.itinerary}
+            onChange={handleItineraryChange}
+          />
           
           <ButtonsContainer>
             <Button type="button" onClick={handleCancel}>

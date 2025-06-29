@@ -77,6 +77,12 @@ class ReviewService {
         helpfulBy: []
       };
       
+      console.log('Creating review with data:', JSON.stringify({
+        ...reviewDoc, 
+        comment: reviewDoc.comment,
+        commentLength: reviewDoc.comment?.length
+      }));
+      
       const reviewRef = await addDoc(collection(db, this.reviewsCollection), reviewDoc);
       
       // Update trek's average rating
@@ -113,11 +119,19 @@ class ReviewService {
       );
       
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: this.formatTimestamp(doc.data().createdAt)
-      }));
+      const reviews = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        const review = {
+          id: doc.id,
+          ...data,
+          createdAt: this.formatTimestamp(data.createdAt)
+        };
+        console.log(`Review ${doc.id}:`, review);
+        console.log(`Comment present:`, !!review.comment, 'Comment value:', review.comment);
+        return review;
+      });
+      console.log(`Found ${reviews.length} reviews for trek ${trekId}`);
+      return reviews;
     } catch (error) {
       console.error('Error fetching trek reviews:', error);
       return [];
@@ -273,6 +287,11 @@ class ReviewService {
       
       // Delete the review
       await deleteDoc(reviewRef);
+      
+      console.log(`Review ${reviewId} deleted from trek ${trekId}`);
+      
+      // Update trek's average rating after deletion
+      await this.updateTrekRating(trekId);
       
       // Update trek's average rating
       await this.updateTrekRating(trekId);

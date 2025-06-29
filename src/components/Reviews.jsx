@@ -97,7 +97,6 @@ const Reviews = ({ trekId }) => {
   const [reviews, setReviews] = useState([]);
   const [userReview, setUserReview] = useState(null);
   const [showReviewForm, setShowReviewForm] = useState(false);
-  const [editingReview, setEditingReview] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
   
   // Debug log the trekId
@@ -156,28 +155,24 @@ const Reviews = ({ trekId }) => {
   
   // Handle review submission
   const handleReviewSubmitted = () => {
-    // Refetch all review data
+    // Completely refresh all review data from the server
+    console.log('Review submitted, refreshing data for trek:', trekId);
     fetchReviewData();
     // Close the review form
     setShowReviewForm(false);
-    // Clear editing state
-    setEditingReview(null);
-  };
-  
-  // Handle review edit
-  const handleEditReview = (review) => {
-    setEditingReview(review);
-    setShowReviewForm(true);
   };
   
   // Handle review deletion
   const handleDeleteReview = async (reviewId) => {
+    console.log('Deleting review with ID:', reviewId);
+    
     // Remove the review from the list
     setReviews(prev => prev.filter(r => r.id !== reviewId));
     
     // Clear user review if it was deleted
     if (userReview && userReview.id === reviewId) {
       setUserReview(null);
+      console.log('Cleared user review after deletion');
     }
     
     // Refetch stats
@@ -190,15 +185,15 @@ const Reviews = ({ trekId }) => {
     setShowReviewForm(true);
   };
   
-  // Cancel review editing
+  // Cancel review form
   const handleCancelEdit = () => {
-    setEditingReview(null);
     setShowReviewForm(false);
   };
   
   // If user is logged in and has already reviewed, filter their review from the list
+  // Also ensure we're only displaying reviews for this specific trek
   const filteredReviews = reviews.filter(
-    review => !(userReview && review.id === userReview.id)
+    review => !(userReview && review.id === userReview.id) && review.trekId === trekId
   );
   
   return (
@@ -215,8 +210,7 @@ const Reviews = ({ trekId }) => {
           {/* User's Review Form */}
           {auth.currentUser && !userReview && (showReviewForm ? (
             <ReviewForm 
-              trekId={trekId} 
-              existingReview={editingReview}
+              trekId={trekId}
               onReviewSubmitted={handleReviewSubmitted}
               onCancel={handleCancelEdit}
             />
@@ -229,7 +223,7 @@ const Reviews = ({ trekId }) => {
           ))}
           
           {/* User's Existing Review */}
-          {userReview && !editingReview && (
+          {userReview && (
             <>
               <ReviewsHeader>
                 <ReviewsTitle>Your Review</ReviewsTitle>
@@ -237,19 +231,10 @@ const Reviews = ({ trekId }) => {
               <ReviewCard 
                 review={userReview} 
                 currentUserId={currentUserId}
-                onEdit={handleEditReview}
                 onDelete={handleDeleteReview}
               />
               
-              {/* Edit Form (when editing) */}
-              {editingReview && editingReview.id === userReview.id && (
-                <ReviewForm 
-                  trekId={trekId} 
-                  existingReview={editingReview}
-                  onReviewSubmitted={handleReviewSubmitted}
-                  onCancel={handleCancelEdit}
-                />
-              )}
+
             </>
           )}
           

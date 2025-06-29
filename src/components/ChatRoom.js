@@ -1,6 +1,65 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
-import ImprovedChatRoom from './ChatRoom.improved';
+import React, { useState, useEffect, useRef } from 'react';
+import { Navigate, useNavigate, useLocation } from 'react-router-dom';
+import styled, { keyframes, css } from 'styled-components';
+import { auth, db } from '../firebase';
+import { 
+  collection, 
+  addDoc, 
+  onSnapshot, 
+  query, 
+  orderBy, 
+  serverTimestamp, 
+  doc, 
+  updateDoc, 
+  arrayUnion, 
+  where, 
+  getDocs, 
+  deleteDoc, 
+  Timestamp 
+} from 'firebase/firestore';
+import user1 from '../assets/images/user1.jpg';
+import mapPattern from '../assets/images/pattern.png';
+
+// Animations
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+const slideIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+`;
+
+const glow = keyframes`
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(255, 75, 31, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 75, 31, 0.8);
+  }
+`;
+
+const typing = keyframes`
+  0%, 60%, 100% {
+    transform: initial;
+  }
+  30% {
+    transform: translateY(-10px);
+  }
+`;
 
 // This file now exports the improved ChatRoom component
 
@@ -33,7 +92,13 @@ const ChatContainer = styled.div`
   z-index: 1;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 100px);
+  height: calc(100vh - 140px); /* Adjusted to account for bottom navbar */
+  min-height: 600px;
+  
+  @media (max-width: 768px) {
+    padding: 10px;
+    height: calc(100vh - 160px); /* More space for mobile */
+  }
 `;
 
 const ChatHeader = styled.div`
@@ -113,6 +178,13 @@ const MessagesContainer = styled.div`
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-top: none;
   border-bottom: none;
+  min-height: 300px; /* Ensure minimum height */
+  max-height: calc(100vh - 320px); /* Prevent overflow */
+  
+  @media (max-width: 768px) {
+    padding: 16px;
+    max-height: calc(100vh - 280px);
+  }
   
   &::-webkit-scrollbar {
     width: 8px;
@@ -274,51 +346,44 @@ const EmptyMessagesState = styled.div`
 
 const InputContainer = styled.form`
   padding: 16px 24px;
-  background: rgba(24, 24, 40, 0.8);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(24, 24, 40, 0.95);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0 0 16px 16px;
   display: flex;
   align-items: center;
   animation: ${fadeIn} 0.5s ease-out forwards;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+  
+  @media (max-width: 768px) {
+    padding: 12px 16px;
+    border-radius: 0 0 12px 12px;
+  }
 `;
 
 const MessageInput = styled.input`
   flex: 1;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
   border-radius: 24px;
-  padding: 12px 20px;
+  padding: 14px 20px;
   color: white;
   font-size: 1rem;
+  transition: all 0.3s ease;
   
   &:focus {
     outline: none;
-    border-color: rgba(255, 75, 31, 0.5);
+    border-color: rgba(255, 75, 31, 0.7);
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 20px rgba(255, 75, 31, 0.2);
+    transform: translateY(-1px);
   }
   
   &::placeholder {
-    color: rgba(255, 255, 255, 0.4);
-  }
-`;
-
-const SendButton = styled.button`
-  background: linear-gradient(90deg, #FF4B1F, #FF9E1F);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 44px;
-  height: 44px;
-  margin-left: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  
-  &:hover {
-    transform: scale(1.05);
-    box-shadow: 0 2px 8px rgba(255, 75, 31, 0.4);
+    color: rgba(255, 255, 255, 0.6);
   }
   
   &:disabled {
@@ -326,9 +391,52 @@ const SendButton = styled.button`
     cursor: not-allowed;
   }
   
+  @media (max-width: 768px) {
+    font-size: 16px; /* Prevent zoom on mobile */
+    padding: 12px 18px;
+  }
+`;
+
+const SendButton = styled.button`
+  background: linear-gradient(135deg, #FF4B1F 0%, #FF9E1F 100%);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  margin-left: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 75, 31, 0.3);
+  
+  &:hover:not(:disabled) {
+    transform: scale(1.1) translateY(-2px);
+    box-shadow: 0 6px 25px rgba(255, 75, 31, 0.5);
+  }
+  
+  &:active:not(:disabled) {
+    transform: scale(1.05) translateY(-1px);
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 2px 8px rgba(255, 75, 31, 0.2);
+  }
+  
   svg {
     width: 20px;
     height: 20px;
+  }
+  
+  @media (max-width: 768px) {
+    width: 44px;
+    height: 44px;
+    margin-left: 10px;
   }
 `;
 
@@ -363,6 +471,27 @@ const UserActivity = styled.div`
   margin: 8px 0;
   text-align: center;
   animation: ${fadeIn} 0.3s ease-out forwards;
+`;
+
+const NotificationBanner = styled.div`
+  background: rgba(58, 102, 219, 0.15);
+  border: 2px solid rgba(58, 102, 219, 0.3);
+  padding: 16px 20px;
+  border-radius: 12px;
+  margin: 0 0 16px;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  animation: ${fadeIn} 0.5s ease-out;
+  backdrop-filter: blur(10px);
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
 `;
 
 // Format date for message groups
@@ -406,16 +535,26 @@ const formatTime = (timestamp) => {
 };
 
 // Using the improved ChatRoom component for better mobile keyboard handling
-import ImprovedChatRoom from './ChatRoom.improved';
-
 const ChatRoom = () => {
-  // We're redirecting to the improved version which has better keyboard handling
-  return <ImprovedChatRoom />;
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { roomId, room: initialRoom } = location.state || {};
+  
+  const [room, setRoom] = useState(initialRoom);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [localMessages, setLocalMessages] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [isUserMember, setIsUserMember] = useState(false);
   const [joining, setJoining] = useState(false);
   const messagesEndRef = useRef(null);
+  
+  // Redirect if no room data
+  if (!roomId) {
+    return <Navigate to="/community" replace />;
+  }
   
   // Get room data if not provided in location state
   useEffect(() => {
@@ -715,31 +854,23 @@ const ChatRoom = () => {
           {error && <ErrorMessage>{error}</ErrorMessage>}
         
         {auth.currentUser && !isUserMember && !error && (
-          <div style={{
-            background: 'rgba(58, 102, 219, 0.1)',
-            border: '1px solid rgba(58, 102, 219, 0.3)',
-            padding: '12px 16px',
-            borderRadius: '8px',
-            margin: '0 0 16px',
-            color: 'rgba(255, 255, 255, 0.9)',
-            fontSize: '0.9rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}>
-            <span>Join this community to participate in the conversation</span>
+          <NotificationBanner>
+            <span>🚀 Join this community to participate in the conversation</span>
             <SendButton 
               onClick={handleJoinRoom} 
               disabled={joining} 
               style={{ 
-                background: 'linear-gradient(90deg, #3a66db, #2752bb)',
+                background: 'linear-gradient(135deg, #3a66db 0%, #2752bb 100%)',
                 padding: '8px 16px',
-                minWidth: 'auto'
+                minWidth: 'auto',
+                borderRadius: '20px',
+                height: '36px',
+                width: 'auto'
               }}
             >
               {joining ? 'Joining...' : 'Join Now'}
             </SendButton>
-          </div>
+          </NotificationBanner>
         )}
         
         <MessagesContainer>
@@ -790,7 +921,9 @@ const ChatRoom = () => {
           )}
           <div ref={messagesEndRef} />
         </MessagesContainer>
-          <InputContainer onSubmit={handleSendMessage}>
+        
+        {/* Fixed Input Container */}
+        <InputContainer onSubmit={handleSendMessage}>
           {!auth.currentUser ? (
             // User is not logged in
             <>

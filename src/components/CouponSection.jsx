@@ -7,11 +7,11 @@ import { collection, getDocs, query, where, Timestamp } from 'firebase/firestore
 const CouponContainer = styled.div`
   margin: 20px 0;
   padding: 20px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 10px;
+  background: ${props => props.theme.gradientLight || 'rgba(255, 255, 255, 0.05)'};
+  border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
-  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border: 2px solid ${props => props.theme.inputBorder || 'rgba(255, 255, 255, 0.2)'};
 `;
 
 const CouponHeader = styled.div`
@@ -19,7 +19,8 @@ const CouponHeader = styled.div`
   align-items: center;
   margin-bottom: 15px;
   gap: 10px;
-  color: ${props => props.theme.mainColor || '#5390D9'};
+  color: ${props => props.theme.textColor || props.theme.mainColor || '#5390D9'};
+  font-weight: 600;
 `;
 
 const CouponForm = styled.form`
@@ -35,20 +36,27 @@ const CouponForm = styled.form`
 const CouponInput = styled.input`
   flex: 1;
   padding: 12px 15px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.07);
+  border: 2px solid ${props => props.theme.inputBorder || 'rgba(255, 255, 255, 0.1)'};
+  background: ${props => props.theme.inputBackground || 'rgba(255, 255, 255, 0.07)'};
   border-radius: 8px;
-  color: #111;
+  color: ${props => props.theme.inputText || '#111'};
   font-size: 16px;
+  transition: all 0.3s ease;
   
   &:focus {
     outline: none;
     border-color: ${props => props.theme.mainColor || '#5390D9'};
     box-shadow: 0 0 0 2px rgba(83, 144, 217, 0.2);
+    background: ${props => props.theme.inputBackground || '#ffffff'};
   }
   
   &::placeholder {
-    color: rgba(255, 255, 255, 0.4);
+    color: ${props => props.theme.placeholderColor || 'rgba(255, 255, 255, 0.4)'};
+  }
+  
+  &:hover:not(:focus) {
+    border-color: ${props => props.theme.mainColor || '#5390D9'};
+    transform: translateY(-1px);
   }
 `;
 

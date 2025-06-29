@@ -3,6 +3,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore, collection, getDocs, setDoc, doc } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import { getFunctions } from "firebase/functions";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -22,6 +23,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const functions = getFunctions(app);
 
 /**
  * Ensures a string is a valid Firestore document ID
@@ -30,7 +32,7 @@ const db = getFirestore(app);
  * @param {any} id - The potential document ID
  * @returns {string} - A sanitized document ID or fallback ID if input is invalid
  */
-export const getSafeDocumentId = (id) => {
+const getSafeDocumentId = (id) => {
   // Handle null, undefined, or non-string values
   if (!id || typeof id !== 'string' || id.trim() === '') {
     // Generate a reliable fallback ID with timestamp for uniqueness
@@ -55,7 +57,7 @@ export const getSafeDocumentId = (id) => {
 };
 
 // Helper function to ensure collections exist with error handling
-export const ensureCollectionExists = async (collectionName) => {
+const ensureCollectionExists = async (collectionName) => {
   try {
     // Try to get the collection
     const collectionRef = collection(db, collectionName);
@@ -88,4 +90,4 @@ ensureCollectionExists("treks").catch(err => console.error("Failed to initialize
 // Initialize Firebase Storage
 const storage = getStorage(app);
 
-export { auth, db, storage };
+export { auth, db, storage, functions, getSafeDocumentId, ensureCollectionExists };

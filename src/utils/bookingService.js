@@ -14,21 +14,61 @@ export const saveBooking = async (bookingData) => {
     if (!user) {
       throw new Error('User must be logged in to make a booking');
     }
+    
+    // Clean up any undefined values to prevent Firestore errors
+    const cleanedBookingData = {};
+    
+    // Only include defined fields
+    Object.keys(bookingData).forEach(key => {
+      if (bookingData[key] !== undefined) {
+        cleanedBookingData[key] = bookingData[key];
+      }
+    });
+
+    // Ensure trek name is properly set based on trekId if it's missing
+    if ((!cleanedBookingData.trekName || !cleanedBookingData.trekTitle) && cleanedBookingData.trekId) {
+      const trekName = cleanedBookingData.trekId
+        .replace(/-/g, ' ')
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+        
+      if (!cleanedBookingData.trekName) cleanedBookingData.trekName = trekName;
+      if (!cleanedBookingData.trekTitle) cleanedBookingData.trekTitle = trekName;
+      
+      console.log(`Fixed missing trek name for booking. Using: ${trekName} for trek ID: ${cleanedBookingData.trekId}`);
+    }
+    
+    // Never use "Test Trek" as a placeholder
+    if (cleanedBookingData.trekName === "Test Trek" && cleanedBookingData.trekId) {
+      const correctedName = cleanedBookingData.trekId
+        .replace(/-/g, ' ')
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+      
+      cleanedBookingData.trekName = correctedName;
+      cleanedBookingData.trekTitle = correctedName;
+      
+      console.log(`Replaced "Test Trek" placeholder with actual name: ${correctedName} for trek ID: ${cleanedBookingData.trekId}`);
+    }
 
     // Create booking in Firestore
     const bookingsRef = collection(db, 'bookings');
     const bookingDoc = await addDoc(bookingsRef, {
-      ...bookingData,
+      ...cleanedBookingData,
       userId: user.uid,
       userEmail: user.email,
-      status: 'pending',
+      status: 'confirmed', // Change from 'pending' to 'confirmed' since payment is already successful
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
 
+    console.log(`Booking saved with ID: ${bookingDoc.id}, Trek Name: ${cleanedBookingData.trekName}, Trek ID: ${cleanedBookingData.trekId}`);
+
     return {
       id: bookingDoc.id,
-      ...bookingData
+      ...cleanedBookingData
     };
   } catch (error) {
     console.error('Error saving booking:', error);

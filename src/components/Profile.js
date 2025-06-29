@@ -5,7 +5,8 @@ import { auth, db } from '../firebase';
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { motion } from 'framer-motion';
-import { FaEnvelope, FaBirthdayCake, FaEdit, FaSignOutAlt, FaMapMarkerAlt, FaMountain, FaClock, FaCrown, FaCompass } from 'react-icons/fa';
+import { FaEnvelope, FaBirthdayCake, FaEdit, FaSignOutAlt, FaMapMarkerAlt, FaMountain, FaClock, FaCrown, FaCompass, FaTicketAlt, FaChevronRight, FaCalendarAlt, FaUsers, FaMoneyBillWave, FaFileAlt } from 'react-icons/fa';
+import BookingService from '../services/BookingService';
 import profileImg from '../assets/images/trek1.png';
 import mapPattern from '../assets/images/map-pattren.png';
 
@@ -658,6 +659,8 @@ const Profile = () => {
   const [authUser, setAuthUser] = useState(null);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [bookings, setBookings] = useState([]);
+  const [loadingBookings, setLoadingBookings] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -675,6 +678,17 @@ const Profile = () => {
               email: currentUser.email,
               role: 'user'
             });
+          }
+          
+          // Fetch user bookings
+          setLoadingBookings(true);
+          try {
+            const userBookings = await BookingService.getUserBookings();
+            setBookings(userBookings);
+          } catch (error) {
+            console.error("Error fetching user bookings:", error);
+          } finally {
+            setLoadingBookings(false);
           }
         } catch (error) {
           console.error("Error fetching user data from Firestore:", error);
@@ -845,6 +859,74 @@ const Profile = () => {
             )}
           </BadgesGrid>
         </BadgesSection>
+
+        {/* Bookings Section */}
+        <BookingsSection>
+          <SectionTitle>Your Bookings</SectionTitle>
+          {loadingBookings ? (
+            <LoadingBookingsIndicator>
+              Loading your bookings
+              <span className="loading-dots"></span>
+            </LoadingBookingsIndicator>
+          ) : (
+            <BookingsList>
+              {bookings.length > 0 ? (
+                bookings.map((booking, idx) => (
+                  <BookingCard 
+                    key={booking.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                  >
+                    <BookingImage 
+                      src={booking.trek?.imageUrl || booking.trekImage || profileImg} 
+                      alt={(booking.trek?.title || booking.trekTitle || 'Trek Image')} 
+                    />
+                    <BookingInfo>
+                      <BookingTitle>
+                        {booking.trek?.title || booking.trek?.name || 
+                         booking.trekTitle || booking.trekName || 
+                         booking.trekData?.title || booking.trekData?.name ||
+                         (booking.trekId && booking.trekId.replace(/-/g, ' ')
+                            .split(' ')
+                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                            .join(' ')) || 
+                         'Unknown Trek'}
+                      </BookingTitle>
+                      <BookingDate>Booked on: {booking.createdAt}</BookingDate>
+                      <BookingDetails>
+                        {(booking.participants || booking.participantCount) && (
+                          <span><FaUsers /> {booking.participants || booking.participantCount || 1} {(booking.participants || booking.participantCount) === 1 ? 'Person' : 'People'}</span>
+                        )}
+                        {(booking.bookingDate || booking.startDate) && (
+                          <span><FaCalendarAlt /> {booking.bookingDate || booking.startDate}</span>
+                        )}
+                        {booking.amount && (
+                          <span><FaMoneyBillWave /> ₹{booking.amount}</span>
+                        )}
+                        {(booking.trek?.location || booking.trekLocation) && (
+                          <span><FaMapMarkerAlt /> {booking.trek?.location || booking.trekLocation}</span>
+                        )}
+                      </BookingDetails>
+                      <BookingStatus status={booking.status || 'confirmed'}>
+                        {booking.status || 'Confirmed'}
+                      </BookingStatus>
+                    </BookingInfo>
+                    <BookingActions>
+                      <ViewDetailsButton onClick={() => navigate(`/booking-confirmation/${booking.id}`)}>
+                        <FaFileAlt /> View Details
+                      </ViewDetailsButton>
+                    </BookingActions>
+                  </BookingCard>
+                ))
+              ) : (
+                <div style={{ textAlign: 'center', padding: '20px', color: 'rgba(255,255,255,0.7)' }}>
+                  No bookings found. Start exploring treks and book your adventures!
+                </div>
+              )}
+            </BookingsList>
+          )}
+        </BookingsSection>
       </Container>
     </Page>
   );
@@ -982,4 +1064,191 @@ const TrekStats = styled.div`
   }
 `;
 
-// Component styles
+// Bookings Section Styled Components
+const BookingsSection = styled.div`
+  background: rgba(25, 28, 35, 0.85);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 40px 30px;
+  margin-top: 40px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.2),
+    0 2px 16px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #FF6B6B, #4CC9F0);
+    opacity: 0.8;
+  }
+`;
+
+const BookingsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+`;
+
+const BookingCard = styled(motion.div)`
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
+  }
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+`;
+
+const BookingImage = styled.img`
+  width: 100px;
+  height: 75px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+`;
+
+const BookingInfo = styled.div`
+  flex: 1;
+`;
+
+const BookingTitle = styled.h4`
+  margin: 0 0 5px;
+  font-size: 1.1rem;
+  color: #ffffff;
+`;
+
+const BookingDate = styled.div`
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 5px;
+`;
+
+const BookingDetails = styled.div`
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  
+  span {
+    display: flex;
+    align-items: center;
+    
+    svg {
+      margin-right: 5px;
+      color: #4CC9F0;
+    }
+  }
+`;
+
+const BookingStatus = styled.div`
+  background: ${props => {
+    switch(props.status?.toLowerCase()) {
+      case 'confirmed':
+        return 'rgba(39, 174, 96, 0.3)';
+      case 'pending':
+        return 'rgba(241, 196, 15, 0.3)';
+      case 'cancelled':
+        return 'rgba(231, 76, 60, 0.3)';
+      default:
+        return 'rgba(41, 128, 185, 0.3)';
+    }
+  }};
+  color: ${props => {
+    switch(props.status?.toLowerCase()) {
+      case 'confirmed':
+        return '#2ecc71';
+      case 'pending':
+        return '#f1c40f';
+      case 'cancelled':
+        return '#e74c3c';
+      default:
+        return '#3498db';
+    }
+  }};
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  display: inline-block;
+  margin-top: 10px;
+`;
+
+const ViewDetailsButton = styled.button`
+  background: linear-gradient(135deg, #4CC9F0, #06D6A0);
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(76, 201, 240, 0.3);
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(76, 201, 240, 0.4);
+  }
+  
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(76, 201, 240, 0.3);
+  }
+  
+  @media (max-width: 768px) {
+    margin-top: 10px;
+  }
+`;
+
+const BookingActions = styled.div`
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  
+  @media (max-width: 768px) {
+    width: 100%;
+    justify-content: flex-end;
+  }
+`;
+
+const LoadingBookingsIndicator = styled.div`
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  color: rgba(255, 255, 255, 0.7);
+  
+  &::after {
+    content: '';
+    width: 25px;
+    height: 25px;
+    border: 2px solid rgba(76, 201, 240, 0.3);
+    border-top: 2px solid #4CC9F0;
+    border-radius: 50%;
+    margin-left: 10px;
+    animation: ${rotate} 1s linear infinite;
+  }
+`;

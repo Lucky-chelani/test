@@ -3,9 +3,13 @@ import styled from "styled-components";
 import { db, auth } from "../firebase";
 import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, setDoc, query, where } from "firebase/firestore";
 import { initializeTreks } from "../utils/initializeTreks";
-import { FiTrash, FiEdit, FiSave, FiX, FiPlusCircle, FiLogIn, FiUpload, FiImage } from 'react-icons/fi';
+import { FiTrash, FiEdit, FiSave, FiX, FiPlusCircle, FiLogIn, FiUpload, FiImage, FiCalendar, FiMap } from 'react-icons/fi';
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
-import { uploadImage, deleteImage, getTrekImagePath, getValidImageUrl } from "../utils/images";
+import { uploadImage, deleteImage, getTrekImagePath, getValidImageUrl, uploadMultipleImages } from "../utils/images";
+import MultipleImagesUploader from './MultipleImagesUploader';
+import ItineraryManager from './ItineraryManager';
+import MonthAvailability from './MonthAvailability';
+import DateAvailabilitySelector from './DateAvailabilitySelector';
 
 // Styled components for the admin interface
 const AdminContainer = styled.div`
@@ -45,9 +49,9 @@ const ButtonsContainer = styled.div`
 
 const Button = styled.button`
   padding: 12px 18px;
-  background: ${props => props.primary ? '#5390D9' : '#fff'};
-  color: ${props => props.primary ? '#fff' : '#333'};
-  border: 1px solid ${props => props.primary ? '#5390D9' : '#ddd'};
+  background: ${props => props.primary ? '#5390D9' : 'rgba(255, 255, 255, 0.1)'};
+  color: ${props => props.primary ? '#fff' : '#fff'};
+  border: 1px solid ${props => props.primary ? '#5390D9' : 'rgba(255, 255, 255, 0.2)'};
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
@@ -57,7 +61,7 @@ const Button = styled.button`
   transition: all 0.2s;
   
   &:hover {
-    background: ${props => props.primary ? '#4a81c4' : '#f9f9f9'};
+    background: ${props => props.primary ? '#4a81c4' : 'rgba(255, 255, 255, 0.2)'};
   }
   
   @media (max-width: 768px) {
@@ -175,17 +179,18 @@ const IconButton = styled.button`
 `;
 
 const FormContainer = styled.div`
-  background: white;
+  background: #1e2330;
+  color: white;
   border-radius: 12px;
   padding: 25px;
   margin-top: 30px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 `;
 
 const FormTitle = styled.h2`
   margin-top: 0;
   margin-bottom: 25px;
-  color: #333;
+  color: white;
 `;
 
 const FormGrid = styled.div`
@@ -206,16 +211,18 @@ const Label = styled.label`
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
-  color: #333;
+  color: rgba(255, 255, 255, 0.9);
 `;
 
 const Input = styled.input`
   width: 100%;
   padding: 12px 15px;
-  border: 1px solid #ddd;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 8px;
   font-size: 1rem;
   transition: border 0.2s;
+  background: rgba(0, 0, 0, 0.2);
+  color: white;
   
   &:focus {
     border-color: #5390D9;
@@ -226,25 +233,33 @@ const Input = styled.input`
 const Select = styled.select`
   width: 100%;
   padding: 12px 15px;
-  border: 1px solid #ddd;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 8px;
   font-size: 1rem;
-  background: white;
+  background: rgba(0, 0, 0, 0.2);
+  color: white;
   
   &:focus {
     border-color: #5390D9;
     outline: none;
+  }
+  
+  option {
+    background: #2a3446;
+    color: white;
   }
 `;
 
 const TextArea = styled.textarea`
   width: 100%;
   padding: 12px 15px;
-  border: 1px solid #ddd;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 8px;
   font-size: 1rem;
   min-height: 120px;
   transition: border 0.2s;
+  background: rgba(0, 0, 0, 0.2);
+  color: white;
   
   &:focus {
     border-color: #5390D9;
@@ -338,8 +353,9 @@ const Message = styled.div`
   padding: 15px;
   margin: 20px 0;
   border-radius: 8px;
-  background-color: ${props => props.error ? '#fee2e2' : '#dcfce7'};
-  color: ${props => props.error ? '#ef4444' : '#16a34a'};
+  background-color: ${props => props.error ? 'rgba(239, 68, 68, 0.2)' : 'rgba(22, 163, 74, 0.2)'};
+  border: 1px solid ${props => props.error ? 'rgba(239, 68, 68, 0.5)' : 'rgba(22, 163, 74, 0.5)'};
+  color: ${props => props.error ? '#ff7b7b' : '#4ade80'};
   font-weight: 500;
 `;
 
@@ -482,7 +498,13 @@ const TrekAdmin = () => {
     image: '',
     description: '',
     organizerId: '', // Add organizerId field
-    organizerName: '' // Add organizerName field
+    organizerName: '', // Add organizerName field
+    imageUrls: [], // Initialize imageUrls as an empty array
+    coverIndex: 0, // Default cover image index
+    availableMonths: [], // Initialize available months as an empty array
+    availableDates: [], // Initialize available dates as an empty array
+    itinerary: [], // Initialize itinerary as an empty array
+    detailedDescription: '' // Detailed description field
   });
   
   // Image upload state
@@ -606,7 +628,43 @@ const TrekAdmin = () => {
       [name]: value
     }));
   };
-    const resetForm = () => {
+  
+  // Handler for multiple images
+  const handleImagesChange = (images, coverIndex) => {
+    setFormData(prev => ({
+      ...prev,
+      imageUrls: Array.isArray(images) ? images : [],
+      coverIndex: coverIndex
+    }));
+  };
+  
+  // Handler for itinerary changes
+  const handleItineraryChange = (itinerary) => {
+    setFormData(prev => ({
+      ...prev,
+      itinerary
+    }));
+  };
+  
+  // Handler for available months
+  const handleMonthsChange = (months) => {
+    setFormData(prev => ({
+      ...prev,
+      availableMonths: months
+    }));
+  };
+  
+  // Handler for available dates
+  const handleAvailableDatesChange = (dates) => {
+    console.log("🗓️ Available dates changed:", dates);
+    console.log("📊 This is just updating form state, NOT saving to database");
+    setFormData(prev => ({
+      ...prev,
+      availableDates: dates
+    }));
+  };
+  
+  const resetForm = () => {
     setFormData({
       id: '',
       title: '',
@@ -619,9 +677,18 @@ const TrekAdmin = () => {
       rating: 5.0,
       reviews: 0,
       image: '',
+      imageUrls: [],
+      coverIndex: 0,
       description: '',
-      organizerId: '', // Add organizerId field
-      organizerName: '' // Add organizerName field
+      detailedDescription: '',
+      itinerary: [],
+      availableMonths: [],
+      availableDates: [], // Reset available dates
+      organizerId: '',
+      organizerName: '',
+      includedServices: [],
+      excludedServices: [],
+      highlights: []
     });
     setEditingTrek(null);
     setImageFile(null);
@@ -657,9 +724,19 @@ const TrekAdmin = () => {
       rating: trek.rating || 5.0,
       reviews: trek.reviews || 0,
       image: trek.image || '',
+      // Make sure imageUrls is always an array
+      imageUrls: Array.isArray(trek.imageUrls) ? trek.imageUrls : [],
+      coverIndex: trek.coverIndex || 0,
       description: trek.description || '',
-      organizerId: trek.organizerId || '', // Add organizerId field
-      organizerName: trek.organizerName || '' // Add organizerName field
+      detailedDescription: trek.detailedDescription || '',
+      itinerary: Array.isArray(trek.itinerary) ? trek.itinerary : [],
+      availableMonths: Array.isArray(trek.availableMonths) ? trek.availableMonths : [],
+      availableDates: Array.isArray(trek.availableDates) ? trek.availableDates : [], // Load existing available dates
+      organizerId: trek.organizerId || '',
+      organizerName: trek.organizerName || '',
+      includedServices: Array.isArray(trek.includedServices) ? trek.includedServices : [],
+      excludedServices: Array.isArray(trek.excludedServices) ? trek.excludedServices : [],
+      highlights: Array.isArray(trek.highlights) ? trek.highlights : []
     });
     setEditingTrek(trek.docId);
     setShowForm(true);
@@ -758,7 +835,27 @@ const TrekAdmin = () => {
     }
   };
   const handleSave = async (e) => {
-    e.preventDefault();
+    console.log("🚨 SAVE FUNCTION CALLED!", {
+      eventType: e?.type,
+      hasPreventDefault: !!(e && e.preventDefault),
+      timestamp: new Date().toISOString()
+    });
+    
+    // Ensure this function is called only from the form submit or explicit button click
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    } else {
+      console.warn("⚠️ handleSave called without event - this might be unintended auto-save, blocking execution");
+      return; // Exit if not called from a submit event
+    }
+    
+    // Additional protection: ensure we have a valid form event type
+    if (e && e.type && !['submit', 'click'].includes(e.type)) {
+      console.warn("⚠️ handleSave called from unexpected event type:", e.type, "- blocking execution");
+      return;
+    }
+    
+    console.log("✅ Save operation proceeding - this is an intentional save");
     
     try {
       setLoading(true);
@@ -766,12 +863,68 @@ const TrekAdmin = () => {
       // Create a slug from the title if ID is not provided
       const trekId = formData.id || generateSlug(formData.title);
       
-      // Upload image if new image is selected
+      // Handle image uploads (if needed)
       let imageUrl = formData.image;
+      // Ensure imageUrls is always an array
+      let imageUrls = Array.isArray(formData.imageUrls) ? [...formData.imageUrls] : [];
       
+      // For backwards compatibility, if using old single image upload
       if (imageFile) {
         // New image to upload
         imageUrl = await handleImageUpload(trekId);
+      }
+      
+      // If we have uploads from the MultipleImagesUploader but they're not yet uploaded (just File objects)
+      // Ensure imageUrls is always an array before filtering
+      const safeImageUrls = Array.isArray(formData.imageUrls) ? formData.imageUrls : [];
+      
+      // Better detection for File objects - check both direct File instances and objects with file property
+      const newImageFiles = safeImageUrls.filter(img => {
+        if (img instanceof File) return true;
+        if (typeof img === 'object' && img !== null && img.file instanceof File) return img.file;
+        return false;
+      }).map(img => {
+        // If it's a wrapper object with a file property, return the actual File
+        if (img instanceof File) return img;
+        return img.file;
+      });
+      
+      if (newImageFiles.length > 0) {
+        setIsUploading(true);
+        try {
+          console.log("Uploading multiple images:", newImageFiles.length);
+          
+          // Upload multiple new images
+          const uploadedUrls = await uploadMultipleImages(
+            newImageFiles,
+            trekId, // Pass just the trekId, let the utility function format the path
+            (progress) => {
+              setUploadProgress(progress);
+            }
+          );
+          
+          console.log("Upload completed. Got URLs:", uploadedUrls);
+          
+          if (!Array.isArray(uploadedUrls) || uploadedUrls.length === 0) {
+            throw new Error("Failed to get image URLs after upload");
+          }
+          
+          // Replace File objects with URLs
+          // First ensure imageUrls is an array before mapping
+          const safeImageUrlsForMapping = Array.isArray(formData.imageUrls) ? formData.imageUrls : [];
+          imageUrls = safeImageUrlsForMapping.map(img => {
+            if (typeof img === 'string') return img;
+            const idx = newImageFiles.findIndex(file => file === img);
+            return idx >= 0 ? uploadedUrls[idx] : img;
+          });
+          
+          console.log("Final imageUrls array:", imageUrls);
+        } catch (error) {
+          console.error("Error uploading multiple images:", error);
+          setMessage({ text: "Failed to upload images: " + error.message, error: true });
+        } finally {
+          setIsUploading(false);
+        }
       }
         const trekData = {
         ...formData,
@@ -779,9 +932,19 @@ const TrekAdmin = () => {
         days: Number(formData.days),
         rating: Number(formData.rating),
         reviews: Number(formData.reviews),
-        image: imageUrl,
+        price: Number(formData.price || 0),
+        image: imageUrl, // Keep for backwards compatibility
+        imageUrls: imageUrls,
+        coverIndex: formData.coverIndex || 0,
         organizerId: formData.organizerId || '', 
         organizerName: formData.organizerName || '',
+        detailedDescription: formData.detailedDescription || '',
+        itinerary: formData.itinerary || [],
+        availableMonths: formData.availableMonths || [],
+        availableDates: formData.availableDates || [], // Include available dates in save
+        includedServices: formData.includedServices || [],
+        excludedServices: formData.excludedServices || [],
+        highlights: formData.highlights || [],
         updatedAt: new Date().toISOString()
       };
       
@@ -962,7 +1125,13 @@ const TrekAdmin = () => {
       {showForm && (
         <FormContainer>
           <FormTitle>{editingTrek ? 'Edit Trek' : 'Add New Trek'}</FormTitle>
-          <form onSubmit={handleSave}>
+          <form onSubmit={handleSave} onKeyDown={(e) => {
+            // Prevent accidental form submission with Enter key
+            if (e.key === 'Enter' && e.target.type !== 'submit') {
+              console.log("⚠️ Enter key pressed on", e.target.name || e.target.type, "- preventing form submission");
+              e.preventDefault();
+            }
+          }}>
             <FormGrid>
               <FormGroup>
                 <Label htmlFor="title">Trek Title</Label>
@@ -1181,14 +1350,83 @@ const TrekAdmin = () => {
                   required
                 />
               </FormFullWidth>
+              
+              <FormFullWidth>
+                <Label htmlFor="detailedDescription">Detailed Description</Label>
+                <TextArea
+                  id="detailedDescription"
+                  name="detailedDescription"
+                  value={formData.detailedDescription}
+                  onChange={handleInputChange}
+                  placeholder="Provide more detailed information about the trek experience, terrain, special attractions, etc."
+                  style={{ minHeight: "150px", fontSize: "15px", padding: "12px", lineHeight: "1.5" }}
+                />
+              </FormFullWidth>
+              
+              <FormFullWidth>
+                <Label>Trek Images</Label>
+                <div style={{ backgroundColor: '#2a3446', padding: '20px', borderRadius: '8px', position: 'relative', overflow: 'visible', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)' }}>
+                  <div style={{ position: 'absolute', top: '-10px', left: '20px', background: '#4cc9f0', borderRadius: '4px', padding: '2px 10px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                    Upload Multiple Images
+                  </div>
+                  <MultipleImagesUploader
+                    onImagesChange={handleImagesChange}
+                    initialImages={formData.imageUrls}
+                    initialCoverIndex={formData.coverIndex}
+                    maxFiles={10}
+                    maxSize={5}
+                  />
+                </div>
+              </FormFullWidth>
+              
+              <FormFullWidth>
+                <Label><FiCalendar style={{ marginRight: '8px' }} /> Available Months</Label>
+                <div style={{ backgroundColor: '#2a3446', padding: '20px', borderRadius: '8px' }}>
+                  <MonthAvailability 
+                    availableMonths={formData.availableMonths}
+                    onChange={handleMonthsChange}
+                  />
+                </div>
+              </FormFullWidth>
+              
+              <FormFullWidth>
+                <Label><FiCalendar style={{ marginRight: '8px' }} /> Specific Available Dates</Label>
+                <div style={{ backgroundColor: '#2a3446', padding: '20px', borderRadius: '8px' }}>
+                  <DateAvailabilitySelector
+                    selectedDates={formData.availableDates}
+                    onChange={handleAvailableDatesChange}
+                    label="Trek Available Dates"
+                    minDate={new Date().toISOString().split('T')[0]} // Today as minimum date
+                    maxDate={new Date(new Date().setFullYear(new Date().getFullYear() + 2)).toISOString().split('T')[0]} // 2 years from now as max
+                  />
+                </div>
+              </FormFullWidth>
+              
+              <FormFullWidth>
+                <Label><FiMap style={{ marginRight: '8px' }} /> Day-by-Day Itinerary</Label>
+                <div style={{ backgroundColor: '#2a3446', padding: '20px', borderRadius: '8px' }}>
+                  <ItineraryManager 
+                    itinerary={formData.itinerary}
+                    onChange={handleItineraryChange}
+                  />
+                </div>
+              </FormFullWidth>
             </FormGrid>
             
             <SaveButtonContainer>
               <Button type="button" onClick={handleCancel}>
                 <FiX /> Cancel
               </Button>
-              <Button primary type="submit">
-                <FiSave /> {editingTrek ? 'Update Trek' : 'Add Trek'}
+              <Button 
+                primary 
+                type="submit"
+                disabled={loading}
+                onClick={(e) => {
+                  // Additional safety check to ensure intentional submission
+                  console.log("Save button clicked - this is an intentional save operation");
+                }}
+              >
+                <FiSave /> {loading ? 'Saving...' : (editingTrek ? 'Update Trek' : 'Add Trek')}
               </Button>
             </SaveButtonContainer>
           </form>

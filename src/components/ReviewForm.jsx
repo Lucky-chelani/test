@@ -100,12 +100,13 @@ const CommentBox = styled.textarea`
   padding: 15px;
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   color: white;
   font-size: 1rem;
   margin-bottom: 20px;
   resize: none;
-  transition: border 0.3s ease;
+  transition: all 0.3s ease;
+  font-family: inherit;
   
   &:focus {
     outline: none;
@@ -209,7 +210,9 @@ const ReviewForm = ({ trekId, existingReview = null, onReviewSubmitted, onCancel
   
   // Handle comment input
   const handleCommentChange = (e) => {
-    setComment(e.target.value);
+    const value = e.target.value;
+    console.log("Comment changed to:", value);
+    setComment(value);
   };
   
   // Handle form submission

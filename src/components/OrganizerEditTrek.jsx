@@ -12,10 +12,14 @@ import {
   where
 } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
-import { uploadImage, deleteImage, getTrekImagePath } from '../utils/images';
+import { uploadImage, uploadMultipleImages, deleteImage, getTrekImagePath } from '../utils/images';
 import initializeCategories from '../utils/initializeCategories';
 import { prepareTrekData, fetchOrganizerDetails } from '../utils/trekUtils';
 import { FiUpload, FiImage, FiAlertTriangle, FiCheck, FiArrowLeft } from 'react-icons/fi';
+import MultipleImagesUploader from './MultipleImagesUploader';
+import ItineraryManager from './ItineraryManager';
+import MonthAvailability from './MonthAvailability';
+import DateAvailabilitySelector from './DateAvailabilitySelector';
 import { FaMountain } from 'react-icons/fa';
 import mapPattern from '../assets/images/map-pattren.png';
 
@@ -301,25 +305,33 @@ const OrganizerEditTrek = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [categories, setCategories] = useState([]);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [imageFile, setImageFile] = useState(null);
-  const [originalImageUrl, setOriginalImageUrl] = useState('');
-  const fileInputRef = useRef(null);
+  const [trekImages, setTrekImages] = useState([]);
+  const [coverImageIndex, setCoverImageIndex] = useState(0);
+  const [originalImageUrls, setOriginalImageUrls] = useState([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    detailedDescription: '',
     location: '',
     difficulty: 'medium',
     days: 1,
     category: '',
-    startDate: '',
-    endDate: '',
     price: 0,
     rating: 4.0,
     reviews: 0,
-    status: 'active'
+    status: 'active',
+    itinerary: [],
+    availableMonths: [],
+    availableDates: [], // New field for specific available dates
+    highlights: [],
+    includedServices: [],
+    excludedServices: [],
+    equipmentNeeded: [],
+    fitnessLevel: 'moderate',
+    ageRestriction: { min: 12, max: 65 }
   });
   
   // Check authentication and authorization
@@ -368,13 +380,28 @@ const OrganizerEditTrek = () => {
           // Set form data from trek document
           setFormData({
             ...trekData,
-            startDate: trekData.startDate || '',
-            endDate: trekData.endDate || '',
+            availableDates: trekData.availableDates || [], // Load existing available dates
           });
           
-          if (trekData.image) {
-            setOriginalImageUrl(trekData.image);
-            setImagePreview(trekData.image);
+          // Load images
+          if (trekData.imageUrls && trekData.imageUrls.length > 0) {
+            // Handle multiple images
+            const images = trekData.imageUrls.map((url, idx) => ({
+              url,
+              id: `existing-${idx}`,
+              name: `Trek image ${idx + 1}`
+            }));
+            setTrekImages(images);
+            setOriginalImageUrls(trekData.imageUrls);
+            setCoverImageIndex(trekData.coverIndex || 0);
+          } else if (trekData.image) {
+            // Handle legacy single image
+            setTrekImages([{
+              url: trekData.image,
+              id: 'existing-0',
+              name: 'Trek image 1'
+            }]);
+            setOriginalImageUrls([trekData.image]);
           }
           
           // Load categories
@@ -427,26 +454,86 @@ const OrganizerEditTrek = () => {
     }));
   };
   
-  const handleImageChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setImageFile(file);
-      
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleItineraryChange = (newItinerary) => {
+    setFormData(prev => ({
+      ...prev,
+      itinerary: newItinerary,
+      days: newItinerary.length // Update days count to match itinerary length
+    }));
+  };
+  
+  const handleMonthsChange = (months) => {
+    setFormData(prev => ({
+      ...prev,
+      availableMonths: months
+    }));
+  };
+  
+  const handleImagesChange = (data) => {
+    setTrekImages(data.images);
+    setCoverImageIndex(data.coverIndex);
   };
   
   const handleImageUpload = async () => {
-    if (!imageFile) return originalImageUrl;
-    
     try {
-      const path = `treks/${trekId}`;
-      const imageUrl = await uploadImage(imageFile, path);
-      return imageUrl;
+      // No new images to upload
+      if (!trekImages || trekImages.length === 0) {
+        return { 
+          imageUrl: originalImageUrls[0] || '', 
+          imageUrls: originalImageUrls,
+          coverIndex: coverImageIndex
+        };
+      }
+      
+      setLoading(true);
+      setUploadProgress(0);
+      
+      // Filter out images that need uploading (have file property)
+      const imagesNeedingUpload = trekImages.filter(img => img.file);
+      const filesToUpload = imagesNeedingUpload.map(img => img.file);
+      
+      // If no new files, return original/existing images
+      if (filesToUpload.length === 0) {
+        const allUrls = trekImages.map(img => img.url);
+        return { 
+          imageUrl: allUrls[coverImageIndex] || allUrls[0] || '',
+          imageUrls: allUrls,
+          coverIndex: coverImageIndex
+        };
+      }
+      
+      // Upload new images
+      const newImageUrls = await uploadMultipleImages(
+        filesToUpload,
+        trekId,
+        (progress) => setUploadProgress(progress),
+        null
+      );
+      
+      // Combine existing URLs with new URLs
+      const existingUrls = trekImages
+        .filter(img => !img.file)
+        .map(img => img.url);
+      
+      const allImageUrls = [...existingUrls];
+      
+      // Insert new URLs in the right positions
+      let newUrlIndex = 0;
+      trekImages.forEach((img, idx) => {
+        if (img.file) {
+          allImageUrls[idx] = newImageUrls[newUrlIndex];
+          newUrlIndex++;
+        }
+      });
+      
+      // Make sure we have a cover image URL
+      const coverImageUrl = allImageUrls[coverImageIndex] || allImageUrls[0] || '';
+      
+      return {
+        imageUrl: coverImageUrl, // For backward compatibility
+        imageUrls: allImageUrls,
+        coverIndex: coverImageIndex
+      };
     } catch (error) {
       console.error('Error uploading image:', error);
       throw new Error('Failed to upload trek image');
@@ -462,16 +549,19 @@ const OrganizerEditTrek = () => {
       return;
     }
     
+    // Check if at least one image is provided
+    if (!trekImages || trekImages.length === 0) {
+      setError('Please provide at least one trek image.');
+      return;
+    }
+    
     setLoading(true);
     setError('');
     setSuccess('');
     
     try {
-      // Upload new image if provided
-      let imageUrl = originalImageUrl;
-      if (imageFile) {
-        imageUrl = await handleImageUpload();
-      }
+      // Upload images
+      const { imageUrl, imageUrls, coverIndex } = await handleImageUpload();
       
       // Find the trek document by ID
       const treksRef = collection(db, 'treks');
@@ -489,6 +579,8 @@ const OrganizerEditTrek = () => {
       const baseData = { 
         ...formData, 
         image: imageUrl,
+        imageUrls: imageUrls,
+        coverIndex: coverIndex,
         updatedAt: new Date().toISOString()
       };
       
@@ -703,28 +795,59 @@ const OrganizerEditTrek = () => {
           </FormGroup>
           
           <FormGroup>
-            <Label>Trek Image</Label>
-            <ImageUploadContainer onClick={() => fileInputRef.current.click()}>
-              {imagePreview ? (
-                <ImagePreview>
-                  <img src={imagePreview} alt="Trek" />
-                  <p>Click to change image</p>
-                </ImagePreview>
-              ) : (
-                <>
-                  <FiImage style={{ fontSize: '2rem', marginBottom: '10px' }} />
-                  <p>Click to upload an image</p>
-                </>
-              )}
-              <input
-                type="file"
-                ref={fileInputRef}
-                accept="image/*"
-                onChange={handleImageChange}
-                style={{ display: 'none' }}
-              />
-            </ImageUploadContainer>
+            <Label>Trek Images*</Label>
+            <MultipleImagesUploader
+              onImagesChange={handleImagesChange}
+              initialImages={trekImages}
+              maxFiles={10}
+              maxSize={10}
+            />
+            {uploadProgress > 0 && uploadProgress < 100 && (
+              <div style={{ marginTop: '10px' }}>
+                <div style={{ 
+                  background: 'rgba(255,255,255,0.1)',
+                  height: '4px',
+                  borderRadius: '2px',
+                  overflow: 'hidden',
+                  marginBottom: '8px'
+                }}>
+                  <div style={{ 
+                    background: 'linear-gradient(90deg, #4cc9f0 0%, #7209b7 100%)',
+                    height: '100%',
+                    width: `${uploadProgress}%`,
+                    transition: 'width 0.3s ease'
+                  }}></div>
+                </div>
+                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem' }}>
+                  Uploading... {Math.round(uploadProgress)}%
+                </p>
+              </div>
+            )}
           </FormGroup>
+          
+          <FormGroup>
+            <Label>Detailed Description</Label>
+            <TextArea
+              id="detailedDescription"
+              name="detailedDescription"
+              value={formData.detailedDescription || ''}
+              onChange={handleInputChange}
+              placeholder="Provide more detailed information about the trek experience, terrain, special attractions, etc."
+              style={{ minHeight: "150px" }}
+            />
+          </FormGroup>
+          
+          {/* Month Availability Selector */}
+          <MonthAvailability 
+            availableMonths={formData.availableMonths || []}
+            onChange={handleMonthsChange}
+          />
+          
+          {/* Itinerary Manager */}
+          <ItineraryManager 
+            itinerary={formData.itinerary || []}
+            onChange={handleItineraryChange}
+          />
           
           <ButtonsContainer>
             <Button type="button" onClick={handleCancel}>
