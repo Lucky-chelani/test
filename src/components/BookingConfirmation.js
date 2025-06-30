@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FaCheckCircle, FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaMoneyBillWave, FaFileAlt } from 'react-icons/fa';
+import { FaCheckCircle, FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaMoneyBillWave, FaFileAlt, FaPhone } from 'react-icons/fa';
 import BookingService from '../services/BookingService';
 
 const slideUp = keyframes`
@@ -1022,6 +1022,36 @@ const BookingConfirmation = () => {
               </DetailItem>
             </DetailsGrid>
           </Section>
+
+          {(booking.emergencyName || booking.emergencyContact || booking.emergencyPhone) && (
+            <Section>
+              <SectionTitle>
+                <FaPhone /> Emergency Contact
+              </SectionTitle>
+              
+              <DetailsGrid>
+                {(booking.emergencyName) && (
+                  <DetailItem>
+                    <DetailLabel>Emergency Contact Name</DetailLabel>
+                    <DetailValue>
+                      {booking.emergencyName || 'Not provided'}
+                    </DetailValue>
+                  </DetailItem>
+                )}
+                
+                {(booking.emergencyContact || booking.emergencyPhone) && (
+                  <DetailItem>
+                    <DetailLabel>Emergency Contact Number</DetailLabel>
+                    <DetailValue>
+                      {booking.emergencyContact || 
+                       booking.emergencyPhone || 
+                       'Not provided'}
+                    </DetailValue>
+                  </DetailItem>
+                )}
+              </DetailsGrid>
+            </Section>
+          )}
 
           {(booking.totalAmount || booking.amount || booking.price) && (
             <Section>

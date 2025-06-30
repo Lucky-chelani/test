@@ -1,27 +1,82 @@
-[debug] [2025-06-29T22:16:59.123Z] ----------------------------------------------------------------------
-[debug] [2025-06-29T22:16:59.125Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\DELL\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js functions:shell
-[debug] [2025-06-29T22:16:59.125Z] CLI Version:   14.6.0
-[debug] [2025-06-29T22:16:59.126Z] Platform:      win32
-[debug] [2025-06-29T22:16:59.126Z] Node Version:  v20.18.0
-[debug] [2025-06-29T22:16:59.126Z] Time:          Mon Jun 30 2025 03:46:59 GMT+0530 (India Standard Time)
-[debug] [2025-06-29T22:16:59.126Z] ----------------------------------------------------------------------
+[debug] [2025-06-30T19:46:29.100Z] ----------------------------------------------------------------------
+[debug] [2025-06-30T19:46:29.106Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\DELL\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js functions:shell
+[debug] [2025-06-30T19:46:29.106Z] CLI Version:   14.6.0
+[debug] [2025-06-30T19:46:29.107Z] Platform:      win32
+[debug] [2025-06-30T19:46:29.107Z] Node Version:  v20.18.0
+[debug] [2025-06-30T19:46:29.107Z] Time:          Tue Jul 01 2025 01:16:29 GMT+0530 (India Standard Time)
+[debug] [2025-06-30T19:46:29.107Z] ----------------------------------------------------------------------
 [debug] 
-[debug] [2025-06-29T22:16:59.375Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
-[debug] [2025-06-29T22:16:59.375Z] > authorizing via signed-in user (luckychelani950@gmail.com)
-[debug] [2025-06-29T22:16:59.375Z] [iam] checking project trovia-142e1 for permissions ["firebase.projects.get"]
-[debug] [2025-06-29T22:16:59.377Z] Checked if tokens are valid: true, expires at: 1751238679573
-[debug] [2025-06-29T22:16:59.377Z] Checked if tokens are valid: true, expires at: 1751238679573
-[debug] [2025-06-29T22:16:59.378Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/trovia-142e1:testIamPermissions [none]
-[debug] [2025-06-29T22:16:59.378Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/trovia-142e1:testIamPermissions x-goog-quota-user=projects/trovia-142e1
-[debug] [2025-06-29T22:16:59.379Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/trovia-142e1:testIamPermissions {"permissions":["firebase.projects.get"]}
-[debug] [2025-06-29T22:17:01.953Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/trovia-142e1:testIamPermissions 200
-[debug] [2025-06-29T22:17:01.954Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/trovia-142e1:testIamPermissions {"permissions":["firebase.projects.get"]}
-[debug] [2025-06-29T22:17:01.959Z] [functions] Functions Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
-[debug] [2025-06-29T22:17:02.030Z] defaultcredentials: writing to file C:\Users\DELL\AppData\Roaming\firebase\luckychelani950_gmail_com_application_default_credentials.json
-[debug] [2025-06-29T22:17:02.033Z] DEBUG: Setting GAC to C:\Users\DELL\AppData\Roaming\firebase\luckychelani950_gmail_com_application_default_credentials.json
-[debug] [2025-06-29T22:17:02.033Z] Checked if tokens are valid: true, expires at: 1751238679573
-[debug] [2025-06-29T22:17:02.033Z] Checked if tokens are valid: true, expires at: 1751238679573
-[debug] [2025-06-29T22:17:02.034Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/trovia-142e1/adminSdkConfig [none]
-[debug] [2025-06-29T22:17:02.978Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/trovia-142e1/adminSdkConfig 200
-[debug] [2025-06-29T22:17:02.979Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/trovia-142e1/adminSdkConfig {"projectId":"trovia-142e1","storageBucket":"trovia-142e1.firebasestorage.app"}
-[debug] [2025-06-29T22:17:03.003Z] [functions] Watching "C:\Users\DELL\Documents\Coders\test\functions" for Cloud Functions...
+[debug] [2025-06-30T19:46:29.362Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-06-30T19:46:29.363Z] > authorizing via signed-in user (luckychelani950@gmail.com)
+[debug] [2025-06-30T19:46:29.363Z] [iam] checking project trovia-142e1 for permissions ["firebase.projects.get"]
+[debug] [2025-06-30T19:46:29.364Z] Checked if tokens are valid: true, expires at: 1751316171093
+[debug] [2025-06-30T19:46:29.365Z] Checked if tokens are valid: true, expires at: 1751316171093
+[debug] [2025-06-30T19:46:29.366Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/trovia-142e1:testIamPermissions [none]
+[debug] [2025-06-30T19:46:29.366Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/trovia-142e1:testIamPermissions x-goog-quota-user=projects/trovia-142e1
+[debug] [2025-06-30T19:46:29.366Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/trovia-142e1:testIamPermissions {"permissions":["firebase.projects.get"]}
+[debug] [2025-06-30T19:46:29.419Z] *** [apiv2] error from fetch(https://cloudresourcemanager.googleapis.com/v1/projects/trovia-142e1:testIamPermissions, {"headers":{},"method":"POST","body":"{\"permissions\":[\"firebase.projects.get\"]}"}): FetchError: request to https://cloudresourcemanager.googleapis.com/v1/projects/trovia-142e1:testIamPermissions failed, reason: getaddrinfo ENOTFOUND cloudresourcemanager.googleapis.com
+[debug] [2025-06-30T19:46:29.419Z] [iam] error while checking permissions, command may fail: Failed to make request to https://cloudresourcemanager.googleapis.com/v1/projects/trovia-142e1:testIamPermissions
+[debug] [2025-06-30T19:46:29.423Z] [functions] Functions Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-06-30T19:46:29.458Z] defaultcredentials: writing to file C:\Users\DELL\AppData\Roaming\firebase\luckychelani950_gmail_com_application_default_credentials.json
+[debug] [2025-06-30T19:46:29.470Z] DEBUG: Setting GAC to C:\Users\DELL\AppData\Roaming\firebase\luckychelani950_gmail_com_application_default_credentials.json
+[debug] [2025-06-30T19:46:29.470Z] Checked if tokens are valid: true, expires at: 1751316171093
+[debug] [2025-06-30T19:46:29.471Z] Checked if tokens are valid: true, expires at: 1751316171093
+[debug] [2025-06-30T19:46:29.471Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/trovia-142e1/adminSdkConfig [none]
+[debug] [2025-06-30T19:46:29.473Z] *** [apiv2] error from fetch(https://firebase.googleapis.com/v1beta1/projects/trovia-142e1/adminSdkConfig, {"headers":{},"method":"GET"}): FetchError: request to https://firebase.googleapis.com/v1beta1/projects/trovia-142e1/adminSdkConfig failed, reason: getaddrinfo ENOTFOUND firebase.googleapis.com
+[debug] [2025-06-30T19:46:29.473Z] Failed to get Admin SDK config for trovia-142e1, falling back to cache Failed to get Admin SDK for Firebase project trovia-142e1. Please make sure the project exists and your account has permission to access it. {"name":"FirebaseError","children":[],"exit":2,"message":"Failed to get Admin SDK for Firebase project trovia-142e1. Please make sure the project exists and your account has permission to access it.","original":{"name":"FirebaseError","children":[],"exit":1,"message":"Failed to make request to https://firebase.googleapis.com/v1beta1/projects/trovia-142e1/adminSdkConfig","original":{"message":"request to https://firebase.googleapis.com/v1beta1/projects/trovia-142e1/adminSdkConfig failed, reason: getaddrinfo ENOTFOUND firebase.googleapis.com","type":"system","errno":"ENOTFOUND","code":"ENOTFOUND"},"status":500},"status":500}
+[debug] [2025-06-30T19:46:29.481Z] [functions] Watching "C:\Users\DELL\Documents\Coders\test\functions" for Cloud Functions...
+[debug] [2025-06-30T19:46:29.486Z] Validating nodejs source
+[debug] [2025-06-30T19:46:39.534Z] checkFunctionsSDKVersion was unable to fetch information from NPM Error: spawnSync C:\WINDOWS\system32\cmd.exe ETIMEDOUT
+    at Object.spawnSync (node:internal/child_process:1124:20)
+    at Object.spawnSync (node:child_process:877:24)
+    at Function.spawnSync [as sync] (C:\Users\DELL\AppData\Roaming\npm\node_modules\firebase-tools\node_modules\cross-spawn\index.js:26:23)
+    at Object.getLatestSDKVersion (C:\Users\DELL\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\runtimes\node\versioning.js:54:25)
+    at Object.checkFunctionsSDKVersion (C:\Users\DELL\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\runtimes\node\versioning.js:74:32)
+    at Delegate.validate (C:\Users\DELL\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\runtimes\node\index.js:86:20)
+    at FunctionsEmulator.discoverTriggers (C:\Users\DELL\AppData\Roaming\npm\node_modules\firebase-tools\lib\emulator\functionsEmulator.js:313:35)
+    at async FunctionsEmulator.loadTriggers (C:\Users\DELL\AppData\Roaming\npm\node_modules\firebase-tools\lib\emulator\functionsEmulator.js:353:34)
+    at async FunctionsEmulator.connect (C:\Users\DELL\AppData\Roaming\npm\node_modules\firebase-tools\lib\emulator\functionsEmulator.js:279:13)
+    at async FunctionsServer.connect (C:\Users\DELL\AppData\Roaming\npm\node_modules\firebase-tools\lib\serve\functions.js:56:9)
+[debug] [2025-06-30T19:46:39.537Z] > [functions] package.json contents: {
+  "name": "functions",
+  "description": "Cloud Functions for Firebase",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "18"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.0.0",
+    "firebase-admin": "^11.8.0",
+    "firebase-functions": "^5.1.0",
+    "nodemailer": "^6.10.1"
+  },
+  "devDependencies": {
+    "firebase-functions-test": "^3.1.0"
+  },
+  "private": true
+}
+[debug] [2025-06-30T19:46:39.538Z] Building nodejs source
+[debug] [2025-06-30T19:46:39.539Z] Failed to find version of module node: reached end of search path C:\Users\DELL\Documents\Coders\test\functions\node_modules
+[warn] !  functions: Your requested "node" version "18" doesn't match your global version "20". Using node@20 from host. 
+[debug] [2025-06-30T19:46:39.548Z] Could not find functions.yaml. Must use http discovery
+[debug] [2025-06-30T19:46:39.554Z] Found firebase-functions binary at 'C:\Users\DELL\Documents\Coders\test\functions\node_modules\.bin\firebase-functions'
+[info] Serving at port 8957
+
+[debug] [2025-06-30T19:46:40.509Z] Got response from /__/functions.yaml {"endpoints":{"verifyPayment":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"httpsTrigger":{},"entryPoint":"verifyPayment"},"createOrder":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"httpsTrigger":{},"entryPoint":"createOrder"},"onReviewCreate":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"eventTrigger":{"eventType":"providers/cloud.firestore/eventTypes/document.create","eventFilters":{"resource":"projects/trovia-142e1/databases/(default)/documents/reviews/{reviewId}"},"retry":false},"labels":{},"entryPoint":"onReviewCreate"},"onReviewUpdate":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"eventTrigger":{"eventType":"providers/cloud.firestore/eventTypes/document.update","eventFilters":{"resource":"projects/trovia-142e1/databases/(default)/documents/reviews/{reviewId}"},"retry":false},"labels":{},"entryPoint":"onReviewUpdate"},"onReviewDelete":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"eventTrigger":{"eventType":"providers/cloud.firestore/eventTypes/document.delete","eventFilters":{"resource":"projects/trovia-142e1/databases/(default)/documents/reviews/{reviewId}"},"retry":false},"labels":{},"entryPoint":"onReviewDelete"},"sendBookingConfirmationEmail":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"sendBookingConfirmationEmail"}},"specVersion":"v1alpha1","requiredAPIs":[],"extensions":{}}
+[debug] [2025-06-30T19:46:44.569Z] [functions] Loaded functions definitions from source: verifyPayment, createOrder, onReviewCreate, onReviewUpdate, onReviewDelete, sendBookingConfirmationEmail.
+[debug] [2025-06-30T19:46:44.570Z] [functions[us-central1-verifyPayment]] http function initialized (http://127.0.0.1:5000/trovia-142e1/us-central1/verifyPayment).
+[debug] [2025-06-30T19:46:44.570Z] [functions[us-central1-createOrder]] http function initialized (http://127.0.0.1:5000/trovia-142e1/us-central1/createOrder).
+[debug] [2025-06-30T19:46:44.571Z] [functions[us-central1-onReviewCreate]] function ignored because the firestore emulator does not exist or is not running.
+[debug] [2025-06-30T19:46:44.571Z] [functions[us-central1-onReviewUpdate]] function ignored because the firestore emulator does not exist or is not running.
+[debug] [2025-06-30T19:46:44.571Z] [functions[us-central1-onReviewDelete]] function ignored because the firestore emulator does not exist or is not running.
+[debug] [2025-06-30T19:46:44.571Z] [functions[us-central1-sendBookingConfirmationEmail]] http function initialized (http://127.0.0.1:5000/trovia-142e1/us-central1/sendBookingConfirmationEmail).
+[info] i  functions: Loaded functions: verifyPayment, createOrder, onReviewCreate, onReviewUpdate, onReviewDelete, sendBookingConfirmationEmail 
+[warn] !  functions: The following emulators are not running, calls to these services will affect production: firestore, database, pubsub, storage, eventarc, tasks 

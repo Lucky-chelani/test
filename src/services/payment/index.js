@@ -43,7 +43,7 @@ export const processPayment = async (trekData, bookingDetails) => {
     const user = auth.currentUser;
     const userId = user ? user.uid : 'anonymous-user';
     
-    console.log('👤 User:', user ? `${user.displayName || user.email} (${user.uid})` : 'Anonymous');    // Create order data with proper validation
+    console.log('👤 User:', user ? `${user.displayName || user.email} (${user.uid})` : 'Anonymous');    // Create order data with proper validation and preserve original field names
     const orderData = {
       userId: userId,
       
@@ -53,10 +53,27 @@ export const processPayment = async (trekData, bookingDetails) => {
         code: bookingDetails.coupon.code,
         discount: bookingDetails.coupon.discount,
         discountType: bookingDetails.coupon.discountType
-      } : null,      userEmail: user ? user.email : bookingDetails.email || 'anonymous@example.com',
+      } : null,
+      
+      // User information - preserve original field names AND add alternatives
+      userEmail: user ? user.email : bookingDetails.email || 'anonymous@example.com',
+      email: bookingDetails.email || (user ? user.email : 'anonymous@example.com'),
+      
       userName: user ? (user.displayName || bookingDetails.name || 'Guest User') : (bookingDetails.name || 'Guest User'),
+      name: bookingDetails.name || (user ? user.displayName : 'Guest User'),
+      
+      contactNumber: bookingDetails.contactNumber || '',
+      phoneNumber: bookingDetails.contactNumber || '',
+      
+      // Trek information
       trekId: trekData?.id || 'test-trek',
       trekName: trekData?.name || 'Test Trek',
+      
+      // Booking details - preserve original field names
+      participants: bookingDetails?.participants || 1,
+      startDate: bookingDetails?.startDate || new Date().toISOString().split('T')[0],
+      specialRequests: bookingDetails?.specialRequests || '',
+      
       // Calculate amount based on participants and apply discount if coupon is present
       amount: bookingDetails.coupon ? 
         parseInt(bookingDetails.coupon.finalAmount) :
@@ -64,11 +81,11 @@ export const processPayment = async (trekData, bookingDetails) => {
       originalAmount: bookingDetails.coupon ?
         parseInt(bookingDetails.coupon.originalAmount) :
         parseInt((trekData?.numericPrice || 100) * (bookingDetails?.participants || 1)),
+      totalAmount: bookingDetails.coupon ? 
+        parseInt(bookingDetails.coupon.finalAmount) :
+        parseInt((trekData?.numericPrice || 100) * (bookingDetails?.participants || 1)),
+      
       currency: 'INR',
-      participants: bookingDetails?.participants || 1,
-      startDate: bookingDetails?.startDate || new Date().toISOString().split('T')[0],
-      contactNumber: bookingDetails?.contactNumber || '',
-      specialRequests: bookingDetails?.specialRequests || '',
       bookingDate: new Date().toISOString()
     };
 

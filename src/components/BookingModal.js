@@ -376,6 +376,43 @@ const Select = styled.select`
   }
 `;
 
+const DateInput = styled.input`
+  padding: 1rem 1.25rem;
+  border: 2px solid rgba(51, 153, 204, 0.2);
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  &::placeholder {
+    color: #94a3b8;
+    font-weight: 400;
+  }
+
+  &:focus {
+    border-color: #3399cc;
+    background: #ffffff;
+    box-shadow: 
+      0 0 0 4px rgba(51, 153, 204, 0.1),
+      0 4px 12px rgba(51, 153, 204, 0.15);
+    transform: translateY(-2px);
+  }
+  
+  &:hover:not(:focus) {
+    border-color: rgba(51, 153, 204, 0.4);
+    transform: translateY(-1px);
+  }
+
+  /* Style for disabled dates in calendar */
+  &::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.8;
+  }
+`;
+
 const Textarea = styled.textarea`
   padding: 1rem 1.25rem;
   border: 2px solid rgba(51, 153, 204, 0.2);
@@ -442,76 +479,133 @@ const FieldHelpText = styled.div`
   }
 `;
 
-const AvailableDatesContainer = styled.div`
-  margin-top: 12px;
-  padding: 20px;
-  background: linear-gradient(135deg, rgba(51, 153, 204, 0.05) 0%, rgba(0, 180, 219, 0.05) 100%);
-  border-radius: 16px;
-  border: 2px solid rgba(51, 153, 204, 0.2);
-  box-shadow: 
-    0 4px 12px rgba(51, 153, 204, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  animation: ${bounceIn} 0.6s ease-out;
+const CustomDatePickerContainer = styled.div`
   position: relative;
-  overflow: hidden;
+  width: 100%;
+`;
+
+const DatePickerInput = styled.div`
+  padding: 1rem 1.25rem;
+  border: 2px solid rgba(51, 153, 204, 0.2);
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 500;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 24px;
   
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, #3399cc, #00b4db, #3399cc);
-    background-size: 200% 100%;
-    animation: ${shimmer} 2s infinite linear;
+  &:hover {
+    border-color: rgba(51, 153, 204, 0.4);
+    transform: translateY(-1px);
+  }
+  
+  &.focused {
+    border-color: #3399cc;
+    background: #ffffff;
+    box-shadow: 
+      0 0 0 4px rgba(51, 153, 204, 0.1),
+      0 4px 12px rgba(51, 153, 204, 0.15);
+    transform: translateY(-2px);
   }
 `;
 
-const AvailableDatesTitle = styled.div`
-  font-size: 1rem;
+const DatePickerPlaceholder = styled.span`
+  color: ${props => props.hasValue ? '#2c5aa0' : '#94a3b8'};
+  font-weight: ${props => props.hasValue ? '600' : '400'};
+`;
+
+const CalendarIcon = styled(FiCalendar)`
+  color: #3399cc;
+  font-size: 1.1rem;
+`;
+
+const DatePickerDropdown = styled.div`
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 2px solid rgba(51, 153, 204, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  margin-top: 8px;
+  max-height: 400px;
+  overflow-y: auto;
+  animation: ${fadeIn} 0.3s ease-out;
+  
+  /* Custom scrollbar */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: rgba(51, 153, 204, 0.1);
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #3399cc, #00b4db);
+    border-radius: 3px;
+  }
+`;
+
+const DatePickerHeader = styled.div`
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 2px solid rgba(51, 153, 204, 0.1);
+  background: linear-gradient(135deg, rgba(51, 153, 204, 0.05) 0%, rgba(0, 180, 219, 0.05) 100%);
+  border-radius: 14px 14px 0 0;
+`;
+
+const DatePickerTitle = styled.div`
   font-weight: 700;
   color: #2c5aa0;
-  margin-bottom: 16px;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  
-  svg {
-    color: #3399cc;
-    font-size: 1.1rem;
-  }
+  gap: 0.5rem;
 `;
 
-const AvailableDatesList = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+const DatePickerSubtitle = styled.div`
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 500;
 `;
 
-const AvailableDateChip = styled.button`
+const DateGrid = styled.div`
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  max-height: 280px;
+  overflow-y: auto;
+`;
+
+const DateOption = styled.button`
+  padding: 12px 16px;
   background: ${props => props.selected 
     ? 'linear-gradient(135deg, #3399cc 0%, #00b4db 100%)' 
-    : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)'
+    : 'linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)'
   };
   color: ${props => props.selected ? 'white' : '#2c5aa0'};
-  border: 2px solid ${props => props.selected ? '#3399cc' : 'rgba(51, 153, 204, 0.3)'};
+  border: 2px solid ${props => props.selected ? '#3399cc' : 'rgba(51, 153, 204, 0.2)'};
   border-radius: 12px;
-  padding: 12px 16px;
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: ${props => props.selected 
-    ? '0 6px 20px rgba(51, 153, 204, 0.3)' 
-    : '0 2px 8px rgba(51, 153, 204, 0.1)'
-  };
-  transform: ${props => props.selected ? 'translateY(-2px)' : 'translateY(0)'};
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 60px;
   position: relative;
-  min-width: 90px;
-  text-align: center;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   overflow: hidden;
   
   &::before {
@@ -521,7 +615,7 @@ const AvailableDateChip = styled.button`
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
     transition: left 0.5s ease;
   }
   
@@ -532,8 +626,8 @@ const AvailableDateChip = styled.button`
     };
     color: white;
     border-color: #3399cc;
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 8px 25px rgba(51, 153, 204, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(51, 153, 204, 0.25);
     
     &::before {
       left: 100%;
@@ -541,13 +635,44 @@ const AvailableDateChip = styled.button`
   }
   
   &:active {
-    transform: translateY(-1px) scale(0.98);
-    box-shadow: 0 4px 12px rgba(51, 153, 204, 0.2);
+    transform: translateY(0);
   }
+`;
+
+const DateOptionMain = styled.div`
+  font-size: 0.95rem;
+  font-weight: 700;
+`;
+
+const DateOptionSub = styled.div`
+  font-size: 0.8rem;
+  opacity: 0.8;
+  font-weight: 500;
+`;
+
+const NoAvailableDates = styled.div`
+  padding: 2rem;
+  text-align: center;
+  color: #64748b;
+  font-style: italic;
+`;
+
+const SelectedDateDisplay = styled.div`
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(51, 153, 204, 0.08) 0%, rgba(0, 180, 219, 0.08) 100%);
+  border: 2px solid rgba(51, 153, 204, 0.2);
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #2c5aa0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: ${bounceIn} 0.5s ease-out;
   
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 4px rgba(51, 153, 204, 0.2);
+  svg {
+    color: #3399cc;
   }
 `;
 
@@ -883,10 +1008,57 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
   const [activeCoupon, setActiveCoupon] = useState(null);
   const [originalAmount, setOriginalAmount] = useState(0);
   const [discountAmount, setDiscountAmount] = useState(0);
+  
+  // Custom date picker states
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [selectedDateFormatted, setSelectedDateFormatted] = useState('');
+
+  // Format date for display
+  const formatDateForDisplay = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long', 
+      day: 'numeric'
+    });
+  };
+
+  // Handle custom date picker selection
+  const handleCustomDateSelect = (dateString) => {
+    setFormData(prevData => ({
+      ...prevData,
+      startDate: dateString
+    }));
+    setSelectedDateFormatted(formatDateForDisplay(dateString));
+    setIsDatePickerOpen(false);
+    
+    // Clear date error if it exists
+    if (errors.startDate) {
+      setErrors(prevErrors => ({
+        ...prevErrors,
+        startDate: undefined
+      }));
+    }
+  };
+
+  // Get available dates for the calendar
+  const getAvailableDatesForCalendar = () => {
+    if (trek.availableDates && Array.isArray(trek.availableDates) && trek.availableDates.length > 0) {
+      // Filter to only future dates and return them
+      return trek.availableDates.filter(dateStr => {
+        const date = new Date(dateStr);
+        return date >= today;
+      }).sort();
+    }
+    return [];
+  };
 
   // Get the number of days from the start of the current month to create a minimum date
   const today = new Date();
   const minBookingDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const availableDatesForCalendar = getAvailableDatesForCalendar();
   
   // Create a function to check if a date is available for booking
   const isDateAvailable = (dateString) => {
@@ -897,7 +1069,7 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
       return false;
     }
     
-    // If specific available dates are defined, check against them FIRST (highest priority)
+    // If specific available dates are defined by admin, ONLY allow those dates
     if (trek.availableDates && Array.isArray(trek.availableDates) && trek.availableDates.length > 0) {
       const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
       console.log("Checking if date", formattedDate, "is in available dates:", trek.availableDates);
@@ -957,7 +1129,7 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
     
     return 'All year';
   };
-    useEffect(() => {
+  useEffect(() => {
     const getCurrentUser = async () => {
       if (auth.currentUser) {
         setFormData(prevData => ({
@@ -986,6 +1158,49 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
       });
     }
   }, [isOpen, trek]);
+
+  // Additional useEffect to handle date input restrictions and click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Close date picker if clicking outside
+      if (isDatePickerOpen && !event.target.closest('.date-picker-container')) {
+        setIsDatePickerOpen(false);
+      }
+    };
+
+    if (isDatePickerOpen) {
+      document.addEventListener('click', handleClickOutside);
+      return () => {
+        document.removeEventListener('click', handleClickOutside);
+      };
+    }
+  }, [isDatePickerOpen]);
+
+  // Additional useEffect to handle date input restrictions
+  useEffect(() => {
+    if (isOpen && availableDatesForCalendar.length > 0) {
+      // Add custom validation for the date input
+      const dateInput = document.querySelector('input[name="startDate"]');
+      if (dateInput) {
+        const handleDateChange = (e) => {
+          const selectedDate = e.target.value;
+          if (selectedDate && !isDateAvailable(selectedDate)) {
+            e.target.setCustomValidity('Please select from the available dates only');
+            e.target.reportValidity();
+          } else {
+            e.target.setCustomValidity('');
+          }
+        };
+
+        dateInput.addEventListener('change', handleDateChange);
+        
+        // Cleanup
+        return () => {
+          dateInput.removeEventListener('change', handleDateChange);
+        };
+      }
+    }
+  }, [isOpen, availableDatesForCalendar, isDateAvailable]);
   const validateForm = () => {
     const newErrors = {};
 
@@ -1493,54 +1708,104 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
                   <FiCalendar />
                   Start Date
                 </Label>
-                <Input 
-                  type="date" 
-                  name="startDate"
-                  value={formData.startDate}
-                  onChange={handleChange}
-                  min={minBookingDate}
-                />
+                
+                {/* Custom Date Picker for Available Dates */}
+                {availableDatesForCalendar.length > 0 ? (
+                  <CustomDatePickerContainer className="date-picker-container">
+                    <DatePickerInput 
+                      className={isDatePickerOpen ? 'focused' : ''}
+                      onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
+                    >
+                      <DatePickerPlaceholder hasValue={!!formData.startDate}>
+                        {formData.startDate ? selectedDateFormatted || formatDateForDisplay(formData.startDate) : 'Click to select an available date'}
+                      </DatePickerPlaceholder>
+                      <CalendarIcon />
+                    </DatePickerInput>
+                    
+                    {isDatePickerOpen && (
+                      <DatePickerDropdown>
+                        <DatePickerHeader>
+                          <DatePickerTitle>
+                            <FiCalendar />
+                            Select Booking Date
+                          </DatePickerTitle>
+                          <DatePickerSubtitle>
+                            {availableDatesForCalendar.length} dates available for this trek
+                          </DatePickerSubtitle>
+                        </DatePickerHeader>
+                        
+                        <DateGrid>
+                          {availableDatesForCalendar.length > 0 ? (
+                            availableDatesForCalendar.map(dateStr => {
+                              const date = new Date(dateStr);
+                              const displayDate = date.toLocaleDateString('en-US', { 
+                                weekday: 'short',
+                                month: 'short', 
+                                day: 'numeric'
+                              });
+                              const fullDate = date.toLocaleDateString('en-US', { 
+                                month: 'long', 
+                                day: 'numeric',
+                                year: 'numeric'
+                              });
+                              
+                              return (
+                                <DateOption
+                                  key={dateStr}
+                                  type="button"
+                                  selected={formData.startDate === dateStr}
+                                  onClick={() => handleCustomDateSelect(dateStr)}
+                                >
+                                  <DateOptionMain>{displayDate}</DateOptionMain>
+                                  <DateOptionSub>{fullDate}</DateOptionSub>
+                                </DateOption>
+                              );
+                            })
+                          ) : (
+                            <NoAvailableDates>
+                              No dates currently available for booking
+                            </NoAvailableDates>
+                          )}
+                        </DateGrid>
+                      </DatePickerDropdown>
+                    )}
+                  </CustomDatePickerContainer>
+                ) : (
+                  // Fallback to regular date input if no specific dates
+                  <DateInput 
+                    type="date" 
+                    name="startDate"
+                    value={formData.startDate}
+                    onChange={handleChange}
+                    min={minBookingDate}
+                  />
+                )}
+                
                 {errors.startDate && <span style={{ color: 'red', fontSize: '0.9rem' }}>{errors.startDate}</span>}
+                
+                {formData.startDate && availableDatesForCalendar.length > 0 && (
+                  <SelectedDateDisplay>
+                    <FiCheck />
+                    Selected: {selectedDateFormatted || formatDateForDisplay(formData.startDate)}
+                  </SelectedDateDisplay>
+                )}
+                
                 <FieldHelpText>
                   <FiInfo size={14} style={{ marginRight: '6px' }} />
-                  <strong>Available dates:</strong> {getAvailabilityDisplay()}
+                  {availableDatesForCalendar.length > 0 ? (
+                    <>
+                      <strong>Only specific dates are available for booking:</strong> {getAvailabilityDisplay()}
+                      <br />
+                      <span style={{ fontSize: '0.85em', color: '#64748b', marginTop: '4px', display: 'block' }}>
+                        💡 Use the date picker above to see all available options
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <strong>Available dates:</strong> {getAvailabilityDisplay()}
+                    </>
+                  )}
                 </FieldHelpText>
-                
-                {/* Show clickable date chips if specific dates are available and not too many */}
-                {trek.availableDates && trek.availableDates.length > 0 && trek.availableDates.length <= 12 && (
-                  <AvailableDatesContainer>
-                    <AvailableDatesTitle>
-                      <FiCalendar size={16} />
-                      Click any date below to select:
-                    </AvailableDatesTitle>
-                    <AvailableDatesList>
-                      {trek.availableDates
-                        .filter(dateStr => {
-                          const date = new Date(dateStr);
-                          return date >= today; // Only show future dates
-                        })
-                        .sort((a, b) => new Date(a) - new Date(b)) // Sort chronologically
-                        .map(dateStr => {
-                          const date = new Date(dateStr);
-                          const displayDate = date.toLocaleDateString('en-US', { 
-                            weekday: 'short',
-                            month: 'short', 
-                            day: 'numeric'
-                          });
-                          return (
-                            <AvailableDateChip
-                              key={dateStr}
-                              type="button"
-                              selected={formData.startDate === dateStr}
-                              onClick={() => handleDateChipClick(dateStr)}
-                            >
-                              {displayDate}
-                            </AvailableDateChip>
-                          );
-                        })}
-                    </AvailableDatesList>
-                  </AvailableDatesContainer>
-                )}
               </FormGroup>
               
               <FormGroup>

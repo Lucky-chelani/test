@@ -336,9 +336,10 @@ export const verifyAndCompletePayment = async (bookingId, paymentDetails) => {
         
         // Create a recovery booking record with all available info
         const recoveryData = {
-          userId: 'recovery_user',
-          userEmail: paymentDetails?.email || 'recovery@example.com',
-          trekName: 'Recovery Payment', 
+          userId: paymentDetails?.userId || 'recovery_user',
+          userEmail: paymentDetails?.email || paymentDetails?.userEmail || 'recovery@example.com',
+          userName: paymentDetails?.name || paymentDetails?.userName || 'Recovery User',
+          trekName: paymentDetails?.trekName || 'Recovery Payment', 
           amount: paymentDetails.amount || 100,
           currency: 'INR',
           status: 'recovered',
@@ -346,6 +347,21 @@ export const verifyAndCompletePayment = async (bookingId, paymentDetails) => {
           paymentId: paymentDetails.razorpay_payment_id || `test_${Date.now()}`,
           paymentOrderId: paymentDetails.razorpay_order_id || safeBookingId,
           paymentSignature: paymentDetails.razorpay_signature || 'generated',
+          
+          // Include user data if available in payment details
+          ...(paymentDetails?.name && { name: paymentDetails.name }),
+          ...(paymentDetails?.email && { email: paymentDetails.email }),
+          ...(paymentDetails?.contactNumber && { contactNumber: paymentDetails.contactNumber }),
+          ...(paymentDetails?.contact && { contact: paymentDetails.contact }),
+          ...(paymentDetails?.phone && { phone: paymentDetails.phone }),
+          ...(paymentDetails?.participants && { participants: paymentDetails.participants }),
+          ...(paymentDetails?.trekDate && { trekDate: paymentDetails.trekDate }),
+          ...(paymentDetails?.selectedDate && { selectedDate: paymentDetails.selectedDate }),
+          ...(paymentDetails?.emergencyContact && { emergencyContact: paymentDetails.emergencyContact }),
+          ...(paymentDetails?.emergencyName && { emergencyName: paymentDetails.emergencyName }),
+          ...(paymentDetails?.emergencyPhone && { emergencyPhone: paymentDetails.emergencyPhone }),
+          ...(paymentDetails?.specialRequests && { specialRequests: paymentDetails.specialRequests }),
+          
           recoveryReason: 'Missing or invalid bookingId in payment flow',
           recoveryTimestamp: new Date().toISOString(),
           createdAt: serverTimestamp(),
@@ -369,6 +385,10 @@ export const verifyAndCompletePayment = async (bookingId, paymentDetails) => {
       // Booking exists, update it with payment details
       console.log('✅ Booking found, updating with payment details');
       
+      // Get the existing booking data to preserve user information
+      const existingBookingData = bookingSnap.data();
+      console.log('📋 Existing booking data:', existingBookingData);
+      
       // Create a detailed payment record with all data we have
       const paymentData = {
         paymentId: paymentDetails.razorpay_payment_id || paymentDetails.payment_id || `test_payment_${Date.now()}`,
@@ -385,10 +405,30 @@ export const verifyAndCompletePayment = async (bookingId, paymentDetails) => {
         responseBookingId: paymentDetails?.bookingId || 'not_provided',
         notesBookingId: paymentDetails?.notes?.bookingId || 'no_notes',
         globalBookingId: window.lastRazorpayBookingId || 'not_stored',
-        paymentTimestamp: new Date().toISOString()
+        paymentTimestamp: new Date().toISOString(),
+        
+        // Preserve all original user data - ensure we don't lose any user-provided information
+        // Keep original field names if they exist
+        ...(existingBookingData.name && { name: existingBookingData.name }),
+        ...(existingBookingData.email && { email: existingBookingData.email }),
+        ...(existingBookingData.contactNumber && { contactNumber: existingBookingData.contactNumber }),
+        ...(existingBookingData.emergencyContact && { emergencyContact: existingBookingData.emergencyContact }),
+        ...(existingBookingData.emergencyName && { emergencyName: existingBookingData.emergencyName }),
+        ...(existingBookingData.emergencyPhone && { emergencyPhone: existingBookingData.emergencyPhone }),
+        ...(existingBookingData.participants && { participants: existingBookingData.participants }),
+        ...(existingBookingData.specialRequests && { specialRequests: existingBookingData.specialRequests }),
+        ...(existingBookingData.trekDate && { trekDate: existingBookingData.trekDate }),
+        ...(existingBookingData.selectedDate && { selectedDate: existingBookingData.selectedDate }),
+        
+        // Also preserve alternative field names for compatibility
+        ...(existingBookingData.userEmail && { userEmail: existingBookingData.userEmail }),
+        ...(existingBookingData.userName && { userName: existingBookingData.userName }),
+        ...(existingBookingData.userPhone && { userPhone: existingBookingData.userPhone }),
+        ...(existingBookingData.contact && { contact: existingBookingData.contact }),
+        ...(existingBookingData.phone && { phone: existingBookingData.phone })
       };
       
-      // Update the booking with payment details
+      // Update the booking with payment details while preserving all user data
       await updateDoc(bookingRef, paymentData);
       
       // Get the updated booking
