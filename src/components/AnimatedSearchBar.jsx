@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { useSearch } from '../context/SearchContext';
-import { FiSearch, FiX } from 'react-icons/fi';
+import { FiSearch, FiX, FiTrendingUp, FiClock, FiMic } from 'react-icons/fi';
 
 // Animations
 const pulse = keyframes`

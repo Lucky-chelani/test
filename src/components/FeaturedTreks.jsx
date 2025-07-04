@@ -2,7 +2,8 @@ import React, { useRef, useState, useEffect } from "react";
 import styled, { keyframes, css, createGlobalStyle } from "styled-components";
 import { useNavigate } from "react-router-dom";
 import mapPattern from "../assets/images/map-pattren.png";
-import { FiChevronLeft, FiChevronRight, FiClock, FiMapPin, FiCalendar, FiArrowRight, FiSearch } from 'react-icons/fi';
+// Import required icons for the new card design
+import { FiChevronLeft, FiChevronRight, FiClock, FiMapPin, FiCalendar, FiArrowRight, FiSearch, FiUsers, FiHeart, FiStar } from 'react-icons/fi';
 import { FaMountain, FaStar } from 'react-icons/fa';
 import { db } from "../firebase";
 import { collection, getDocs } from "firebase/firestore";
@@ -1114,60 +1115,64 @@ export default function FeaturedTreks() {
             </PrevButton>
               <TrekListContainer ref={scrollRef}>
               
-              {/* Dynamic Cards from Database */}
+              {/* Dynamic Cards from Database - Updated to match SearchResultsPage design */}
               {treks.map((trek, idx) => (
-                <TrekCard key={idx} onClick={() => navigateToTrekDetails(trek.id)}>                  <TrekImageWrapper>
+                <TrekCard key={idx} onClick={() => navigateToTrekDetails(trek.id)}>
+                  <TrekImageWrapper>
                     <TrekImage style={{backgroundImage: `url(${getValidImageUrl(trek.image)})`}} />
                     <DifficultyTag>{trek.difficulty || "Easy"}</DifficultyTag>
-                    
-                    {/* Dynamic tags container */}
-                    <TagsContainer>
-                      {trek.featured && (
-                        <Tag style={{background: "linear-gradient(135deg, #FFD700, #FFA500)"}}>Featured</Tag>
-                      )}
-                      {trek.tags && trek.tags.map((tag, index) => (
-                        <Tag key={index}>{tag}</Tag>
-                      ))}
-                    </TagsContainer>
-                    
-                    {/* Organizer information */}
-                    {(trek.organizerName || trek.organizer) && (
-                      <OrganizerRow>
-                        <OrganizerIcon>
-                          <FaMountain />
-                        </OrganizerIcon>
-                        <OrganizerText>
-                          Organized by <OrganizerName>{trek.organizerName || trek.organizer || "Local Guide"}</OrganizerName>
-                        </OrganizerText>
-                      </OrganizerRow>
-                    )}
                   </TrekImageWrapper>
+                  
                   <TrekInfo>
                     <TrekTitle>{trek.title}</TrekTitle>
+                    <TrekLocation>
+                      <FiMapPin />
+                      {trek.location || trek.country || "Location"}
+                    </TrekLocation>
                     
-                    <MetaDataRow>
-                      {trek.days} Days <MetaDataDot>·</MetaDataDot> 
-                      {trek.location || trek.country || "Location"} <MetaDataDot>·</MetaDataDot> 
-                      {trek.season || trek.month || "Year-round"}
-                    </MetaDataRow>
-                    
-                    {trek.rating && (
-                      <CardRating>
-                        <FaStar /> {trek.rating} 
-                        {trek.reviews && <span className="reviews">({trek.reviews} reviews)</span>}
-                      </CardRating>
-                    )}
-                    
-                    <CardFooter>
-                      <PremiumPriceTag>
-                        <span className="currency">₹</span>{trek.price || "4,999"}
-                        <span className="unit">/ person</span>
-                      </PremiumPriceTag>
+                    <TrekMeta>
+                      <TrekDetails>
+                        <TrekDetail>
+                          <FiClock />
+                          {trek.days || 1} days
+                        </TrekDetail>
+                        <TrekDetail>
+                          <FiUsers />
+                          {trek.capacity || '8-12'}
+                        </TrekDetail>
+                        <TrekDetail>
+                          <FiCalendar />
+                          {trek.season || 'All seasons'}
+                        </TrekDetail>
+                      </TrekDetails>
                       
-                      <ViewButton>
-                        View Trek
-                      </ViewButton>
-                    </CardFooter>
+                      {trek.rating && (
+                        <TrekRating>
+                          <FiStar />
+                          {trek.rating}
+                          <span className="reviews">({trek.reviews || 0})</span>
+                        </TrekRating>
+                      )}
+                    </TrekMeta>
+                    
+                    <TrekPrice>
+                      <span className="currency">₹</span>
+                      {typeof trek.price === 'string' ? trek.price.replace('₹', '') : trek.price || '4,999'}
+                      <span className="unit">/person</span>
+                    </TrekPrice>
+                    
+                    <TrekDescription>
+                      {trek.description || 'Experience this amazing trek with breathtaking views and unforgettable memories.'}
+                    </TrekDescription>
+                    
+                    <TrekFooter>
+                      <ViewTrekButton>
+                        View Details
+                      </ViewTrekButton>
+                      <FavoriteButton>
+                        <FiHeart />
+                      </FavoriteButton>
+                    </TrekFooter>
                   </TrekInfo>
                 </TrekCard>
               ))}
@@ -1206,19 +1211,17 @@ const TrekInfo = styled.div`
   z-index: 3;
   display: flex;
   flex-direction: column;
-  gap: 12px;
   
   @media (max-width: 480px) {
     padding: 16px;
-    gap: 10px;
   }
 `;
 
 const TrekTitle = styled.h3`
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
-  margin: 0;
-  line-height: 1.3;
+  margin: 0 0 8px 0;
+  line-height: 1.2;
   color: #ffffff;
 `;
 
@@ -1226,5 +1229,134 @@ const TrekTitle = styled.h3`
 const SeasonBadge = styled(MetaItem)`
   svg {
     color: #7c3aed;
+  }
+`;
+
+const TrekLocation = styled.p`
+  color: #a1a1aa;
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 400;
+`;
+
+const TrekMeta = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 15px;
+  
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+`;
+
+const TrekDetails = styled.div`
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 13px;
+  color: #a1a1aa;
+  flex-wrap: wrap;
+`;
+
+const TrekDetail = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 6px 12px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+  }
+  
+  svg {
+    color: #64B5F6;
+    font-size: 1.1rem;
+  }
+`;
+
+const TrekPrice = styled.div`
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 16px;
+  
+  .currency {
+    font-size: 14px;
+    font-weight: 400;
+    margin-right: 1px;
+  }
+  
+  .unit {
+    font-size: 12px;
+    color: #a1a1aa;
+    margin-left: 2px;
+    font-weight: 400;
+  }
+`;
+
+const TrekDescription = styled.p`
+  color: #a1a1aa;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+`;
+
+const TrekFooter = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+`;
+
+const ViewTrekButton = styled.button`
+  flex: 1;
+  height: 38px;
+  padding: 0 18px;
+  background: #7c3aed;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: #8b5cf6;
+    transform: translateY(-2px);
+  }
+`;
+
+const FavoriteButton = styled.button`
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 10px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: scale(1.1);
+  }
+  
+  svg {
+    font-size: 16px;
   }
 `;

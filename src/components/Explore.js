@@ -7,8 +7,8 @@ import trek1 from '../assets/images/trek1.png';
 import Footer from './Footer';
 import groupImg from '../assets/images/trek1.png';
 import eventImg from '../assets/images/trek1.png';
-import { FiChevronLeft, FiChevronRight, FiClock, FiMapPin, FiCalendar, FiArrowRight, FiUsers, FiInfo, FiTrendingUp, FiAward, FiSearch, FiX } from 'react-icons/fi';
-import { FaMountain, FaStar } from 'react-icons/fa';
+import { FiChevronLeft, FiChevronRight, FiClock, FiMapPin, FiCalendar, FiArrowRight, FiUsers, FiInfo, FiTrendingUp, FiAward, FiSearch, FiX, FiHeart, FiStar } from 'react-icons/fi';
+import { FaMountain, FaStar, FaSnowflake, FaSun, FaLeaf, FaCloudRain } from 'react-icons/fa';
 import { RiCommunityFill } from 'react-icons/ri';
 import { MdEventAvailable } from 'react-icons/md';
 import { db } from '../firebase';
@@ -126,6 +126,18 @@ const breathe = keyframes`
 const floatAnimation = keyframes`
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
+`;
+
+const starPulse = keyframes`
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
 `;
 
 // Main Container Components
@@ -465,14 +477,14 @@ const RightArrowButton = styled(ArrowButton)`
 // Card Components
 // Using the GlobalFonts component declared above
 
-// Premium minimalist Trek Card
+// Premium Trek Card - Updated to match SearchResultsPage design
 const TrekCard = styled.div`
   background: #0d0f14;
   border-radius: 16px;
   overflow: hidden;
   width: 320px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  transition: all 0.3s ease;
   flex-shrink: 0;
   position: relative;
   border: 1px solid rgba(255, 255, 255, 0.05);
@@ -480,11 +492,10 @@ const TrekCard = styled.div`
   animation: ${fadeIn} 0.6s ease-out;
   font-family: 'Inter', sans-serif;
   cursor: pointer;
-  padding-bottom: 16px;
   
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    transform: translateY(-6px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
   }
   
   @media (max-width: 1200px) {
@@ -508,21 +519,35 @@ const TrekCard = styled.div`
 
 const TrekImageWrapper = styled.div`
   position: relative;
-  height: 180px;
+  height: 220px;
   overflow: hidden;
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
 `;
 
 const TrekImage = styled.div`
-  height: 100%;
   width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
   background-size: cover;
   background-position: center;
   position: relative;
-  transition: transform 0.3s ease;
-  object-fit: cover;
-    ${TrekCard}:hover & {
+  overflow: hidden;
+  transition: transform 0.6s ease;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(180deg,
+      rgba(0, 0, 0, 0.2) 0%,
+      rgba(0, 0, 0, 0.6) 100%
+    );
+    z-index: 1;
+  }
+  
+  ${TrekCard}:hover & {
     transform: scale(1.05);
   }
 `;
@@ -778,201 +803,183 @@ const TrekTitle = styled.h3`
   font-size: 20px;
   font-weight: 700;
   color: #ffffff;
-  margin-top: 14px;
-  margin-bottom: 4px;
-  line-height: 1.3;
+  margin: 0 0 8px 0;
+  line-height: 1.2;
   
   @media (max-width: 480px) {
     font-size: 18px;
   }
 `;
 
-const TrekLocation = styled.div`
-  display: flex;
-  align-items: center;
-  color: #ccc;
-  font-size: 1rem;
-  margin-bottom: 14px;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  padding: 6px 12px;
-  border-radius: 20px;
-  display: inline-flex;
-  margin-top: 60px;
-  
-  svg {
-    color: #64B5F6;
-    min-width: 18px;
-  }
-  
-  @media (max-width: 480px) {
-    font-size: 0.9rem;
-    margin-bottom: 12px;
-  }
-`;
-
-const MetaRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 15px;
-  
-  &:last-child {
-    margin-bottom: 0;
-  }
-  
-  @media (max-width: 480px) {
-    gap: 12px;
-  }
-`;
-
-const MetaItem = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #e0e0e0;
-  font-size: 1rem;
-  background: rgba(255, 255, 255, 0.07);
-  padding: 12px 18px;
-  border-radius: 12px;
-  transition: all 0.3s ease;
-  flex-grow: 1;
-  justify-content: center;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(76, 111, 255, 0.1);
-  position: relative;
-  overflow: hidden;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 4px;
-    height: 100%;
-    background: linear-gradient(to bottom, #64B5F6, #1976D2);
-    opacity: 0.6;
-    transition: all 0.3s ease;
-  }
-  
-  &:hover {
-    background: rgba(255, 255, 255, 0.09);
-    transform: translateY(-3px) translateX(2px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    border-color: rgba(76, 111, 255, 0.2);
-    
-    &::after {
-      opacity: 1;
-    }
-  }
-  
-  svg {
-    color: #64B5F6;
-    min-width: 16px;
-    font-size: 1.3rem;
-  }
-  
-  span {
-    font-weight: 600;
-    letter-spacing: 0.2px;
-  }
-  
-  @media (max-width: 480px) {
-    font-size: 0.9rem;
-    gap: 8px;
-    padding: 10px 16px;
-  }
-`;
-
-const Difficulty = styled.div`
-  color: #ccc;
-  font-size: 0.95rem;
-  font-weight: 600;
+const TrekLocation = styled.p`
+  color: #a1a1aa;
+  margin: 0 0 12px 0;
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 87, 34, 0.15);
-  padding: 6px 12px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 87, 34, 0.2);
-  
-  svg {
-    color: #FF8A65;
-  }
+  font-size: 13px;
+  font-weight: 400;
+`;
+
+const TrekMeta = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 15px;
   
   @media (max-width: 480px) {
-    font-size: 0.85rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
   }
 `;
 
-const starPulse = keyframes`
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-  }
+const TrekDetails = styled.div`
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 13px;
+  color: #a1a1aa;
+  flex-wrap: wrap;
 `;
 
-const TrekRating = styled.div`
+const TrekDetail = styled.div`
   display: flex;
   align-items: center;
-  gap: 10px;
-  position: relative;
-  padding: 16px 0 8px 0;
-  color: #eee;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 6px 12px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
   
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(to right, 
-      rgba(255, 255, 255, 0.02), 
-      rgba(255, 193, 7, 0.2), 
-      rgba(255, 255, 255, 0.02));
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
   }
   
   svg {
-    color: #FFC107;
+    color: #64B5F6;
     font-size: 1.1rem;
+  }
+`;
+
+const TrekRatingNew = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #e4e4e7;
+  font-size: 13px;
+  font-weight: 500;
+  
+  svg {
+    color: #fbbf24;
+    font-size: 14px;
   }
   
   .reviews {
-    opacity: 0.8;
-    font-size: 0.9rem;
-    margin-left: 5px;
-    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 152, 0, 0.1));
-    padding: 5px 12px;
-    border-radius: 20px;
-    border: 1px solid rgba(255, 193, 7, 0.15);
-    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.1);
-    transition: all 0.3s ease;
-    
-    &:hover {
-      background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 152, 0, 0.15));
-      transform: translateY(-1px);
-    }
+    color: #a1a1aa;
+    font-weight: 400;
+    font-size: 12px;
+    margin-left: 2px;
   }
 `;
 
-// We're using the OrganizerRow, OrganizerIcon, OrganizerText, and OrganizerName components 
-// from TagComponents.js now, so we don't need these local definitions
-
-const MonthIndicator = styled(SeasonBadge)`
-  position: static;
-  box-shadow: 0 3px 10px rgba(255, 193, 7, 0.2);
+const TrekPrice = styled.div`
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 16px;
   
-  @media (max-width: 480px) {
-    padding: 6px 10px;
-    font-size: 0.8rem;
+  .currency {
+    font-size: 14px;
+    font-weight: 400;
+    margin-right: 1px;
   }
+  
+  .unit {
+    font-size: 12px;
+    color: #a1a1aa;
+    margin-left: 2px;
+    font-weight: 400;
+  }
+`;
+
+const TrekDescription = styled.p`
+  color: #a1a1aa;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+`;
+
+const TrekFooter = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+`;
+
+const ViewTrekButton = styled.button`
+  flex: 1;
+  height: 38px;
+  padding: 0 18px;
+  background: #7c3aed;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: #8b5cf6;
+    transform: translateY(-2px);
+  }
+`;
+
+const FavoriteButton = styled.button`
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 10px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: scale(1.1);
+  }
+  
+  svg {
+    font-size: 16px;
+  }
+`;
+
+const TrekBadge = styled.div`
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background-color: rgba(124, 58, 237, 0.9);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  z-index: 10;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+`;
+
+const TrekContent = styled.div`
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
 `;
 
 // Loading Placeholder Component
@@ -1259,58 +1266,62 @@ const Explore = () => {
             <TrekCard key={idx} onClick={() => navigate(`/trek/${trek.id || trek.title.toLowerCase().replace(/\s+/g, '-')}`)}>
               <TrekImageWrapper>
                 <TrekImage style={{ backgroundImage: `url(${trek.image})` }} />
-                <DifficultyTag>{trek.difficulty || "Easy"}</DifficultyTag>
-                
-                {/* Dynamic tags container */}
-                <TagsContainer>
-                  {trek.featured && (
-                    <Tag style={{background: "linear-gradient(135deg, #FFD700, #FFA500)"}}>Featured</Tag>
-                  )}
-                  {trek.tags && trek.tags.map((tag, index) => (
-                    <Tag key={index}>{tag}</Tag>
-                  ))}
-                </TagsContainer>
-                
-                {/* Organizer information */}
-                {(trek.organizerName || trek.organizer) && (
-                  <OrganizerRow>
-                    <OrganizerIcon>
-                      <FaMountain />
-                    </OrganizerIcon>
-                    <OrganizerText>
-                      Organized by <OrganizerName>{trek.organizerName || trek.organizer || "Local Guide"}</OrganizerName>
-                    </OrganizerText>
-                  </OrganizerRow>
-                )}
+                <TrekBadge>
+                  {trek.difficulty || 'Moderate'}
+                </TrekBadge>
               </TrekImageWrapper>
               
-              <TrekInfo>
+              <TrekContent>
                 <TrekTitle>{trek.title}</TrekTitle>
+                <TrekLocation>
+                  <FiMapPin />
+                  {trek.location || trek.state || "India"}
+                </TrekLocation>
                 
-                <MetaDataRow>
-                  {trek.days || Math.floor(Math.random() * 7) + 2} Days <MetaDataDot>·</MetaDataDot> 
-                  {trek.location || trek.state || "India"} <MetaDataDot>·</MetaDataDot> 
-                  {trek.season || trek.month || "Year-round"}
-                </MetaDataRow>
-                
-                {trek.rating && (
-                  <CardRating>
-                    <FaStar /> {trek.rating || (4 + Math.random()).toFixed(1)} 
-                    {trek.reviews && <span className="reviews">({trek.reviews || Math.floor(Math.random() * 100) + 50} reviews)</span>}
-                  </CardRating>
-                )}
-                
-                <CardFooter>
-                  <PremiumPriceTag>
-                    <span className="currency">₹</span>{trek.price || "4,999"}
-                    <span className="unit">/ person</span>
-                  </PremiumPriceTag>
+                <TrekMeta>
+                  <TrekDetails>
+                    <TrekDetail>
+                      <FiClock />
+                      {trek.days || Math.floor(Math.random() * 7) + 2} days
+                    </TrekDetail>
+                    <TrekDetail>
+                      <FiUsers />
+                      {trek.capacity || '8-12'}
+                    </TrekDetail>
+                    <TrekDetail>
+                      {getSeasonIcon(trek.season)}
+                      {trek.season || trek.month || 'All seasons'}
+                    </TrekDetail>
+                  </TrekDetails>
                   
-                  <ViewButton>
-                    View Trek
-                  </ViewButton>
-                </CardFooter>
-              </TrekInfo>
+                  {trek.rating && (
+                    <TrekRatingNew>
+                      <FiStar />
+                      {trek.rating || (4 + Math.random()).toFixed(1)}
+                      <span className="reviews">({trek.reviews || Math.floor(Math.random() * 100) + 50})</span>
+                    </TrekRatingNew>
+                  )}
+                </TrekMeta>
+                
+                <TrekPrice>
+                  <span className="currency">₹</span>
+                  {typeof trek.price === 'string' ? trek.price.replace('₹', '') : trek.price || '4,999'}
+                  <span className="unit">/person</span>
+                </TrekPrice>
+                
+                <TrekDescription>
+                  {trek.description || 'Experience this amazing trek with breathtaking views and unforgettable memories.'}
+                </TrekDescription>
+                
+                <TrekFooter>
+                  <ViewTrekButton>
+                    View Details
+                  </ViewTrekButton>
+                  <FavoriteButton>
+                    <FiHeart />
+                  </FavoriteButton>
+                </TrekFooter>
+              </TrekContent>
             </TrekCard>
           ))}
         </SliderWithArrows>
@@ -1679,3 +1690,16 @@ const ScrollIndicator = styled.div`
       'rgba(255, 255, 255, 0.4)'};
   }
 `;
+
+// Utility function to get season icon
+const getSeasonIcon = (season) => {
+  if (!season) return <FaLeaf />;
+  const s = season.toLowerCase();
+  if (s.includes('winter') || s.includes('dec') || s.includes('jan') || s.includes('feb'))
+    return <FaSnowflake />;
+  if (s.includes('summer') || s.includes('jun') || s.includes('jul') || s.includes('aug'))
+    return <FaSun />;
+  if (s.includes('monsoon') || s.includes('rain'))
+    return <FaCloudRain />;
+  return <FaLeaf />;
+};

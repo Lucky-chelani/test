@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styled, { keyframes } from 'styled-components';
+import styled, { keyframes, css } from 'styled-components';
 import { useSearch } from '../context/SearchContext';
 import { FiSearch, FiX } from 'react-icons/fi';
 
@@ -32,14 +32,19 @@ const SearchTapContainer = styled.div`
   box-shadow: 0 2px 16px 0 rgba(0,0,0,0.10);
   padding: 0 18px;
   cursor: pointer;
-  transition: box-shadow 0.2s, transform 0.2s;
-  animation: ${pulse} 2.5s infinite;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  ${css`animation: ${pulse} 2.5s infinite;`}
   position: relative;
   border: 1.5px solid #e6e6e6;
-  z-index: 1; /* Ensure it stays below the dialog */
+  z-index: 1;
+  
   &:hover {
     box-shadow: 0 6px 32px 0 rgba(0,0,0,0.13);
     transform: translateY(-2px) scale(1.02);
+  }
+  
+  &:active {
+    transform: translateY(-1px) scale(0.98);
   }
 `;
 const SearchIcon = styled(FiSearch)`
@@ -60,12 +65,12 @@ const AnimatedTextBase = styled.span`
 `;
 
 const FadeInText = styled(AnimatedTextBase)`
-  animation: ${fadeIn} 0.5s;
+  ${css`animation: ${fadeIn} 0.5s;`}
   opacity: 1;
 `;
 
 const FadeOutText = styled(AnimatedTextBase)`
-  animation: ${fadeOut} 0.35s;
+  ${css`animation: ${fadeOut} 0.35s;`}
   opacity: 0;
 `;
 const ArrowIndicator = styled.span`
@@ -388,16 +393,9 @@ const CancelButton = styled.button`
 `;
 
 const AnimatedSearchTapBar = () => {
-  const [isOpen, setIsOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const [phraseIdx, setPhraseIdx] = useState(0);
   const [fade, setFade] = useState(true);
-  const [recentSearches, setRecentSearches] = useState([
-    'Mountain Treks',
-    'Himalayan Adventures',
-    'Beginner Friendly',
-    'Weekend Getaways'
-  ]);
   const inputRef = useRef(null);
   const navigate = useNavigate();
   const { updateSearchQuery } = useSearch();
@@ -414,33 +412,11 @@ const AnimatedSearchTapBar = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Focus input when dialog opens
-  useEffect(() => {
-    if (isOpen && inputRef.current) {
-      setTimeout(() => inputRef.current.focus(), 250);
-    }
-    const handleEscape = (e) => { if (e.key === 'Escape' && isOpen) setIsOpen(false); };
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen]);
-
-  const toggleSearchDialog = () => setIsOpen(!isOpen);
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    if (searchValue.trim()) {
-      updateSearchQuery(searchValue.trim());
-      navigate('/search-results');
-      setIsOpen(false);
-    }
-  };
-  const handleRecentSearchClick = (term) => {
-    updateSearchQuery(term);
+  const toggleSearchDialog = () => {
+    // Navigate directly to search results page instead of opening dialog
     navigate('/search-results');
-    setIsOpen(false);
-  };  const handleRemoveRecent = (e, term) => {
-    e.stopPropagation(); // Prevent triggering the parent button's onClick
-    setRecentSearches(recentSearches.filter(t => t !== term));
   };
+  
   // --- Render ---
   return (
     <>
@@ -456,59 +432,7 @@ const AnimatedSearchTapBar = () => {
         ) : (
           <FadeOutText>{PHRASES[phraseIdx]}</FadeOutText>
         )}
-        <ArrowIndicator>→</ArrowIndicator>      </SearchTapContainer>      <SearchDialog isOpen={isOpen} onClick={(e) => {
-        if (e.target === e.currentTarget) setIsOpen(false);
-      }}>
-        <DialogContent onClick={(e) => e.stopPropagation()}><CancelButton 
-            onClick={() => setIsOpen(false)}
-            aria-label="Cancel search"
-          >
-            <FiX size={16} />
-          </CancelButton>
-          <SearchForm onSubmit={handleSearchSubmit}>
-            <SearchInputWrapper>
-              <SearchInputIcon />
-              <SearchInput
-                ref={inputRef}
-                type="text"
-                placeholder="Search for treks, adventures, locations..."
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                autoComplete="off"
-                autoCorrect="off"
-              />              <SearchButton type="submit" aria-label="Search">
-                <FiSearch size={20} />
-              </SearchButton>
-            </SearchInputWrapper>
-            <SearchHint>Try searching for trek names, locations, difficulty levels, or duration</SearchHint>
-          </SearchForm>
-          
-          {recentSearches.length > 0 && (
-            <RecentSearchesWrapper>
-              <RecentLabel>Recent Searches</RecentLabel>
-              <RecentSearches>                {recentSearches.map((term, idx) => (
-                  <RecentSearchItem 
-                    key={idx}
-                    onClick={() => handleRecentSearchClick(term)}
-                  >
-                    {term}
-                    <RemoveIcon onClick={(e) => handleRemoveRecent(e, term)} />
-                  </RecentSearchItem>
-                ))}
-              </RecentSearches>
-            </RecentSearchesWrapper>
-          )}
-          
-          <BackButton onClick={() => setIsOpen(false)}>
-            <FiX /> Return Back
-          </BackButton>
-          
-          <CloseButton onClick={() => setIsOpen(false)}>
-            <FiX />
-          </CloseButton>
-        </DialogContent>
-      </SearchDialog>
-    </>
+        <ArrowIndicator>→</ArrowIndicator>      </SearchTapContainer>    </>
   );
 };
 
