@@ -64,6 +64,7 @@ export const processPayment = async (trekData, bookingDetails) => {
       
       contactNumber: bookingDetails.contactNumber || '',
       phoneNumber: bookingDetails.contactNumber || '',
+      phone: bookingDetails.contactNumber || '',
       
       // Trek information
       trekId: trekData?.id || 'test-trek',

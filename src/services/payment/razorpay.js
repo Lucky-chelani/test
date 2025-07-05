@@ -70,6 +70,16 @@ export const createRazorpayOrder = async (orderData) => {
     // Create a booking record in Firestore first
     const bookingsRef = collection(db, 'bookings');
     
+    // DEBUG: Log the incoming orderData to check if contactNumber is present
+    console.log('📞 Order data received for booking:', {
+      contactNumber: orderData.contactNumber,
+      phoneNumber: orderData.phoneNumber,
+      phone: orderData.phone,
+      name: orderData.name,
+      email: orderData.email,
+      allKeys: Object.keys(orderData)
+    });
+    
     // Sanitize the data to ensure no undefined values are sent to Firestore
     const sanitizedOrderData = Object.keys(orderData).reduce((acc, key) => {
       // Only include defined values
@@ -86,6 +96,15 @@ export const createRazorpayOrder = async (orderData) => {
       amount: sanitizedOrderData.amount || 0,
       currency: sanitizedOrderData.currency || 'INR',
       participants: sanitizedOrderData.participants || 1,
+      // Ensure contact number is preserved if provided
+      ...(sanitizedOrderData.contactNumber && { contactNumber: sanitizedOrderData.contactNumber }),
+      ...(sanitizedOrderData.phoneNumber && { phoneNumber: sanitizedOrderData.phoneNumber }),
+      ...(sanitizedOrderData.phone && { phone: sanitizedOrderData.phone }),
+      // Also preserve other important user details
+      ...(sanitizedOrderData.name && { name: sanitizedOrderData.name }),
+      ...(sanitizedOrderData.email && { email: sanitizedOrderData.email }),
+      ...(sanitizedOrderData.startDate && { startDate: sanitizedOrderData.startDate }),
+      ...(sanitizedOrderData.specialRequests && { specialRequests: sanitizedOrderData.specialRequests }),
     };
     
     // Create a booking record without a Razorpay order ID
@@ -98,6 +117,16 @@ export const createRazorpayOrder = async (orderData) => {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
+    
+    // DEBUG: Log what's actually being saved to Firestore
+    console.log('📞 Booking data being saved:', {
+      contactNumber: bookingData.contactNumber,
+      phoneNumber: bookingData.phoneNumber,
+      phone: bookingData.phone,
+      name: bookingData.name,
+      email: bookingData.email,
+      allFields: Object.keys(bookingData)
+    });
     
     const bookingDoc = await addDoc(bookingsRef, bookingData);
     console.log('Booking created with ID:', bookingDoc.id);

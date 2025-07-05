@@ -5,7 +5,7 @@ import { FiX, FiCalendar, FiUser, FiPhone, FiMessageSquare, FiCreditCard, FiChec
 import { processBookingPayment, completeBookingPayment, handleBookingPaymentFailure } from '../utils/bookingService';
 import { loadRazorpayScript } from '../services/payment/razorpay';
 import { auth, db } from '../firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import CouponSection from './CouponSection';
 import emailService from '../services/emailService';
 
@@ -1319,10 +1319,22 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
   useEffect(() => {
     const getCurrentUser = async () => {
       if (auth.currentUser) {
+        // Also try to get user profile data from Firestore
+        let userProfileData = {};
+        try {
+          const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+          if (userDoc.exists()) {
+            userProfileData = userDoc.data();
+          }
+        } catch (error) {
+          console.warn('Could not fetch user profile for booking modal:', error);
+        }
+        
         setFormData(prevData => ({
           ...prevData, 
-          name: auth.currentUser.displayName || '',
-          email: auth.currentUser.email || '',
+          name: auth.currentUser.displayName || userProfileData.name || userProfileData.firstName || '',
+          email: auth.currentUser.email || userProfileData.email || '',
+          contactNumber: userProfileData.phone || userProfileData.phoneNumber || userProfileData.contactNumber || auth.currentUser.phoneNumber || '',
         }));
       }
     };
@@ -1529,11 +1541,13 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
       setIsProcessingPayment(true);
       setPaymentError(null);
       
+      // Save phone number to user profile if provided
+      // (This could be enhanced in future to save to user profile)
+      
       // Calculate final amounts
       const total = calculateTotalPrice();
       const baseAmount = trek?.numericPrice * formData.participants || total;
       
-      // Process payment through Razorpay with coupon data if available
       const paymentResult = await processBookingPayment(trek, {
         ...formData,
         amount: total,

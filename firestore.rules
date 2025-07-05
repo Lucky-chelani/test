@@ -28,11 +28,25 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
       );
       
-      // Only admins can update or delete chatrooms
-      allow update, delete: if request.auth != null && (
-        // Admin email check
+      // Only admins can update or delete chatrooms, except for joining (updating members)
+      allow update: if request.auth != null && (
+        // Admin access for all updates
         (request.auth.token.email in ['luckychelani950@gmail.com', 'test@example.com', 'youremail@example.com']) ||
-        // Admin role check
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+        // Allow users to join by updating members array only
+        (
+          // Only allow updates to members and memberCount fields
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members', 'memberCount']) &&
+          // User is adding themselves to members array
+          request.auth.uid in request.resource.data.members &&
+          // User was not previously in members array
+          !(request.auth.uid in resource.data.get('members', []))
+        )
+      );
+      
+      // Only admins can delete chatrooms
+      allow delete: if request.auth != null && (
+        (request.auth.token.email in ['luckychelani950@gmail.com', 'test@example.com', 'youremail@example.com']) ||
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
       );
       

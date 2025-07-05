@@ -209,14 +209,12 @@ const Community = () => {
     try {
       setLoading(true);
       setError('');
-      console.log('Attempting to join room:', room);
       
       // Use the docId for Firestore operations, not the custom id
       const roomRef = doc(db, 'chatrooms', room.docId);
       const roomDoc = await getDoc(roomRef);
       
       if (!roomDoc.exists()) {
-        console.log('Room does not exist, reinitializing...');
         await initializeChatrooms();
         const recheckDoc = await getDoc(roomRef);
         if (!recheckDoc.exists()) {
@@ -224,26 +222,16 @@ const Community = () => {
         }
       }
 
-      try {
-        // Get current members
-        const currentMembers = roomDoc.data()?.members || [];
-        
-        // Only add member if not already in the room
-        if (!currentMembers.includes(auth.currentUser.uid)) {
-          await updateDoc(roomRef, {
-            members: arrayUnion(auth.currentUser.uid),
-            memberCount: (roomDoc.data()?.memberCount || 0) + 1
-          });
-          console.log('Successfully joined community');
-        } else {
-          console.log('User already in community');
-        }
-      } catch (permissionError) {
-        console.error('Permission error:', permissionError);
-        
-        // Navigate anyway - the user might already be a member or have view-only access
-        navigate(`/chat/${room.id}`, { state: { room, viewOnly: true } });
-        return;
+      // Get current members
+      const currentData = roomDoc.data();
+      const currentMembers = currentData?.members || [];
+      
+      // Only add member if not already in the room
+      if (!currentMembers.includes(auth.currentUser.uid)) {
+        await updateDoc(roomRef, {
+          members: arrayUnion(auth.currentUser.uid),
+          memberCount: (currentData?.memberCount || 0) + 1
+        });
       }
 
       // Navigate to chat screen with room ID
@@ -253,9 +241,25 @@ const Community = () => {
       console.error('Error joining room:', err);
       
       if (err.code === 'permission-denied') {
-        setError('Access denied: You do not have permission to join this community.');
+        setError('Access denied: You do not have permission to join this community. Trying view-only mode...');
+        // Still try to navigate in view-only mode
+        setTimeout(() => {
+          navigate(`/chat/${room.id}`, { 
+            state: { 
+              room: {
+                ...room,
+                viewOnly: true,
+                permissionError: 'View-only access due to permission restrictions'
+              } 
+            } 
+          });
+        }, 2000);
+      } else if (err.code === 'unavailable') {
+        setError('Community service is temporarily unavailable. Please try again later.');
+      } else if (err.code === 'not-found') {
+        setError('This community no longer exists.');
       } else {
-        setError(`Failed to join community: ${err.message}`);
+        setError(`Failed to join community: ${err.message || 'Unknown error occurred'}`);
       }
     } finally {
       setLoading(false);

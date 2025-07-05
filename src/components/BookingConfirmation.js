@@ -3,6 +3,8 @@ import styled, { keyframes } from 'styled-components';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FaCheckCircle, FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaMoneyBillWave, FaFileAlt, FaPhone } from 'react-icons/fa';
 import BookingService from '../services/BookingService';
+import { auth, db } from '../firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 const checkDrawAnimation = keyframes`
   0% {
@@ -754,6 +756,7 @@ const ErrorMessage = styled.div`
 const BookingConfirmation = () => {
   const { bookingId } = useParams();
   const [booking, setBooking] = useState(null);
+  const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -762,46 +765,54 @@ const BookingConfirmation = () => {
     const fetchBookingDetails = async () => {
       try {
         setLoading(true);
+        
+        // Get current user
+        const currentUser = auth.currentUser;
+        if (!currentUser) {
+          setError('Please log in to view booking details.');
+          setLoading(false);
+          return;
+        }
+
+        // Fetch booking data
         const bookingData = await BookingService.getBookingById(bookingId);
-        console.log('📋 Booking data received:', bookingData);
-        console.log('📋 All booking fields:', Object.keys(bookingData || {}));
         
-        // Detailed debugging of specific fields
-        console.log('🔍 Field debugging:');
-        console.log('- Name field variations:', {
-          name: bookingData?.name,
-          userName: bookingData?.userName,
-          customerName: bookingData?.customerName,
-          fullName: bookingData?.fullName,
-          userObject: bookingData?.user
-        });
-        console.log('- Email field variations:', {
-          email: bookingData?.email,
-          userEmail: bookingData?.userEmail,
-          emailAddress: bookingData?.emailAddress,
-          customerEmail: bookingData?.customerEmail
-        });
-        console.log('- Contact field variations:', {
-          contactNumber: bookingData?.contactNumber,
-          phoneNumber: bookingData?.phoneNumber,
-          phone: bookingData?.phone,
-          mobile: bookingData?.mobile,
-          contact: bookingData?.contact
-        });
-        console.log('- Date field variations:', {
-          startDate: bookingData?.startDate,
-          trekDate: bookingData?.trekDate,
-          dateOfTrek: bookingData?.dateOfTrek,
-          date: bookingData?.date
-        });
-        console.log('- Amount field variations:', {
-          totalAmount: bookingData?.totalAmount,
-          amount: bookingData?.amount,
-          price: bookingData?.price,
-          finalAmount: bookingData?.finalAmount
-        });
+        // Fetch user profile data
+        let userProfileData = null;
+        try {
+          const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+          if (userDoc.exists()) {
+            userProfileData = userDoc.data();
+          }
+        } catch (userError) {
+          console.warn('Could not fetch user profile:', userError);
+        }
+
+        // Combine auth user data with profile data
+        const combinedUserData = {
+          uid: currentUser.uid,
+          email: currentUser.email,
+          displayName: currentUser.displayName,
+          phoneNumber: currentUser.phoneNumber,
+          ...userProfileData // Profile data overrides auth data
+        };
         
-        setBooking(bookingData);
+        // Enhanced booking data with user info
+        const enhancedBookingData = {
+          ...bookingData,
+          // Add user data to booking for display, but keep original booking data priority
+          userInfo: combinedUserData,
+          // Override ONLY if booking doesn't have the data
+          userName: bookingData.name || bookingData.userName || combinedUserData.name || combinedUserData.displayName || combinedUserData.firstName,
+          userEmail: bookingData.email || bookingData.userEmail || combinedUserData.email || currentUser.email,
+          userPhone: bookingData.contactNumber || bookingData.phoneNumber || bookingData.phone || combinedUserData.phoneNumber || combinedUserData.phone || combinedUserData.contactNumber,
+          userAge: bookingData.age || combinedUserData.age,
+          userGender: bookingData.gender || combinedUserData.gender
+        };
+        
+
+        setBooking(enhancedBookingData);
+        setUserData(combinedUserData);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching booking details:', error);
@@ -963,11 +974,32 @@ const BookingConfirmation = () => {
               <DetailItem>
                 <DetailLabel>Start Date</DetailLabel>
                 <DetailValue>
-                  {booking.startDate || 
-                   booking.trekDate || 
-                   booking.dateOfTrek || 
-                   booking.date || 
-                   'Not specified'}
+                  {(() => {
+                    const startDate = booking.startDate || 
+                                     booking.trekDate || 
+                                     booking.dateOfTrek || 
+                                     booking.date || 
+                                     booking.trekStartDate;
+                    
+                    if (!startDate) return 'Not specified';
+                    
+                    // Handle different date formats
+                    try {
+                      if (typeof startDate === 'string') {
+                        return new Date(startDate).toLocaleDateString();
+                      } else if (startDate.toDate) {
+                        // Firestore timestamp
+                        return startDate.toDate().toLocaleDateString();
+                      } else if (startDate instanceof Date) {
+                        return startDate.toLocaleDateString();
+                      } else {
+                        return startDate.toString();
+                      }
+                    } catch (error) {
+                      console.error('Error formatting start date:', error);
+                      return startDate.toString();
+                    }
+                  })()}
                 </DetailValue>
               </DetailItem>
               
@@ -1021,11 +1053,15 @@ const BookingConfirmation = () => {
               <DetailItem>
                 <DetailLabel>Name</DetailLabel>
                 <DetailValue>
+                  {/* Priority: booking data first, then user data */}
                   {booking.name || 
                    booking.userName || 
-                   booking.customerName || 
-                   booking.fullName || 
-                   booking.user?.name ||
+                   booking.userInfo?.name || 
+                   booking.userInfo?.displayName || 
+                   booking.userInfo?.firstName ||
+                   userData?.name ||
+                   userData?.displayName ||
+                   userData?.firstName ||
                    'Not provided'}
                 </DetailValue>
               </DetailItem>
@@ -1033,11 +1069,11 @@ const BookingConfirmation = () => {
               <DetailItem>
                 <DetailLabel>Email</DetailLabel>
                 <DetailValue>
+                  {/* Priority: booking data first, then user data */}
                   {booking.email || 
                    booking.userEmail || 
-                   booking.emailAddress || 
-                   booking.customerEmail ||
-                   booking.user?.email ||
+                   booking.userInfo?.email || 
+                   userData?.email ||
                    'Not provided'}
                 </DetailValue>
               </DetailItem>
@@ -1045,15 +1081,80 @@ const BookingConfirmation = () => {
               <DetailItem>
                 <DetailLabel>Contact Number</DetailLabel>
                 <DetailValue>
-                  {booking.contactNumber || 
-                   booking.phoneNumber || 
-                   booking.phone || 
-                   booking.mobile ||
-                   booking.contact ||
-                   booking.user?.phone ||
-                   'Not provided'}
+                  {(() => {
+                    // First, check for phone number in booking data
+                    const bookingPhoneFields = [
+                      booking.contactNumber,
+                      booking.phoneNumber,
+                      booking.phone,
+                      booking.userPhone
+                    ];
+                    
+                    // Then check user profile data (Firebase user data)
+                    const userPhoneFields = [
+                      booking.userInfo?.phone,
+                      booking.userInfo?.phoneNumber,
+                      booking.userInfo?.contactNumber,
+                      userData?.phone,
+                      userData?.phoneNumber,
+                      userData?.contactNumber,
+                      userData?.mobile,
+                      userData?.cellphone,
+                      // Also check Firebase Auth phone number
+                      auth.currentUser?.phoneNumber
+                    ];
+                    
+                    // Check booking data first (highest priority)
+                    for (const phone of bookingPhoneFields) {
+                      if (phone && phone !== null && phone !== undefined && phone !== '') {
+                        const phoneStr = phone.toString().trim();
+                        if (phoneStr !== '' && phoneStr !== 'undefined' && phoneStr !== 'null' && phoneStr !== '0') {
+                          return phoneStr;
+                        }
+                      }
+                    }
+                    
+                    // If not found in booking, check user profile data
+                    for (const phone of userPhoneFields) {
+                      if (phone && phone !== null && phone !== undefined && phone !== '') {
+                        const phoneStr = phone.toString().trim();
+                        if (phoneStr !== '' && phoneStr !== 'undefined' && phoneStr !== 'null' && phoneStr !== '0') {
+                          return phoneStr;
+                        }
+                      }
+                    }
+                    
+                    return (
+                      <div style={{ color: '#f39c12' }}>
+                        <div>Not provided</div>
+                        <div style={{ fontSize: '0.8rem', marginTop: '4px', opacity: 0.8 }}>
+                          Please update your profile to add a phone number
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </DetailValue>
               </DetailItem>
+              
+              {/* Age if available */}
+              {(booking.age || booking.userAge || booking.userInfo?.age || userData?.age) && (
+                <DetailItem>
+                  <DetailLabel>Age</DetailLabel>
+                  <DetailValue>
+                    {booking.age || booking.userAge || booking.userInfo?.age || userData?.age}
+                  </DetailValue>
+                </DetailItem>
+              )}
+              
+              {/* Gender if available */}
+              {(booking.gender || booking.userGender || booking.userInfo?.gender || userData?.gender) && (
+                <DetailItem>
+                  <DetailLabel>Gender</DetailLabel>
+                  <DetailValue>
+                    {booking.gender || booking.userGender || booking.userInfo?.gender || userData?.gender}
+                  </DetailValue>
+                </DetailItem>
+              )}
             </DetailsGrid>
           </Section>
 
