@@ -443,6 +443,12 @@ const SendButton = styled.button`
     width: 44px;
     height: 44px;
     margin-left: 10px;
+    
+    /* Prevent button from stealing focus on mobile */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
   }
 `;
 
@@ -723,13 +729,6 @@ const ChatRoom = () => {
     // Clear input immediately and maintain focus for mobile
     setNewMessage('');
     
-    // Keep focus on input for mobile keyboard
-    setTimeout(() => {
-      if (messageInputRef.current) {
-        messageInputRef.current.focus();
-      }
-    }, 50);
-    
     // Add temporary local message for immediate feedback
     const tempMessage = {
       id: `temp-${Date.now()}`,
@@ -760,6 +759,16 @@ const ChatRoom = () => {
         // Remove local message once it's saved
       setLocalMessages(prev => prev.filter(msg => msg.id !== tempMessage.id));
       setError('');
+      
+      // Keep focus on input for mobile keyboard after successful send
+      if (messageInputRef.current && window.innerWidth <= 768) {
+        // Use requestAnimationFrame to ensure DOM has updated
+        requestAnimationFrame(() => {
+          messageInputRef.current.focus();
+          // Scroll input into view if needed
+          messageInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+      }
     } catch (err) {
       console.error('Error sending message:', err);
       
@@ -773,6 +782,19 @@ const ChatRoom = () => {
       // Remove failed message
       setLocalMessages(prev => prev.filter(msg => msg.id !== tempMessage.id));
     }
+  };
+  
+  // New function to handle sending message without losing focus
+  const handleSendClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Prevent button from taking focus on mobile
+    if (messageInputRef.current && window.innerWidth <= 768) {
+      messageInputRef.current.focus();
+    }
+    
+    handleSendMessage(e);
   };
   
   // New function to handle joining a room
@@ -984,8 +1006,29 @@ const ChatRoom = () => {
                 autoComplete="off"
                 autoCorrect="off"
                 autoCapitalize="sentences"
+                onBlur={(e) => {
+                  // Prevent blur on mobile when tapping send button
+                  if (window.innerWidth <= 768) {
+                    e.preventDefault();
+                    setTimeout(() => {
+                      if (messageInputRef.current) {
+                        messageInputRef.current.focus();
+                      }
+                    }, 100);
+                  }
+                }}
               />
-              <SendButton type="submit" disabled={loading || !newMessage.trim()}>
+              <SendButton 
+                type="button" 
+                onClick={handleSendClick}
+                disabled={loading || !newMessage.trim()}
+                onMouseDown={(e) => {
+                  // Prevent button from taking focus on mobile
+                  if (window.innerWidth <= 768) {
+                    e.preventDefault();
+                  }
+                }}
+              >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M22 2L11 13M22 2L15 22L11 13M11 13L2 9L22 2" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
