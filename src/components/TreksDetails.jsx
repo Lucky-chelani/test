@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, Fragment } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import styled, { keyframes, css } from "styled-components";
+import styled, { keyframes, css, createGlobalStyle } from "styled-components";
 import { db, auth } from "../firebase";
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
@@ -19,14 +19,16 @@ import { FaMountain, FaLeaf, FaWater, FaSnowflake, FaCompass, FaRoute, FaFlag,
   FaOpencart, FaShoppingBasket, FaShoppingCart, FaAward, FaBuffer } from 'react-icons/fa';
 import { BsArrowUpRight } from 'react-icons/bs';
 import { FiAlertTriangle } from 'react-icons/fi';
-// MUI icons removed (unused)
-// Game icons removed (unused)
-// Unused map pattern import removed
 import { getValidImageUrl } from "../utils/images";
 import BookingModal from "./BookingModal";
 import { saveBooking } from "../utils/bookingService";
-import OrganizerCard from "./OrganizerCard"; // Import the OrganizerCard component
-import Reviews from "./Reviews"; // Import the Reviews component
+import OrganizerCard from "./OrganizerCard";
+import Reviews from "./Reviews";
+
+// Global font import for Inter font
+const GlobalFonts = createGlobalStyle`
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+`;
 
 // Animations
 const fadeIn = keyframes`
@@ -310,30 +312,72 @@ const pulseAnimation = keyframes`
   50% { opacity: 1; }
 `;
 
-// Modern page container
+// Modern page container with your website's aesthetic
 const ModernPageContainer = styled.div`
   min-height: 100vh;
-  background-color: #f9fafc;
+  background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 30%, #0f3460 70%, #1a1a2e 100%);
   position: relative;
   overflow-x: hidden;
   font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
-  color: #1a2238;
+  color: #e2e8f0;
+  z-index: 1;
+  
+  &::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 20% 80%, rgba(90, 112, 183, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(66, 160, 75, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(255, 210, 191, 0.04) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  &::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%235A70B7' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+    pointer-events: none;
+    z-index: 1;
+  }
 `;
 
-// Modern header/navigation
+// Modern header with your website's glass-morphism aesthetic
 const ModernHeader = styled.header`
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
-  background: ${props => props.isScrolled ? 'rgba(255, 255, 255, 0.95)' : 'transparent'};
-  backdrop-filter: ${props => props.isScrolled ? 'blur(20px) saturate(180%)' : 'none'};
+  background: ${props => props.isScrolled 
+    ? 'rgba(10, 10, 26, 0.95)' 
+    : 'linear-gradient(180deg, rgba(10, 10, 26, 0.8) 0%, rgba(10, 10, 26, 0.4) 100%)'};
+  backdrop-filter: blur(20px);
   padding: ${props => props.isScrolled ? '0.8rem 0' : '1.5rem 0'};
   transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: ${props => props.isScrolled ? '0 10px 40px rgba(0, 0, 0, 0.06)' : 'none'};
+  box-shadow: ${props => props.isScrolled ? '0 4px 32px rgba(0, 0, 0, 0.3)' : 'none'};
+  border-bottom: ${props => props.isScrolled ? '1px solid rgba(90, 112, 183, 0.2)' : 'none'};
   transform: translateZ(0);
   will-change: transform, background, box-shadow, padding;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 210, 191, 0.3), transparent);
+    opacity: ${props => props.isScrolled ? 1 : 0};
+    transition: opacity 0.3s ease;
+  }
   
   @media (max-width: 768px) {
     padding: ${props => props.isScrolled ? '0.7rem 0' : '1.25rem 0'};
@@ -367,16 +411,16 @@ const HeaderRight = styled.div`
 
 const BackBtn = styled.button`
   background: ${props => props.isScrolled ? 'rgba(90, 112, 183, 0.12)' : 'rgba(255, 255, 255, 0.16)'};
-  border: 1px solid ${props => props.isScrolled ? 'transparent' : 'rgba(255, 255, 255, 0.12)'};
+  border: 1px solid ${props => props.isScrolled ? 'rgba(90, 112, 183, 0.2)' : 'rgba(255, 255, 255, 0.12)'};
   border-radius: 50%;
   width: 46px;
- 
+  height: 46px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  color: ${props => props.isScrolled ? 'var(--primary-color)' : 'white'};
+  color: ${props => props.isScrolled ? '#5A70B7' : 'white'};
   font-size: 1.2rem;
   backdrop-filter: blur(10px);
   overflow: hidden;
@@ -385,7 +429,7 @@ const BackBtn = styled.button`
   &:hover {
     transform: translateY(-3px);
     background: ${props => props.isScrolled ? 'rgba(90, 112, 183, 0.18)' : 'rgba(255, 255, 255, 0.25)'};
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 8px 25px rgba(90, 112, 183, 0.3);
   }
   
   &:active {
@@ -404,7 +448,7 @@ const HeaderTitle = styled.div`
 `;
 
 const HeaderTrekTitle = styled.h1`
-  color: ${props => props.isScrolled ? '#1a2238' : 'white'};
+  color: ${props => props.isScrolled ? '#ffffff' : 'white'};
   font-size: ${props => props.isScrolled ? '1.1rem' : '1.3rem'};
   font-weight: 700;
   margin: 0;
@@ -414,6 +458,10 @@ const HeaderTrekTitle = styled.h1`
   text-overflow: ellipsis;
   max-width: 300px;
   text-shadow: ${props => props.isScrolled ? 'none' : '0 1px 3px rgba(0, 0, 0, 0.15)'};
+  background: ${props => props.isScrolled ? 'linear-gradient(135deg, #ffffff 0%, #FFD2BF 100%)' : 'none'};
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: ${props => props.isScrolled ? 'transparent' : 'white'};
+  background-clip: text;
   
   @media (max-width: 991px) {
     font-size: ${props => props.isScrolled ? '1rem' : '1.2rem'};
@@ -427,7 +475,7 @@ const HeaderTrekTitle = styled.h1`
 `;
 
 const HeaderTrekSubtitle = styled.div`
-  color: ${props => props.isScrolled ? 'var(--text-muted)' : 'rgba(255, 255, 255, 0.9)'};
+  color: ${props => props.isScrolled ? 'rgba(255, 255, 255, 0.7)' : 'rgba(255, 255, 255, 0.9)'};
   font-size: ${props => props.isScrolled ? '0.8rem' : '0.85rem'};
   font-weight: 500;
   margin-top: 0.2rem;
@@ -452,8 +500,8 @@ const HeaderTrekSubtitle = styled.div`
 `;
 
 const ActionBtn = styled.button`
-  background: ${props => props.isScrolled ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.16)'};
-  border: ${props => props.isScrolled ? 'none' : '1px solid rgba(255, 255, 255, 0.12)'};
+  background: ${props => props.isScrolled ? 'rgba(90, 112, 183, 0.08)' : 'rgba(255, 255, 255, 0.16)'};
+  border: ${props => props.isScrolled ? '1px solid rgba(90, 112, 183, 0.2)' : '1px solid rgba(255, 255, 255, 0.12)'};
   width: 42px;
   height: 42px;
   border-radius: 50%;
@@ -462,17 +510,16 @@ const ActionBtn = styled.button`
   justify-content: center;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  color: ${props => props.isScrolled ? '#536087' : 'white'};
-  backdrop-filter: ${props => props.isScrolled ? 'none' : 'blur(10px)'};
+  color: ${props => props.isScrolled ? '#5A70B7' : 'white'};
+  backdrop-filter: blur(10px);
   font-size: 1.05rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
   overflow: hidden;
   
   &:hover {
-    background: ${props => props.isScrolled ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.25)'};
+    background: ${props => props.isScrolled ? 'rgba(90, 112, 183, 0.15)' : 'rgba(255, 255, 255, 0.25)'};
     transform: translateY(-3px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
-    color: ${props => props.isScrolled ? 'var(--primary-color)' : 'white'};
+    box-shadow: 0 8px 25px rgba(90, 112, 183, 0.3);
   }
   
   &:active {
@@ -487,7 +534,7 @@ const ActionBtn = styled.button`
 `;
 
 const BookNowBtn = styled.button`
-  background: var(--secondary-color);
+  background: linear-gradient(135deg, #42A04B 0%, #5FBB66 100%);
   color: white;
   border: none;
   height: 42px;
@@ -522,7 +569,7 @@ const BookNowBtn = styled.button`
   &:hover {
     transform: translateY(-3px);
     box-shadow: 0 12px 28px rgba(66, 160, 75, 0.35);
-    background: #37924f;
+    background: linear-gradient(135deg, #358A3D 0%, #42A04B 100%);
     
     &:before {
       transform: translateX(100%);
@@ -555,7 +602,7 @@ const ModernHero = styled.section`
   height: 100vh;
   min-height: 700px;
   overflow: hidden;
-  background-color: #1a1a2e;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -568,22 +615,6 @@ const ModernHero = styled.section`
   
   @media (max-width: 576px) {
     min-height: 550px;
-  }
-  position: relative;
-  width: 100%;
-  height: 100vh;
-  min-height: 800px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  
-  @media (max-width: 991px) {
-    min-height: 750px;
-  }
-  
-  @media (max-width: 768px) {
-    height: 95vh;
-    min-height: 680px;
   }
 `;
 
@@ -626,10 +657,10 @@ const HeroImgWrapper = styled.div`
     height: 100%;
     background: linear-gradient(
       180deg,
-      rgba(10, 15, 30, 0.65) 0%,
-      rgba(10, 15, 30, 0.45) 40%,
-      rgba(10, 15, 30, 0.75) 80%,
-      rgba(10, 15, 30, 0.9) 100%
+      rgba(15, 15, 35, 0.65) 0%,
+      rgba(15, 15, 35, 0.45) 40%,
+      rgba(15, 15, 35, 0.75) 80%,
+      rgba(15, 15, 35, 0.9) 100%
     );
     z-index: 2;
   }
@@ -641,13 +672,13 @@ const HeroImgWrapper = styled.div`
     left: 0;
     right: 0;
     bottom: 0;
-    background: 
-      radial-gradient(circle at 20% 20%, rgba(38, 46, 93, 0.25) 0%, transparent 40%),
-      radial-gradient(circle at 80% 30%, rgba(66, 160, 75, 0.15) 0%, transparent 36%);
+    background: linear-gradient(
+      45deg,
+      rgba(167, 139, 250, 0.1) 0%,
+      rgba(139, 92, 246, 0.05) 50%,
+      rgba(124, 58, 237, 0.08) 100%
+    );
     z-index: 1;
-    pointer-events: none;
-    mix-blend-mode: overlay;
-    opacity: 0.8;
   }
   
   .hero-img-legacy {
@@ -677,7 +708,7 @@ const HeroWave = styled.div`
   right: 0;
   height: 180px;
   z-index: 3;
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23f9fafc" fill-opacity="1" d="M0,224L80,213.3C160,203,320,181,480,181.3C640,181,800,203,960,208C1120,213,1280,203,1360,197.3L1440,192L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"></path></svg>');
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%230f0f23" fill-opacity="1" d="M0,224L80,213.3C160,203,320,181,480,181.3C640,181,800,203,960,208C1120,213,1280,203,1360,197.3L1440,192L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"></path></svg>');
   background-size: cover;
   background-position: center;
   transform: translateY(1px);
@@ -728,7 +759,7 @@ const LocationTag = styled.div`
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   
   svg {
-    color: var(--secondary-color);
+    color: #22c55e;
     font-size: 1.25rem;
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
   }
@@ -761,9 +792,9 @@ const HeroBadge = styled.div`
   gap: 0.5rem;
   background: ${props => props.variant === 'primary' ? 'rgba(90, 112, 183, 0.85)' : 
     props.variant === 'secondary' ? 'rgba(66, 160, 75, 0.85)' : 
-    props.variant === 'orange' ? 'rgba(248, 144, 63, 0.85)' : 
+    props.variant === 'orange' ? 'rgba(255, 210, 191, 0.85)' : 
     'rgba(255, 255, 255, 0.2)'};
-  color: white;
+  color: ${props => props.variant === 'orange' ? '#1a1a2e' : 'white'};
   padding: 0.6rem 1.3rem;
   border-radius: 30px;
   font-weight: 600;
@@ -801,11 +832,16 @@ const HeroHeading = styled.h1`
   animation: ${fadeInLeft} 0.9s forwards;
   animation-delay: 0.5s;
   text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 2px 25px rgba(90, 112, 183, 0.5);
+  background: linear-gradient(135deg, #ffffff 0%, #FFD2BF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   
   span {
-    color: var(--secondary-color);
+    color: #42A04B;
     position: relative;
     display: inline-block;
+    -webkit-text-fill-color: #42A04B;
     
     &::after {
       content: '';
@@ -900,7 +936,7 @@ const HeroActions = styled.div`
 `;
 
 const HeroPrimaryBtn = styled.button`
-  background: var(--secondary-color);
+  background: linear-gradient(135deg, #42A04B 0%, #5FBB66 100%);
   color: white;
   border: none;
   height: 54px;
@@ -934,7 +970,7 @@ const HeroPrimaryBtn = styled.button`
   &:hover {
     transform: translateY(-3px);
     box-shadow: 0 15px 30px rgba(66, 160, 75, 0.4);
-    background: #37924f;
+    background: linear-gradient(135deg, #358A3D 0%, #42A04B 100%);
     
     &:before {
       transform: translateX(100%);
@@ -1035,12 +1071,13 @@ const StatCard = styled.div`
   display: flex;
   align-items: center;
   gap: 1.25rem;
-  background: white;
+  background: rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(10px);
   padding: 1.75rem;
   border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05),
-              0 2px 8px rgba(${props => props.colorRgb || '0, 0, 0'}, 0.06);
-  border: 1px solid rgba(${props => props.colorRgb || '0, 0, 0'}, 0.06);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1),
+              0 2px 8px rgba(${props => props.colorRgb || '90, 112, 183'}, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   position: relative;
   overflow: hidden;
@@ -1052,7 +1089,7 @@ const StatCard = styled.div`
     left: 0;
     width: 6px;
     height: 100%;
-    background: ${props => props.color || 'var(--primary-color)'};
+    background: ${props => props.color || '#5A70B7'};
     opacity: 0.8;
   }
   
@@ -1064,8 +1101,8 @@ const StatCard = styled.div`
     right: 0;
     height: 100%;
     background: linear-gradient(90deg, 
-      rgba(${props => props.colorRgb || '0, 0, 0'}, 0.03) 0%, 
-      rgba(${props => props.colorRgb || '0, 0, 0'}, 0) 20%);
+      rgba(${props => props.colorRgb || '90, 112, 183'}, 0.08) 0%, 
+      rgba(${props => props.colorRgb || '90, 112, 183'}, 0) 20%);
     z-index: 0;
     opacity: 0;
     transition: opacity 0.4s ease;
@@ -1073,8 +1110,9 @@ const StatCard = styled.div`
   
   &:hover {
     transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(${props => props.colorRgb || '0, 0, 0'}, 0.12),
-                0 8px 16px rgba(${props => props.colorRgb || '0, 0, 0'}, 0.06);
+    box-shadow: 0 20px 40px rgba(${props => props.colorRgb || '90, 112, 183'}, 0.15),
+                0 8px 16px rgba(${props => props.colorRgb || '90, 112, 183'}, 0.08);
+    background: rgba(30, 41, 59, 0.8);
     
     &:after {
       opacity: 1;
@@ -1086,14 +1124,14 @@ const StatIcon = styled.div`
   width: 48px;
   height: 48px;
   border-radius: 14px;
-  background: ${props => props.color || 'var(--primary-color)'};
+  background: ${props => props.color || '#5A70B7'};
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-size: 1.25rem;
   position: relative;
-  box-shadow: 0 8px 15px rgba(${props => props.colorRgb || '0, 0, 0'}, 0.25);
+  box-shadow: 0 8px 15px rgba(${props => props.colorRgb || '90, 112, 183'}, 0.25);
   z-index: 1;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   
@@ -1125,7 +1163,7 @@ const StatIcon = styled.div`
   
   ${StatCard}:hover & {
     transform: scale(1.1) rotate(-5deg);
-    box-shadow: 0 12px 20px rgba(${props => props.colorRgb || '0, 0, 0'}, 0.3);
+    box-shadow: 0 12px 20px rgba(${props => props.colorRgb || '90, 112, 183'}, 0.3);
     
     svg {
       transform: scale(1.1);
@@ -1178,11 +1216,10 @@ const StatValue = styled.div`
 // Modern content area
 const ModernContent = styled.div`
   position: relative;
-  background-color: #f9fafc;
+  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
   padding: 4rem 0 6rem;
   z-index: 5;
-  box-shadow: 0 -50px 100px -20px rgba(0, 0, 0, 0.15);
-  background: linear-gradient(180deg,#f9fafc 60%,#eaf1fa 100%);
+  box-shadow: 0 -50px 100px -20px rgba(0, 0, 0, 0.2);
   
   &::before {
     content: '';
@@ -1192,10 +1229,10 @@ const ModernContent = styled.div`
     right: 0;
     height: 1px;
     background: linear-gradient(to right, 
-      rgba(90, 112, 183, 0), 
-      rgba(90, 112, 183, 0.1) 30%, 
-      rgba(90, 112, 183, 0.1) 70%, 
-      rgba(90, 112, 183, 0)
+      rgba(167, 139, 250, 0), 
+      rgba(167, 139, 250, 0.2) 30%, 
+      rgba(167, 139, 250, 0.2) 70%, 
+      rgba(167, 139, 250, 0)
     );
   }
   
@@ -1231,7 +1268,7 @@ const TwoColumnLayout = styled.div`
     left: 0;
     width: 2px;
     height: 60px;
-    background: linear-gradient(to bottom, rgba(90, 112, 183, 0), rgba(90, 112, 183, 0.2));
+    background: linear-gradient(to bottom, rgba(167, 139, 250, 0), rgba(167, 139, 250, 0.3));
     border-radius: 10px;
   }
   
@@ -1242,7 +1279,7 @@ const TwoColumnLayout = styled.div`
     right: 380px;
     width: 2px;
     height: 60px;
-    background: linear-gradient(to bottom, rgba(66, 160, 75, 0), rgba(66, 160, 75, 0.2));
+    background: linear-gradient(to bottom, rgba(34, 197, 94, 0), rgba(34, 197, 94, 0.3));
     border-radius: 10px;
     
     @media (max-width: 1200px) {
@@ -1282,11 +1319,11 @@ const MainContentArea = styled.div`
     right: 10%;
     height: 1px;
     background: linear-gradient(to right, 
-      rgba(66, 160, 75, 0), 
-      rgba(66, 160, 75, 0.1) 10%, 
-      rgba(66, 160, 75, 0.2) 50%,
-      rgba(66, 160, 75, 0.1) 90%,
-      rgba(66, 160, 75, 0)
+      rgba(34, 197, 94, 0), 
+      rgba(34, 197, 94, 0.1) 10%, 
+      rgba(34, 197, 94, 0.2) 50%,
+      rgba(34, 197, 94, 0.1) 90%,
+      rgba(34, 197, 94, 0)
     );
     opacity: 0.7;
   }
@@ -1298,11 +1335,12 @@ const MainContentArea = styled.div`
 
 // Section Styles
 const Section = styled.section`
-  background: white;
+  background: rgba(30, 41, 59, 0.5);
+  backdrop-filter: blur(10px);
   border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06),0 1.5px 8px rgba(90,112,183,0.04);
-  border: 1.5px solid #e3e8f0;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2), 0 1.5px 8px rgba(90, 112, 183, 0.1);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
   margin-bottom: 2.5rem;
   transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
   position: relative;
@@ -1314,7 +1352,7 @@ const Section = styled.section`
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+    background: linear-gradient(to right, #5A70B7, #42A04B, #FFD2BF);
     opacity: 0;
     transform: scaleX(0.3);
     transform-origin: center;
@@ -1323,8 +1361,9 @@ const Section = styled.section`
   }
   
   &:hover {
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25), 0 5px 15px rgba(90, 112, 183, 0.2);
     transform: translateY(-5px);
+    background: rgba(30, 41, 59, 0.7);
     
     &:before {
       opacity: 1;
@@ -1335,7 +1374,7 @@ const Section = styled.section`
 
 const SectionHeader = styled.div`
   padding: 2.25rem 2.5rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1349,10 +1388,10 @@ const SectionHeader = styled.div`
     right: 2.5rem;
     height: 1px;
     background: linear-gradient(to right,
-      rgba(0, 0, 0, 0.06),
-      rgba(0, 0, 0, 0.08) 20%,
-      rgba(0, 0, 0, 0.08) 80%,
-      rgba(0, 0, 0, 0.06)
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.15) 20%,
+      rgba(255, 255, 255, 0.15) 80%,
+      rgba(255, 255, 255, 0.1)
     );
     z-index: 1;
   }
@@ -1370,12 +1409,16 @@ const SectionHeader = styled.div`
 const SectionTitle = styled.h2`
   font-size: 1.8rem;
   font-weight: 700;
-  color: #1a2238;
+  color: #e2e8f0;
   margin: 0;
   display: flex;
   align-items: center;
   gap: 0.85rem;
   position: relative;
+  background: linear-gradient(135deg, #ffffff 0%, #FFD2BF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   
   &:before {
     content: '';
@@ -1384,15 +1427,15 @@ const SectionTitle = styled.h2`
     top: 50%;
     width: 4px;
     height: 28px;
-    background: var(--secondary-color);
+    background: #42A04B;
     border-radius: 2px;
     transform: translateY(-50%);
     opacity: 0.8;
   }
   
   svg {
-    color: var(--primary-color);
-    filter: drop-shadow(0px 2px 4px rgba(90, 112, 183, 0.2));
+    color: #5A70B7;
+    filter: drop-shadow(0px 2px 4px rgba(90, 112, 183, 0.3));
     font-size: 1.4em;
   }
   
@@ -1418,10 +1461,10 @@ const SectionBody = styled.div`
     right: 5%;
     height: 1px;
     background: linear-gradient(to right,
-      rgba(0, 0, 0, 0),
-      rgba(0, 0, 0, 0.03) 20%,
-      rgba(0, 0, 0, 0.03) 80%,
-      rgba(0, 0, 0, 0)
+      rgba(255, 255, 255, 0),
+      rgba(255, 255, 255, 0.05) 20%,
+      rgba(255, 255, 255, 0.05) 80%,
+      rgba(255, 255, 255, 0)
     );
     opacity: 0;
     transition: opacity 0.3s ease;
@@ -1432,14 +1475,14 @@ const SectionBody = styled.div`
   }
   
   p {
-    color: #4a5568;
+    color: #cbd5e1;
     line-height: 1.7;
     margin-bottom: 1.5rem;
     font-size: 1.05rem;
   }
   
   ul, ol {
-    color: #4a5568;
+    color: #cbd5e1;
     padding-left: 1.5rem;
     margin-bottom: 1.5rem;
     
@@ -1500,13 +1543,14 @@ const QuickStats = styled.div`
 
 // Detailed Description Components
 const DetailedDescription = styled.div`
-  color: rgba(0, 0, 0, 0.85);
+  color: rgba(255, 255, 255, 0.9);
   line-height: 1.6;
   font-size: 1rem;
   
   p {
     margin-bottom: 1rem;
     text-align: justify;
+    color: rgba(255, 255, 255, 0.85);
   }
   
   &:last-child {
@@ -1517,7 +1561,7 @@ const DetailedDescription = styled.div`
 const AvailableMonths = styled.div`
   p {
     margin-bottom: 1.5rem;
-    color: rgba(0, 0, 0, 0.85);
+    color: rgba(255, 255, 255, 0.9);
   }
 `;
 
@@ -1538,11 +1582,11 @@ const MonthsGrid = styled.div`
 const Month = styled.div`
   padding: 12px;
   text-align: center;
-  background: ${props => props.isAvailable ? 'rgba(72, 187, 120, 0.1)' : 'rgba(0, 0, 0, 0.05)'};
+  background: ${props => props.isAvailable ? 'rgba(66, 160, 75, 0.15)' : 'rgba(255, 255, 255, 0.08)'};
   border-radius: 8px;
   font-weight: ${props => props.isAvailable ? '600' : 'normal'};
-  color: ${props => props.isAvailable ? 'rgba(72, 187, 120, 1)' : 'rgba(0, 0, 0, 0.4)'};
-  border: 1px solid ${props => props.isAvailable ? 'rgba(72, 187, 120, 0.3)' : 'transparent'};
+  color: ${props => props.isAvailable ? '#42A04B' : 'rgba(255, 255, 255, 0.6)'};
+  border: 1px solid ${props => props.isAvailable ? 'rgba(66, 160, 75, 0.3)' : 'rgba(255, 255, 255, 0.1)'};
 `;
 
 // Timeline Components
@@ -1560,7 +1604,7 @@ const Timeline = styled.div`
     left: 9px;
     height: 100%;
     width: 2px;
-    background: rgba(90, 112, 183, 0.2);
+    background: rgba(90, 112, 183, 0.3);
   }
   
   @media (max-width: 768px) {
@@ -1579,8 +1623,8 @@ const TimelineItem = styled.div`
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    border: 2px solid var(--primary-color);
-    background: white;
+    border: 2px solid #5A70B7;
+    background: rgba(30, 41, 59, 0.9);
     
     @media (max-width: 768px) {
       left: -1.5rem;
@@ -1590,29 +1634,34 @@ const TimelineItem = styled.div`
   }
   
   &:hover:before {
-    background: var(--primary-color);
+    background: #5A70B7;
   }
 `;
 
 const TimelineContent = styled.div`
-  background: white;
+  background: rgba(30, 41, 59, 0.7);
   border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
+  
+  &:hover {
+    background: rgba(30, 41, 59, 0.9);
+    transform: translateY(-2px);
+  }
 `;
 
 const TimelineTitle = styled.h4`
   margin: 0 0 1rem 0;
   font-size: 1.25rem;
   font-weight: 700;
-  color: #1a2238;
+  color: #ffffff;
 `;
 
 const TimelineDescription = styled.p`
   margin: 0;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.85);
   line-height: 1.6;
 `;
 
@@ -1621,7 +1670,7 @@ const TimelineLocation = styled.div`
   align-items: center;
   gap: 0.5rem;
   font-size: 0.9rem;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.7);
   margin-top: 0.25rem;
 `;
 
@@ -1713,13 +1762,15 @@ const FeatureItem = styled.div`
   align-items: center;
   gap: 1rem;
   padding: 1rem;
-  background: white;
+  background: rgba(30, 41, 59, 0.6);
   border-radius: 12px;
   transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   
   &:hover {
     transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    background: rgba(30, 41, 59, 0.8);
   }
 `;
 
@@ -1727,8 +1778,8 @@ const FeatureIcon = styled.div`
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: ${props => props.included ? 'rgba(66, 160, 75, 0.1)' : 'rgba(255, 87, 87, 0.1)'};
-  color: ${props => props.included ? 'var(--secondary-color)' : '#FF5757'};
+  background: ${props => props.included ? 'rgba(66, 160, 75, 0.15)' : 'rgba(255, 87, 87, 0.15)'};
+  color: ${props => props.included ? '#42A04B' : '#FF5757'};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1738,7 +1789,7 @@ const FeatureIcon = styled.div`
 
 const FeatureText = styled.div`
   font-size: 1rem;
-  color: ${props => props.included ? '#1a2238' : 'var(--text-muted)'};
+  color: ${props => props.included ? '#ffffff' : 'rgba(255, 255, 255, 0.6)'};
   line-height: 1.4;
   ${props => props.included ? '' : 'text-decoration: line-through;'}
 `;
@@ -1748,10 +1799,10 @@ const ReviewsSummary = styled.div`
   display: flex;
   gap: 2rem;
   padding: 1.5rem;
-  background: white;
+  background: rgba(30, 41, 59, 0.6);
   border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   
   @media (max-width: 768px) {
     flex-direction: column;
@@ -1764,20 +1815,20 @@ const RatingBig = styled.div`
   flex-direction: column;
   align-items: center;
   padding-right: 2rem;
-  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
   
   @media (max-width: 768px) {
     padding-right: 0;
     padding-bottom: 1.5rem;
     border-right: none;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   }
 `;
 
 const RatingNumber = styled.div`
   font-size: 3.5rem;
   font-weight: 800;
-  color: var(--primary-color);
+  color: #5A70B7;
   line-height: 1;
 `;
 
@@ -1790,7 +1841,7 @@ const RatingStars = styled.div`
 const RatingText = styled.div`
   font-size: 1rem;
   font-weight: 500;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.8);
 `;
 
 const RatingBreakdown = styled.div`
@@ -1804,16 +1855,17 @@ const ReviewsContainer = styled.div`
 `;
 
 const ReviewCard = styled.div`
-  background: white;
+  background: rgba(30, 41, 59, 0.6);
   border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
   
   &:hover {
     transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    background: rgba(30, 41, 59, 0.8);
   }
 `;
 
@@ -1856,12 +1908,12 @@ const ReviewerDetails = styled.div`
 const ReviewerName = styled.div`
   font-size: 1rem;
   font-weight: 600;
-  color: #1a2238;
+  color: #ffffff;
 `;
 
 const ReviewDate = styled.div`
   font-size: 0.85rem;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.7);
   margin-top: 0.25rem;
 `;
 
@@ -1872,7 +1924,7 @@ const ReviewRating = styled.div`
 
 const ReviewText = styled.div`
   font-size: 1rem;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.85);
   line-height: 1.6;
 `;
 
@@ -1889,11 +1941,12 @@ const Sidebar = styled.aside`
 `;
 
 const BookingCard = styled.div`
-  background: white;
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(10px);
   border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 16px 48px rgba(90,112,183,0.13), 0 2px 8px rgba(66,160,75,0.08);
-  border: 1px solid rgba(0, 0, 0, 0.03);
+  box-shadow: 0 16px 48px rgba(90, 112, 183, 0.2), 0 2px 8px rgba(66, 160, 75, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   position: sticky;
   top: 100px;
   transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
@@ -1908,7 +1961,7 @@ const BookingCard = styled.div`
     height: 15px;
     background: linear-gradient(to right,
       rgba(66, 160, 75, 0) 0%,
-      rgba(66, 160, 75, 0.1) 50%,
+      rgba(66, 160, 75, 0.2) 50%,
       rgba(66, 160, 75, 0) 100%
     );
     border-radius: 50%;
@@ -1916,12 +1969,13 @@ const BookingCard = styled.div`
   }
   
   &:hover {
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 5px 20px rgba(90, 112, 183, 0.3);
+    background: rgba(30, 41, 59, 0.9);
   }
 `;
 
 const BookingHeader = styled.div`
-  background: linear-gradient(135deg, #5A70B7 0%, #3D4E89 100%);
+  background: linear-gradient(135deg, #5A70B7 0%, #42A04B 100%);
   padding: 2.25rem;
   color: white;
   position: relative;
@@ -1959,7 +2013,7 @@ const BookingHeader = styled.div`
   
   background-image: 
     url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"),
-    radial-gradient(circle at 20% 150%, rgba(66, 160, 75, 0.12) 0%, rgba(66, 160, 75, 0) 60%);
+    radial-gradient(circle at 20% 150%, rgba(255, 210, 191, 0.12) 0%, rgba(255, 210, 191, 0) 60%);
 `;
 
 const PriceTag = styled.div`
@@ -1974,7 +2028,7 @@ const Price = styled.div`
   align-items: flex-start;
   line-height: 1;
   margin-bottom: 0.5rem;
-  color: #111;:
+  color: #ffffff;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   position: relative;
   
@@ -2022,7 +2076,7 @@ const Price = styled.div`
 `;
 
 const PriceCaption = styled.div`
-  color: #111;
+  color: #ffffff;
   font-size: 0.9rem;
   opacity: 0.8;
 `;
@@ -2051,14 +2105,14 @@ const DetailItem = styled.div`
 const DetailLabel = styled.div`
   font-size: 0.8rem;
   font-weight: 500;
-  color: var(--text-muted);
+  color: #94a3b8;
   margin-bottom: 0.4rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
   
   svg {
-    color: var(--primary-color);
+    color: #a78bfa;
     font-size: 0.95rem;
   }
 `;
@@ -2066,14 +2120,14 @@ const DetailLabel = styled.div`
 const DetailValue = styled.div`
   font-size: 1.1rem;
   font-weight: 600;
-  color: #1a2238;
+  color: #e2e8f0;
 `;
 
 // BigStat components
 const BigStatValue = styled.div`
   font-size: 1.6rem;
   font-weight: 700;
-  color: #1a2238;
+  color: #e2e8f0;
   line-height: 1.2;
   
   @media (max-width: 768px) {
@@ -2083,7 +2137,7 @@ const BigStatValue = styled.div`
 
 const BigStatLabel = styled.div`
   font-size: 0.9rem;
-  color: #64748b;
+  color: #94a3b8;
   margin-top: 0.25rem;
   
   @media (max-width: 768px) {
@@ -2094,7 +2148,7 @@ const BigStatLabel = styled.div`
 const BookingButton = styled.button`
   width: 100%;
   height: 50px;
-  background: var(--secondary-color);
+  background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
   color: white;
   border: none;
   border-radius: 25px;
@@ -2106,7 +2160,7 @@ const BookingButton = styled.button`
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  box-shadow: 0 8px 20px rgba(66, 160, 75, 0.25);
+  box-shadow: 0 8px 20px rgba(167, 139, 250, 0.25);
   position: relative;
   overflow: hidden;
   
@@ -2125,8 +2179,8 @@ const BookingButton = styled.button`
   
   &:hover {
     transform: translateY(-3px);
-    background: #37924f;
-    box-shadow: 0 12px 25px rgba(66, 160, 75, 0.35);
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    box-shadow: 0 12px 25px rgba(167, 139, 250, 0.35);
     
     &:before {
       transform: translateX(100%);
@@ -2139,7 +2193,7 @@ const BookingButton = styled.button`
   
   svg {
     font-size: 1.3rem;
-    transition: transform 0.3s ease
+    transition: transform 0.3s ease;
     z-index: 2;
   }
 `;
@@ -2147,15 +2201,14 @@ const BookingButton = styled.button`
 const BookingActions = styled.div`
   display: flex;
   gap: 1rem;
-  margin-top:  1.5rem;
+  margin-top: 1.5rem;
 `;
 
 const BookingActionButton = styled.button`
   flex: 1;
   height: 46px;
-  background: rgba(90, 112, 183, 0.06);
- 
-  color: var(--primary-color);
+  background: rgba(167, 139, 250, 0.1);
+  color: #a78bfa;
   border: none;
   border-radius: 23px;
   font-weight: 500;
@@ -2168,10 +2221,11 @@ const BookingActionButton = styled.button`
   gap: 0.5rem;
   
   &:hover {
-    background: rgba(90, 112, 183, 0.1);
+    background: rgba(167, 139, 250, 0.2);
     transform: translateY(-3px);
   }
-    svg {
+  
+  svg {
     font-size: 1.1rem;
   }
 `;
@@ -2182,11 +2236,11 @@ const ModernLoadingContainer = styled.div`
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background-color: #f9fafc;
+  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #1a1a2e 75%, #0f0f23 100%);
   background-image: linear-gradient(
     to bottom,
-    rgba(90, 112, 183, 0.05) 0%,
-    rgba(90, 112, 183, 0.01) 100%
+    rgba(167, 139, 250, 0.05) 0%,
+    rgba(167, 139, 250, 0.01) 100%
   );
 `;
 const LoadingWrapper = styled.div`
@@ -2208,9 +2262,9 @@ const LoadingLogo = styled.div`
 const LoadingMessage = styled.h2`
   font-size: 1.8rem;
   font-weight: 700;
-  color: #1a2238;
+  color: #ffffff;
   margin-bottom: 2rem;
-  background: linear-gradient(to right, var(--primary-color), #1a2238);
+  background: linear-gradient(to right, #5A70B7, #42A04B);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -2226,14 +2280,14 @@ const LoadingBar = styled.div`
 const LoadingProgress = styled.div`
   height: 100%;
   width: 30%;
-  background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+  background: linear-gradient(to right, #5A70B7, #42A04B);
   border-radius: 4px;
   animation: ${shimmerEffect} 1.5s infinite;
   background-size: 200% 100%;
 `;
 const LoadingHint = styled.p`
   font-size: 1rem;
-  color: #64748b;
+  color: rgba(255, 255, 255, 0.7);
   max-width: 280px;
   line-height: 1.5;
 `;
@@ -2242,9 +2296,10 @@ const ModernErrorContainer = styled.div`
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background-color: #f9fafc;
-  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%235a70b7' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #1a1a2e 75%, #0f0f23 100%);
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23a78bfa' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 `;
+
 const ErrorContent = styled.div`
   display: flex;
   flex-direction: column;
@@ -2253,42 +2308,51 @@ const ErrorContent = styled.div`
   max-width: 500px;
   padding: 3rem;
   text-align: center;
-  background: white;
+  background: rgba(30, 41, 59, 0.8);
+  backdrop-filter: blur(10px);
   border-radius: 24px;
-  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
   animation: ${fadeIn} 0.6s ease-out;
 `;
+
 const ErrorIconWrapper = styled.div`
   font-size: 4rem;
   margin-bottom: 1.5rem;
   animation: ${floatAnimation} 3s ease-in-out infinite;
+  color: #a78bfa;
 `;
+
 const ErrorHeading = styled.h1`
   font-size: 2.2rem;
   font-weight: 700;
-  color: #1a2238;
+  color: #e2e8f0;
   margin-bottom: 1.5rem;
 `;
+
 const ErrorText = styled.p`
   font-size: 1.1rem;
-  color: #64748b;
+  color: #cbd5e1;
   margin-bottom: 2rem;
   line-height: 1.7;
 `;
+
 const ErrorDescription = styled.div`
   font-size: 0.95rem;
   color: #94a3b8;
   margin-bottom: 2.5rem;
   padding: 0.75rem 1.25rem;
-  background: #f1f5f9;
+  background: rgba(15, 15, 35, 0.6);
   border-radius: 8px;
   display: inline-block;
 `;
+
 const ErrorCodeBlock = styled.span`
   font-family: monospace;
-  color: #5a70b7;
+  color: #a78bfa;
   font-weight: 600;
 `;
+
 const ErrorActions = styled.div`
   display: flex;
   gap: 1.5rem;
@@ -2298,9 +2362,10 @@ const ErrorActions = styled.div`
     width: 100%;
   }
 `;
+
 const ErrorPrimaryButton = styled.button`
   padding: 0.75rem 2rem;
-  background: var(--primary-color);
+  background: linear-gradient(135deg, #42A04B 0%, #5FBB66 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -2308,24 +2373,25 @@ const ErrorPrimaryButton = styled.button`
   cursor: pointer;
   transition: all 0.3s ease;
   &:hover {
-    background: #4a5d9b;
+    background: linear-gradient(135deg, #358A3D 0%, #42A04B 100%);
     transform: translateY(-2px);
   }
   @media (max-width: 576px) {
     width: 100%;
   }
 `;
+
 const ErrorSecondaryButton = styled.button`
   padding: 0.75rem 2rem;
-  background: white;
-  color: var(--primary-color);
+  background: rgba(30, 41, 59, 0.6);
+  color: #5A70B7;
   border: 1px solid rgba(90, 112, 183, 0.3);
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   &:hover {
-    background: #f8fafc;
+    background: rgba(30, 41, 59, 0.8);
     transform: translateY(-2px);
   }
   @media (max-width: 576px) {
@@ -3318,8 +3384,10 @@ export default function TrekDetails() {
             </HeroPrimaryBtn>
           </HeroActions>
         </HeroContentWrapper>
-      </ModernHero>      {/* Content */}
-      <ModernContent style={{background:'linear-gradient(180deg,#f9fafc 60%,#eaf1fa 100%)'}}>
+      </ModernHero>
+      
+      {/* Content */}
+      <ModernContent>
         <ContentContainer>
           <TwoColumnLayout>
             <MainContentArea style={{gap:'3.5rem'}}>

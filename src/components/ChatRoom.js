@@ -394,6 +394,12 @@ const MessageInput = styled.input`
   @media (max-width: 768px) {
     font-size: 16px; /* Prevent zoom on mobile */
     padding: 12px 18px;
+    
+    /* Prevent keyboard from hiding on mobile */
+    &:focus {
+      -webkit-user-select: text;
+      user-select: text;
+    }
   }
 `;
 
@@ -550,6 +556,7 @@ const ChatRoom = () => {
   const [isUserMember, setIsUserMember] = useState(false);
   const [joining, setJoining] = useState(false);
   const messagesEndRef = useRef(null);
+  const messageInputRef = useRef(null);
   
   // Redirect if no room data
   if (!roomId) {
@@ -710,10 +717,23 @@ const ChatRoom = () => {
       return;
     }
     
+    // Store the message to send
+    const messageToSend = newMessage.trim();
+    
+    // Clear input immediately and maintain focus for mobile
+    setNewMessage('');
+    
+    // Keep focus on input for mobile keyboard
+    setTimeout(() => {
+      if (messageInputRef.current) {
+        messageInputRef.current.focus();
+      }
+    }, 50);
+    
     // Add temporary local message for immediate feedback
     const tempMessage = {
       id: `temp-${Date.now()}`,
-      text: newMessage.trim(),
+      text: messageToSend,
       userId: auth.currentUser.uid,
       userName: auth.currentUser.displayName || 'Anonymous',
       userPhoto: auth.currentUser.photoURL || null,
@@ -722,7 +742,6 @@ const ChatRoom = () => {
     };
     
     setLocalMessages(prev => [...prev, tempMessage]);
-    setNewMessage('');
       try {
       // Calculate expiration time (8 hours from now)
       const expirationTime = new Date();
@@ -730,7 +749,7 @@ const ChatRoom = () => {
       
       // Send to Firestore
       await addDoc(collection(db, `chatrooms/${roomId}/messages`), {
-        text: tempMessage.text,
+        text: messageToSend,
         userId: auth.currentUser.uid,
         userName: auth.currentUser.displayName || 'Anonymous',
         userPhoto: auth.currentUser.photoURL || null,
@@ -957,10 +976,14 @@ const ChatRoom = () => {
             // User is logged in and a member
             <>
               <MessageInput
+                ref={messageInputRef}
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type your message..."
                 disabled={loading}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="sentences"
               />
               <SendButton type="submit" disabled={loading || !newMessage.trim()}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

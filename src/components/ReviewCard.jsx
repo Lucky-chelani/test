@@ -90,15 +90,16 @@ const ReviewContent = styled.div`
 `;
 
 const ReviewText = styled.p`
-  color:rgb(252, 252, 252);
+  color: rgba(255, 255, 255, 0.9);
   font-size: 1.1rem;
   font-weight: 400;
   line-height: 1.6;
   margin-bottom: ${props => props.noActions ? '0' : '15px'};
   white-space: pre-wrap;
-  border: 1px solid rgba(255, 255, 255, 0.97);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 12px;
-  background-color: rgb(220, 220, 220);
+  background-color: rgba(30, 41, 59, 0.4);
   border-radius: 8px;
   
   &:empty {
