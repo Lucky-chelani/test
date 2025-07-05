@@ -400,6 +400,12 @@ const MessageInput = styled.input`
       -webkit-user-select: text;
       user-select: text;
     }
+    
+    /* Prevent input from losing focus */
+    &:focus-within {
+      outline: none;
+      border-color: rgba(255, 75, 31, 0.7);
+    }
   }
 `;
 
@@ -449,6 +455,15 @@ const SendButton = styled.button`
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     user-select: none;
+    
+    /* Improve touch interaction */
+    &:focus {
+      outline: none;
+    }
+    
+    &:active {
+      transform: scale(0.95);
+    }
   }
 `;
 
@@ -563,6 +578,18 @@ const ChatRoom = () => {
   const [joining, setJoining] = useState(false);
   const messagesEndRef = useRef(null);
   const messageInputRef = useRef(null);
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   // Redirect if no room data
   if (!roomId) {
@@ -706,7 +733,10 @@ const ChatRoom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, localMessages]);
     const handleSendMessage = async (e) => {
-    e.preventDefault();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     
     // Check if user is logged in
     if (!auth.currentUser) {
@@ -726,7 +756,7 @@ const ChatRoom = () => {
     // Store the message to send
     const messageToSend = newMessage.trim();
     
-    // Clear input immediately and maintain focus for mobile
+    // Clear input immediately
     setNewMessage('');
     
     // Add temporary local message for immediate feedback
@@ -761,12 +791,21 @@ const ChatRoom = () => {
       setError('');
       
       // Keep focus on input for mobile keyboard after successful send
-      if (messageInputRef.current && window.innerWidth <= 768) {
-        // Use requestAnimationFrame to ensure DOM has updated
+      if (messageInputRef.current && isMobile) {
+        // Use multiple methods to ensure focus stays
+        setTimeout(() => {
+          if (messageInputRef.current) {
+            messageInputRef.current.focus();
+            // Force the cursor to the end
+            messageInputRef.current.setSelectionRange(messageInputRef.current.value.length, messageInputRef.current.value.length);
+          }
+        }, 50);
+        
         requestAnimationFrame(() => {
-          messageInputRef.current.focus();
-          // Scroll input into view if needed
-          messageInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          if (messageInputRef.current) {
+            messageInputRef.current.focus();
+            messageInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
         });
       }
     } catch (err) {
@@ -790,7 +829,8 @@ const ChatRoom = () => {
     e.stopPropagation();
     
     // Prevent button from taking focus on mobile
-    if (messageInputRef.current && window.innerWidth <= 768) {
+    if (messageInputRef.current && isMobile) {
+      // Keep the input focused before sending
       messageInputRef.current.focus();
     }
     
@@ -1006,15 +1046,10 @@ const ChatRoom = () => {
                 autoComplete="off"
                 autoCorrect="off"
                 autoCapitalize="sentences"
-                onBlur={(e) => {
-                  // Prevent blur on mobile when tapping send button
-                  if (window.innerWidth <= 768) {
-                    e.preventDefault();
-                    setTimeout(() => {
-                      if (messageInputRef.current) {
-                        messageInputRef.current.focus();
-                      }
-                    }, 100);
+                onFocus={() => {
+                  // Ensure input stays focused on mobile
+                  if (isMobile && messageInputRef.current) {
+                    messageInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                   }
                 }}
               />
@@ -1024,7 +1059,13 @@ const ChatRoom = () => {
                 disabled={loading || !newMessage.trim()}
                 onMouseDown={(e) => {
                   // Prevent button from taking focus on mobile
-                  if (window.innerWidth <= 768) {
+                  if (isMobile) {
+                    e.preventDefault();
+                  }
+                }}
+                onTouchStart={(e) => {
+                  // Prevent touch from stealing focus on mobile
+                  if (isMobile) {
                     e.preventDefault();
                   }
                 }}
