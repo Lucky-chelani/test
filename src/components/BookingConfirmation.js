@@ -4,6 +4,26 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { FaCheckCircle, FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaMoneyBillWave, FaFileAlt, FaPhone } from 'react-icons/fa';
 import BookingService from '../services/BookingService';
 
+const checkDrawAnimation = keyframes`
+  0% {
+    stroke-dashoffset: 100;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+`;
+
+const successPulse = keyframes`
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(22, 160, 133, 0.7);
+  }
+  50% { 
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(22, 160, 133, 0);
+  }
+`;
+
 const slideUp = keyframes`
   from {
     opacity: 0;
@@ -348,8 +368,22 @@ const CheckIcon = styled(FaCheckCircle)`
   font-size: 6rem;
   color: #16a085;
   margin-bottom: 25px;
-  animation: ${scaleIn} 0.6s ease-out 0.4s both, ${float} 3s ease-in-out infinite;
+  animation: ${scaleIn} 0.6s ease-out 0.4s both, ${successPulse} 2s ease-in-out infinite;
   filter: drop-shadow(0 8px 16px rgba(22, 160, 133, 0.3));
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120%;
+    height: 120%;
+    border: 2px solid rgba(22, 160, 133, 0.3);
+    border-radius: 50%;
+    animation: ${successPulse} 3s ease-in-out infinite;
+  }
   
   @media (max-width: 768px) {
     font-size: 4.5rem;

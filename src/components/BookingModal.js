@@ -82,6 +82,58 @@ const bounceIn = keyframes`
   }
 `;
 
+const spin = keyframes`
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+`;
+
+const successPulse = keyframes`
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+  }
+  50% { 
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
+  }
+`;
+
+const checkDraw = keyframes`
+  0% {
+    stroke-dashoffset: 100;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+`;
+
+const confetti = keyframes`
+  0% {
+    transform: translateY(0px) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100px) rotate(720deg);
+    opacity: 0;
+  }
+`;
+
+const slideInUp = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+const gradientShift = keyframes`
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+`;
+
 // Styled Components
 const ModalOverlay = styled.div`
   position: fixed;
@@ -978,12 +1030,145 @@ const LoadingIndicator = styled.div`
   border-radius: 50%;
   border-top-color: #ffffff;
   animation: spin 1s linear infinite;
+`;
+
+// Enhanced loading overlay for post-payment processing
+const ProcessingOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(51, 153, 204, 0.95) 0%, 
+    rgba(0, 180, 219, 0.95) 50%,
+    rgba(76, 175, 80, 0.95) 100%);
+  background-size: 400% 400%;
+  animation: ${gradientShift} 3s ease infinite;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(10px);
+  color: white;
+`;
+
+const ProcessingContent = styled.div`
+  text-align: center;
+  animation: ${slideInUp} 0.8s ease-out;
+`;
+
+const ProcessingSpinner = styled.div`
+  width: 80px;
+  height: 80px;
+  border: 6px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top: 6px solid #ffffff;
+  animation: ${spin} 1s linear infinite;
+  margin: 0 auto 2rem;
+`;
+
+const ProcessingTitle = styled.h2`
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+  animation: ${pulse} 2s ease-in-out infinite;
+`;
+
+const ProcessingSubtitle = styled.p`
+  font-size: 1.1rem;
+  opacity: 0.9;
+  margin: 0;
+  animation: ${fadeIn} 1s ease-out 0.5s both;
+`;
+
+// Enhanced success message with confetti effect
+const EnhancedSuccessMessage = styled.div`
+  background: linear-gradient(135deg, #4caf50 0%, #81c784 100%);
+  color: white;
+  padding: 2rem;
+  border-radius: 20px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(76, 175, 80, 0.3);
+  animation: ${successPulse} 2s ease-in-out infinite;
   
-  @keyframes spin {
-    to { 
-      transform: rotate(360deg); 
-    }
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 10px,
+      rgba(255, 255, 255, 0.1) 10px,
+      rgba(255, 255, 255, 0.1) 20px
+    );
+    animation: ${shimmer} 3s linear infinite;
   }
+`;
+
+const SuccessIcon = styled.div`
+  width: 80px;
+  height: 80px;
+  border: 4px solid white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  animation: ${bounceIn} 1s ease-out;
+  
+  svg {
+    width: 40px;
+    height: 40px;
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: ${checkDraw} 1s ease-out 0.5s both;
+  }
+`;
+
+const SuccessTitle = styled.h3`
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  animation: ${slideInFromLeft} 0.8s ease-out 0.3s both;
+`;
+
+const SuccessSubtitle = styled.p`
+  font-size: 1.1rem;
+  opacity: 0.9;
+  margin: 0;
+  animation: ${slideInFromRight} 0.8s ease-out 0.6s both;
+`;
+
+// Confetti particles
+const ConfettiParticle = styled.div`
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: ${props => props.color || '#ffeb3b'};
+  border-radius: 50%;
+  animation: ${confetti} 3s linear infinite;
+  animation-delay: ${props => props.delay || '0s'};
+  top: ${props => props.top || '50%'};
+  left: ${props => props.left || '50%'};
+`;
+
+const ConfettiContainer = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
 `;
 
 // Main Component
@@ -1003,6 +1188,8 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
   const [paymentError, setPaymentError] = useState(null);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [isProcessingBooking, setIsProcessingBooking] = useState(false);
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
   
   // Coupon related states
   const [activeCoupon, setActiveCoupon] = useState(null);
@@ -1386,10 +1573,11 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
     } finally {
       setIsProcessingPayment(false);
     }
-  };// Define handlePaymentSuccess as a useCallback to fix the dependency warning
+  };  // Define handlePaymentSuccess as a useCallback to fix the dependency warning
   const handlePaymentSuccess = useCallback(async (response) => {
     try {
-      setIsProcessingPayment(true);
+      setIsProcessingPayment(false);
+      setIsProcessingBooking(true); // Show post-payment processing
       
       if (!bookingId) {
         console.warn('⚠️ No bookingId set in component state before payment success');
@@ -1526,38 +1714,45 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
         // Don't fail the booking process if email fails
       }
       
-      // Show success message
+      // Show success message and animation
+      setIsProcessingBooking(false);
       setPaymentSuccess(true);
+      setShowSuccessAnimation(true);
       
       // Notify parent component
       if (onBookingSuccess) {
         onBookingSuccess(effectiveBookingId || bookingId);
       }
       
-      // Navigate to booking confirmation page
-      navigate(`/booking-confirmation/${effectiveBookingId}`);
-      
-      // Close modal after a brief delay
+      // Wait for success animation to complete before navigation
       setTimeout(() => {
-        onClose();
-      // Reset form state
-        setStep(1);
-        setFormData({
-          startDate: '',
-          participants: 1,
-          name: '',
-          email: '',
-          contactNumber: '',
-          specialRequests: ''
-        });
-        setPaymentSuccess(false);
-        setBookingId(null);
-        setActiveCoupon(null);
-        setDiscountAmount(0);
-      }, 3000);
+        // Navigate to booking confirmation page
+        navigate(`/booking-confirmation/${effectiveBookingId}`);
+        
+        // Close modal after navigation
+        setTimeout(() => {
+          onClose();
+          // Reset form state
+          setStep(1);
+          setFormData({
+            startDate: '',
+            participants: 1,
+            name: '',
+            email: '',
+            contactNumber: '',
+            specialRequests: ''
+          });
+          setPaymentSuccess(false);
+          setShowSuccessAnimation(false);
+          setBookingId(null);
+          setActiveCoupon(null);
+          setDiscountAmount(0);
+        }, 500);
+      }, 3000); // Show success animation for 3 seconds
     } catch (error) {
       console.error("Payment verification error:", error);
       setPaymentError(error.message || "Failed to verify payment");
+      setIsProcessingBooking(false);
     } finally {
       setIsProcessingPayment(false);
     }
@@ -1664,14 +1859,73 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
   if (!isOpen) return null;
 
   return (
-    <ModalOverlay>
-      <ModalContainer>
-        <ModalHeader>
-          <ModalTitle>{step === 1 ? 'Book Your Trek' : 'Payment Details'}</ModalTitle>
-          <CloseButton onClick={onClose}>
-            <FiX />
-          </CloseButton>
-        </ModalHeader>
+    <>
+      {/* Processing Overlay - shown after payment success */}
+      {isProcessingBooking && (
+        <ProcessingOverlay>
+          <ProcessingContent>
+            <ProcessingSpinner />
+            <ProcessingTitle>Processing Your Booking</ProcessingTitle>
+            <ProcessingSubtitle>
+              Please wait while we confirm your payment and prepare your booking details...
+            </ProcessingSubtitle>
+          </ProcessingContent>
+        </ProcessingOverlay>
+      )}
+      
+      {/* Success Animation Overlay */}
+      {showSuccessAnimation && (
+        <ProcessingOverlay>
+          <ProcessingContent>
+            <EnhancedSuccessMessage>
+              <ConfettiContainer>
+                {/* Confetti particles */}
+                {Array.from({ length: 15 }).map((_, i) => (
+                  <ConfettiParticle
+                    key={i}
+                    color={['#ffeb3b', '#4caf50', '#2196f3', '#ff9800', '#e91e63'][i % 5]}
+                    delay={`${i * 0.2}s`}
+                    top={`${Math.random() * 100}%`}
+                    left={`${Math.random() * 100}%`}
+                  />
+                ))}
+              </ConfettiContainer>
+              
+              <SuccessIcon>
+                <FiCheck size={40} />
+              </SuccessIcon>
+              
+              <SuccessTitle>🎉 Booking Confirmed!</SuccessTitle>
+              <SuccessSubtitle>
+                Your adventure awaits! We're preparing your booking details...
+              </SuccessSubtitle>
+              
+              {activeCoupon && (
+                <div style={{ 
+                  marginTop: '1rem', 
+                  padding: '1rem', 
+                  background: 'rgba(255, 255, 255, 0.2)', 
+                  borderRadius: '10px',
+                  animation: `${fadeIn} 1s ease-out 1s both`
+                }}>
+                  <strong>Coupon Applied: {activeCoupon.code}</strong>
+                  <br />
+                  You saved ₹{discountAmount.toFixed(2)}!
+                </div>
+              )}
+            </EnhancedSuccessMessage>
+          </ProcessingContent>
+        </ProcessingOverlay>
+      )}
+      
+      <ModalOverlay>
+        <ModalContainer>
+          <ModalHeader>
+            <ModalTitle>{step === 1 ? 'Book Your Trek' : 'Payment Details'}</ModalTitle>
+            <CloseButton onClick={onClose}>
+              <FiX />
+            </CloseButton>
+          </ModalHeader>
         
         <ModalBody>
           {/* Step Indicator */}
@@ -1983,6 +2237,7 @@ const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
         </ModalFooter>
       </ModalContainer>
     </ModalOverlay>
+    </>
   );
 };
 
