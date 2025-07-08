@@ -7,6 +7,8 @@ import { initializeChatrooms } from '../utils/initializeChatrooms';
 import { FiUsers, FiMessageCircle, FiX, FiPlus, FiChevronLeft, FiChevronRight, FiMapPin, FiArrowRight, FiLock } from 'react-icons/fi';
 import ImageOverlay from './ImageOverlay';
 import CreateCommunityModal from './CreateCommunityModal';
+import SEOHelmet, { CommunitySEO } from './SEO/SEOHelmet';
+import { CommunityRichSnippet } from './SEO/SEOUtils';
 import { 
   Page, PageContainer, Header, HeaderTitle, HeaderSubtitle, HeadingIconContainer,
   CardsContainer, Card, CardImageContainer, CardImage, CardContent, CardHeader,
@@ -38,12 +40,20 @@ const Community = () => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [lastVisible, setLastVisible] = useState(null);
   const [hasMore, setHasMore] = useState(true);
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   
   const scrollRef = useRef(null);
   const navigate = useNavigate();
 
   // Check if current user is an admin
   useEffect(() => {
+    // Only check admin status if user is authenticated
+    if (!isAuthenticated || isAuthChecking) {
+      setIsAdmin(false);
+      return;
+    }
+
     const checkAdminStatus = async () => {
       const currentUser = auth.currentUser;
       if (currentUser) {
@@ -69,10 +79,30 @@ const Community = () => {
     };
 
     checkAdminStatus();
-  }, []);
+  }, [isAuthenticated, isAuthChecking]);
+
+  // Add authentication state listener
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setIsAuthChecking(false);
+      if (user) {
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+        navigate('/login');
+      }
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
   
   // Fetch chatrooms from Firestore with optimized pagination
   useEffect(() => {
+    // Only fetch chatrooms if user is authenticated
+    if (!isAuthenticated || isAuthChecking) {
+      return;
+    }
+
     const fetchChatrooms = async () => {
       try {
         setLoading(true);
@@ -137,7 +167,7 @@ const Community = () => {
     };
     
     fetchChatrooms();
-  }, []);
+  }, [isAuthenticated, isAuthChecking]);
 
   // Function to load more chatrooms
   const loadMoreChatrooms = async () => {
@@ -266,8 +296,44 @@ const Community = () => {
     }
   };
   return (
-    <Page>
-      <PageContainer>
+    <>
+      {/* SEO Components */}
+      <CommunitySEO />
+      
+      <Page>
+      {/* Show loading while checking authentication */}
+      {isAuthChecking ? (
+        <PageContainer>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            minHeight: '50vh',
+            color: '#666' 
+          }}>
+            <div style={{ textAlign: 'center' }}>
+              <FiMessageCircle size={48} opacity={0.4} />
+              <p>Loading...</p>
+            </div>
+          </div>
+        </PageContainer>
+      ) : !isAuthenticated ? (
+        <PageContainer>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            minHeight: '50vh',
+            color: '#666' 
+          }}>
+            <div style={{ textAlign: 'center' }}>
+              <FiMessageCircle size={48} opacity={0.4} />
+              <p>Redirecting to login...</p>
+            </div>
+          </div>
+        </PageContainer>
+      ) : (
+        <PageContainer>
         <Header>
           <HeaderTitle>
             <HeadingIconContainer>
@@ -345,47 +411,50 @@ const Community = () => {
             </EmptyState>
           ) : (
             chatrooms.map((room) => (
-              <Card key={room.id || room.docId} onClick={() => handleJoinRoom(room)}>
-                <CardImageContainer>
-                  <CardImage 
-                    src={room.cachedImageUrl} 
-                    alt={room.name}
-                    loading="lazy" // Add lazy loading for better performance
-                  />
-                  <ImageOverlay />
-                  {room.isNew && <NewLabel>NEW</NewLabel>}
-                  {room.featured && <FeaturedLabel>FEATURED</FeaturedLabel>}
-                </CardImageContainer>
-                
-                <CardContent>
-                  <CardHeader>
-                    <CardTitle>{room.name}</CardTitle>
-                    <CardRating>
-                      <StarIcon className="star" /> 
-                      <span>{room.rating}</span>
-                      <small>({room.reviews})</small>
-                    </CardRating>
-                  </CardHeader>
+              <div key={room.id || room.docId}>
+                <CommunityRichSnippet community={room} />
+                <Card onClick={() => handleJoinRoom(room)}>
+                  <CardImageContainer>
+                    <CardImage 
+                      src={room.cachedImageUrl} 
+                      alt={`${room.name} - Join trekking community on Trovia`}
+                      loading="lazy" // Add lazy loading for better performance
+                    />
+                    <ImageOverlay />
+                    {room.isNew && <NewLabel>NEW</NewLabel>}
+                    {room.featured && <FeaturedLabel>FEATURED</FeaturedLabel>}
+                  </CardImageContainer>
                   
-                  <CardDescription>{room.desc || "Join this trekking community to connect with other adventure enthusiasts."}</CardDescription>
-                  
-                  <CardFooter>
-                    <CardStat>
-                      <FiUsers size={14} />
-                      <span>{room.memberCount} {room.memberCount === 1 ? 'member' : 'members'}</span>
-                    </CardStat>
-                    <CardStat>
-                      <FiMessageCircle size={14} />
-                      <span>{room.messageCount || 0} {(room.messageCount || 0) === 1 ? 'message' : 'messages'}</span>
-                    </CardStat>
-                  </CardFooter>
-                  
-                  <JoinButton>
-                    <span>Join Chat</span>
-                    <FiArrowRight size={16} />
-                  </JoinButton>
-                </CardContent>
-              </Card>
+                  <CardContent>
+                    <CardHeader>
+                      <CardTitle>{room.name}</CardTitle>
+                      <CardRating>
+                        <StarIcon className="star" /> 
+                        <span>{room.rating}</span>
+                        <small>({room.reviews})</small>
+                      </CardRating>
+                    </CardHeader>
+                    
+                    <CardDescription>{room.desc || room.description || "Join this trekking community to connect with other adventure enthusiasts."}</CardDescription>
+                    
+                    <CardFooter>
+                      <CardStat>
+                        <FiUsers size={14} />
+                        <span>{room.memberCount} {room.memberCount === 1 ? 'member' : 'members'}</span>
+                      </CardStat>
+                      <CardStat>
+                        <FiMessageCircle size={14} />
+                        <span>{room.messageCount || 0} {(room.messageCount || 0) === 1 ? 'message' : 'messages'}</span>
+                      </CardStat>
+                    </CardFooter>
+                    
+                    <JoinButton>
+                      <span>Join Chat</span>
+                      <FiArrowRight size={16} />
+                    </JoinButton>
+                  </CardContent>
+                </Card>
+              </div>
             ))
           )}
         </CardsContainer>
@@ -421,8 +490,10 @@ const Community = () => {
             onError={(msg) => setError(msg)}
           />
         )}
-      </PageContainer>
-    </Page>
+        </PageContainer>
+      )}
+      </Page>
+    </>
   );
 };
 

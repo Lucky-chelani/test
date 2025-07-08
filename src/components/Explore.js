@@ -7,7 +7,7 @@ import trek1 from '../assets/images/trek1.png';
 import Footer from './Footer';
 import groupImg from '../assets/images/trek1.png';
 import eventImg from '../assets/images/trek1.png';
-import { FiChevronLeft, FiChevronRight, FiClock, FiMapPin, FiCalendar, FiArrowRight, FiUsers, FiInfo, FiTrendingUp, FiAward, FiSearch, FiX, FiHeart, FiStar } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiClock, FiMapPin, FiCalendar, FiArrowRight, FiUsers, FiInfo, FiTrendingUp, FiAward, FiSearch, FiX, FiHeart, FiStar, FiUser } from 'react-icons/fi';
 import { FaMountain, FaStar, FaSnowflake, FaSun, FaLeaf, FaCloudRain } from 'react-icons/fa';
 import { RiCommunityFill } from 'react-icons/ri';
 import { MdEventAvailable } from 'react-icons/md';
@@ -821,6 +821,37 @@ const TrekLocation = styled.p`
   font-weight: 400;
 `;
 
+const TrekOrganizer = styled.div`
+  color: #94a3b8;
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 400;
+  
+  .organizer-label {
+    color: #64748b;
+    font-weight: 500;
+  }
+  
+  .organizer-name {
+    color: #e2e8f0;
+    font-weight: 500;
+  }
+  
+  .verified-badge {
+    color: #4ade80;
+    font-size: 14px;
+    margin-left: 2px;
+  }
+  
+  svg {
+    color: #7c3aed;
+    font-size: 14px;
+  }
+`;
+
 const TrekMeta = styled.div`
   display: flex;
   justify-content: space-between;
@@ -1269,6 +1300,19 @@ const Explore = () => {
                 <TrekBadge>
                   {trek.difficulty || 'Moderate'}
                 </TrekBadge>
+                
+                {/* Add organizer info overlay */}
+                {trek.organizerName && (
+                  <OrganizerRow>
+                    <OrganizerIcon>
+                      <FiUser />
+                    </OrganizerIcon>
+                    <OrganizerText>
+                      By <OrganizerName>{trek.organizerName}</OrganizerName>
+                      {trek.organizerVerified && <span style={{ color: '#4ade80', marginLeft: '4px' }}>✓</span>}
+                    </OrganizerText>
+                  </OrganizerRow>
+                )}
               </TrekImageWrapper>
               
               <TrekContent>
@@ -1277,6 +1321,16 @@ const Explore = () => {
                   <FiMapPin />
                   {trek.location || trek.state || "India"}
                 </TrekLocation>
+                
+                {/* Organized By Field */}
+                {trek.organizerName && (
+                  <TrekOrganizer>
+                    <FiUser />
+                    <span className="organizer-label">Organized by</span>
+                    <span className="organizer-name">{trek.organizerName}</span>
+                    {trek.organizerVerified && <span className="verified-badge">✓</span>}
+                  </TrekOrganizer>
+                )}
                 
                 <TrekMeta>
                   <TrekDetails>

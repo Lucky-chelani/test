@@ -12,7 +12,7 @@ import {
   where
 } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
-import { uploadImage, uploadMultipleImages } from '../utils/images';
+import { uploadImage, uploadMultipleImages } from '../utils/imageUtils/storage';
 import initializeCategories from '../utils/initializeCategories';
 import { prepareTrekData } from '../utils/trekUtils';
 import { FiUpload, FiImage, FiAlertTriangle, FiCheck } from 'react-icons/fi';
@@ -396,8 +396,9 @@ const OrganizerAddTrek = () => {
   };
   
   const handleImagesChange = (data) => {
-    setTrekImages(data.images);
-    setCoverImageIndex(data.coverIndex);
+    console.log('Images data received:', data);
+    setTrekImages(data.images || []);
+    setCoverImageIndex(data.coverIndex || 0);
   };
   
   const handleImageUpload = async (trekId) => {
@@ -409,7 +410,7 @@ const OrganizerAddTrek = () => {
       
       // Get all files to upload
       const filesToUpload = trekImages
-        .filter(img => img.file)
+        .filter(img => img && (img.file instanceof File))
         .map(img => img.file);
       
       // If no files, just return
@@ -449,6 +450,13 @@ const OrganizerAddTrek = () => {
     // Check if images are uploaded
     if (!trekImages || trekImages.length === 0) {
       setError('Please upload at least one trek image.');
+      return;
+    }
+    
+    // Check if any images have valid files
+    const validImages = trekImages.filter(img => img && img.file instanceof File);
+    if (validImages.length === 0) {
+      setError('Please upload valid image files.');
       return;
     }
     
@@ -646,15 +654,18 @@ const OrganizerAddTrek = () => {
             </FormGroup>
             
             <FormGroup>
-              <Label htmlFor="days">Duration (days)</Label>
-              <Input
-                type="number"
-                id="days"
-                name="days"
-                value={formData.days}
+              <Label htmlFor="fitnessLevel">Fitness Level Required</Label>
+              <Select
+                id="fitnessLevel"
+                name="fitnessLevel"
+                value={formData.fitnessLevel}
                 onChange={handleInputChange}
-                min="1"
-              />
+              >
+                <option value="beginner">Beginner</option>
+                <option value="moderate">Moderate</option>
+                <option value="advanced">Advanced</option>
+                <option value="expert">Expert</option>
+              </Select>
             </FormGroup>
           </FormRow>
           

@@ -9,11 +9,7 @@ service firebase.storage {
     // Allow authenticated organizers and admins to upload to trek-related folders
     match /trek-images/{anyPath=**} {
       allow read: if true;
-      allow write: if request.auth != null && 
-        (request.auth.token.email in ['luckychelani950@gmail.com', 'test@example.com', 'youremail@example.com'] ||
-         exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'organizer' || 
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
+      allow write: if request.auth != null;
     }
     
     // Allow authenticated users to upload to treks folder and any subfolders

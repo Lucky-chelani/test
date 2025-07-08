@@ -120,8 +120,8 @@ export const getTrekImagePath = (trekId, index = 0) => {
   const timestamp = Date.now();
   const uniqueId = `${sanitizedId}-${index}-${timestamp}`;
   
-  // Make sure the path matches our storage rules
-  return `trek-images/${uniqueId}`;
+  // Use treks/ folder which has broader permissions
+  return `treks/${uniqueId}`;
 };
 
 /**

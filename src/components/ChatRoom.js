@@ -403,11 +403,16 @@ const MessageInput = styled.input`
       border-color: rgba(255, 75, 31, 0.7);
       background: rgba(255, 255, 255, 0.15);
       box-shadow: 0 0 20px rgba(255, 75, 31, 0.2);
+      /* Force hardware acceleration */
+      transform: translateZ(0) translateY(-1px);
+      -webkit-transform: translateZ(0) translateY(-1px);
     }
     
     /* Prevent input blur on mobile */
     &:active {
       outline: none;
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
     }
     
     /* Enhanced touch support */
@@ -415,9 +420,27 @@ const MessageInput = styled.input`
     -webkit-appearance: none;
     -webkit-border-radius: 24px;
     
-    /* Prevent Safari zoom */
+    /* Prevent Safari zoom and improve input stability */
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    
+    /* iOS specific fixes */
+    -webkit-touch-callout: none;
+    -webkit-user-select: text;
+    user-select: text;
+    
+    /* Prevent input jumping */
+    will-change: transform;
+    
+    /* Better touch target */
+    min-height: 44px; /* iOS recommended touch target */
+    
+    /* Prevent autocomplete dropdown issues */
+    &[autocomplete="off"] {
+      -webkit-text-security: none;
+    }
     
     /* Keep keyboard open */
     &:focus-visible {
@@ -636,6 +659,81 @@ const ChatRoom = () => {
     }
   }, [isMobile]);
   
+  // Enhanced mobile input focus management
+  useEffect(() => {
+    if (!isMobile || !messageInputRef.current) return;
+
+    let focusTimeoutId = null;
+    let blurTimeoutId = null;
+
+    const inputElement = messageInputRef.current;
+
+    const maintainFocus = () => {
+      if (inputElement && document.activeElement !== inputElement) {
+        inputElement.focus();
+      }
+    };
+
+    const handleInputFocus = () => {
+      // Clear any pending blur timeout
+      if (blurTimeoutId) {
+        clearTimeout(blurTimeoutId);
+        blurTimeoutId = null;
+      }
+      
+      // Ensure input stays in view
+      setTimeout(() => {
+        if (inputElement) {
+          inputElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 300);
+    };
+
+    const handleInputBlur = (e) => {
+      // Only handle blur if it's not due to clicking interactive elements
+      const relatedTarget = e.relatedTarget;
+      if (relatedTarget && (
+        relatedTarget.tagName === 'BUTTON' || 
+        relatedTarget.closest('button') ||
+        relatedTarget.closest('[role="button"]')
+      )) {
+        return;
+      }
+
+      // Delay refocus to avoid conflicts
+      blurTimeoutId = setTimeout(() => {
+        if (inputElement && 
+            document.activeElement !== inputElement && 
+            !document.activeElement?.closest('button') &&
+            !document.querySelector('button:focus')) {
+          inputElement.focus();
+        }
+      }, 100);
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden && inputElement) {
+        // Re-focus when page becomes visible again
+        setTimeout(maintainFocus, 200);
+      }
+    };
+
+    // Add event listeners
+    inputElement.addEventListener('focus', handleInputFocus);
+    inputElement.addEventListener('blur', handleInputBlur);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Cleanup
+    return () => {
+      if (focusTimeoutId) clearTimeout(focusTimeoutId);
+      if (blurTimeoutId) clearTimeout(blurTimeoutId);
+      
+      inputElement.removeEventListener('focus', handleInputFocus);
+      inputElement.removeEventListener('blur', handleInputBlur);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isMobile, messageInputRef.current]);
+
   // Redirect if no room data
   if (!roomId) {
     return <Navigate to="/community" replace />;
@@ -839,9 +937,13 @@ const ChatRoom = () => {
       if (messageInputRef.current && isMobile) {
         // Method 1: Immediate focus with multiple attempts
         const maintainFocus = () => {
-          if (messageInputRef.current) {
-            messageInputRef.current.focus();
-            messageInputRef.current.click();
+          if (messageInputRef.current && document.contains(messageInputRef.current)) {
+            try {
+              messageInputRef.current.focus();
+              messageInputRef.current.click();
+            } catch (error) {
+              console.warn('Focus attempt failed:', error);
+            }
           }
         };
         
@@ -860,9 +962,13 @@ const ChatRoom = () => {
         
         // Method 4: Force scroll and focus
         setTimeout(() => {
-          if (messageInputRef.current) {
-            messageInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            messageInputRef.current.focus();
+          if (messageInputRef.current && document.contains(messageInputRef.current)) {
+            try {
+              messageInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              messageInputRef.current.focus();
+            } catch (error) {
+              console.warn('Scroll and focus attempt failed:', error);
+            }
           }
         }, 150);
       }
@@ -1155,14 +1261,25 @@ const ChatRoom = () => {
                   }
                 }}
                 onBlur={(e) => {
-                  // Prevent blur on mobile unless it's intentional
+                  // Only prevent blur if it's not intentional user action
                   if (isMobile && messageInputRef.current) {
-                    // Small delay to allow for send button click
-                    setTimeout(() => {
-                      if (messageInputRef.current && document.activeElement !== messageInputRef.current) {
-                        messageInputRef.current.focus();
-                      }
-                    }, 100);
+                    const relatedTarget = e.relatedTarget;
+                    // Don't refocus if user clicked on send button or other interactive element
+                    if (!relatedTarget || (!relatedTarget.closest('button') && !relatedTarget.closest('a'))) {
+                      // Small delay to check if focus was lost unintentionally
+                      setTimeout(() => {
+                        if (messageInputRef.current && 
+                            document.contains(messageInputRef.current) &&
+                            document.activeElement !== messageInputRef.current && 
+                            !document.activeElement?.closest('button')) {
+                          try {
+                            messageInputRef.current.focus();
+                          } catch (error) {
+                            console.warn('Blur refocus attempt failed:', error);
+                          }
+                        }
+                      }, 50);
+                    }
                   }
                 }}
                 onKeyDown={(e) => {
@@ -1189,8 +1306,12 @@ const ChatRoom = () => {
                     e.preventDefault();
                     e.stopPropagation();
                     // Ensure input stays focused
-                    if (messageInputRef.current) {
-                      messageInputRef.current.focus();
+                    if (messageInputRef.current && document.contains(messageInputRef.current)) {
+                      try {
+                        messageInputRef.current.focus();
+                      } catch (error) {
+                        console.warn('Touch focus attempt failed:', error);
+                      }
                     }
                   }
                 }}
@@ -1200,8 +1321,12 @@ const ChatRoom = () => {
                     e.preventDefault();
                     e.stopPropagation();
                     // Restore focus immediately
-                    if (messageInputRef.current) {
-                      messageInputRef.current.focus();
+                    if (messageInputRef.current && document.contains(messageInputRef.current)) {
+                      try {
+                        messageInputRef.current.focus();
+                      } catch (error) {
+                        console.warn('Touch end focus attempt failed:', error);
+                      }
                     }
                   }
                 }}

@@ -3,7 +3,7 @@ import styled, { keyframes, css, createGlobalStyle } from "styled-components";
 import { useNavigate } from "react-router-dom";
 import mapPattern from "../assets/images/map-pattren.png";
 // Import required icons for the new card design
-import { FiChevronLeft, FiChevronRight, FiClock, FiMapPin, FiCalendar, FiArrowRight, FiSearch, FiUsers, FiHeart, FiStar } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiClock, FiMapPin, FiCalendar, FiArrowRight, FiSearch, FiUsers, FiHeart, FiStar, FiUser } from 'react-icons/fi';
 import { FaMountain, FaStar } from 'react-icons/fa';
 import { db } from "../firebase";
 import { collection, getDocs } from "firebase/firestore";
@@ -1121,6 +1121,19 @@ export default function FeaturedTreks() {
                   <TrekImageWrapper>
                     <TrekImage style={{backgroundImage: `url(${getValidImageUrl(trek.image)})`}} />
                     <DifficultyTag>{trek.difficulty || "Easy"}</DifficultyTag>
+                    
+                    {/* Add organizer info overlay */}
+                    {trek.organizerName && (
+                      <OrganizerRow>
+                        <OrganizerIcon>
+                          <FiUser />
+                        </OrganizerIcon>
+                        <OrganizerText>
+                          By <OrganizerName>{trek.organizerName}</OrganizerName>
+                          {trek.organizerVerified && <span style={{ color: '#4ade80', marginLeft: '4px' }}>✓</span>}
+                        </OrganizerText>
+                      </OrganizerRow>
+                    )}
                   </TrekImageWrapper>
                   
                   <TrekInfo>
@@ -1129,6 +1142,16 @@ export default function FeaturedTreks() {
                       <FiMapPin />
                       {trek.location || trek.country || "Location"}
                     </TrekLocation>
+                    
+                    {/* Organized By Field */}
+                    {trek.organizerName && (
+                      <TrekOrganizer>
+                        <FiUser />
+                        <span className="organizer-label">Organized by</span>
+                        <span className="organizer-name">{trek.organizerName}</span>
+                        {trek.organizerVerified && <span className="verified-badge">✓</span>}
+                      </TrekOrganizer>
+                    )}
                     
                     <TrekMeta>
                       <TrekDetails>
@@ -1240,6 +1263,37 @@ const TrekLocation = styled.p`
   gap: 6px;
   font-size: 13px;
   font-weight: 400;
+`;
+
+const TrekOrganizer = styled.div`
+  color: #94a3b8;
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 400;
+  
+  .organizer-label {
+    color: #64748b;
+    font-weight: 500;
+  }
+  
+  .organizer-name {
+    color: #e2e8f0;
+    font-weight: 500;
+  }
+  
+  .verified-badge {
+    color: #4ade80;
+    font-size: 14px;
+    margin-left: 2px;
+  }
+  
+  svg {
+    color: #7c3aed;
+    font-size: 14px;
+  }
 `;
 
 const TrekMeta = styled.div`

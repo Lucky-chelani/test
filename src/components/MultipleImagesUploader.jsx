@@ -289,13 +289,13 @@ const MultipleImagesUploader = ({
       return img;
     });
     
-    console.log("Images to pass to parent:", imageFilesForParent);
+    console.log("Images to pass to parent:", updatedImages);
     
     // Notify parent component
-    onImagesChange(
-      imageFilesForParent,
-      images.length === 0 ? 0 : coverIndex
-    );
+    onImagesChange({
+      images: updatedImages,
+      coverIndex: images.length === 0 ? 0 : coverIndex
+    });
     
     // Set success status
     if (newImages.length > 0) {
@@ -347,10 +347,10 @@ const MultipleImagesUploader = ({
       ? (coverIndex >= indexToRemove ? Math.max(0, coverIndex - 1) : coverIndex) 
       : 0;
     
-    onImagesChange(
-      imageFilesForParent,
-      newCoverIndex
-    );
+    onImagesChange({
+      images: updatedImages,
+      coverIndex: newCoverIndex
+    });
   };
   
   // Set an image as cover
@@ -370,10 +370,10 @@ const MultipleImagesUploader = ({
     console.log("Images after setting cover:", imageFilesForParent);
     
     // Notify parent component
-    onImagesChange(
-      imageFilesForParent,
-      index
-    );
+    onImagesChange({
+      images: images,
+      coverIndex: index
+    });
     
     setStatus('Cover image updated');
     setTimeout(() => setStatus(''), 2000);

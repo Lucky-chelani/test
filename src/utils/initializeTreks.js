@@ -19,6 +19,10 @@ const sampleTreks = [
     location: "Himachal Pradesh",
     season: "Aug-Sept", // Added season field
     description: "Located in the eastern Kullu Valley of Himachal Pradesh, the Bhrigu Lake Trek is a short and moderate trek with rewards that surpass expectations. The mesmerizing alpine meadows and pristine blue waters make this a must-experience adventure.",
+    organizerName: "Himalayan Adventures",
+    organizerVerified: true,
+    organizerId: "himalayan-adventures",
+    organizerDescription: "Expert mountain guides with 15+ years experience in Himalayan trekking.",
   },  {
     id: "valley-of-flowers",
     image: "https://images.unsplash.com/photo-1575728252059-db43d03fc2de?q=80&w=1470&auto=format&fit=crop", // Using Unsplash image
@@ -32,6 +36,10 @@ const sampleTreks = [
     location: "Uttarakhand Himalayas",
     season: "Jul-Aug", 
     description: "The Valley of Flowers is a UNESCO World Heritage Site known for its meadows of endemic alpine flowers. Located in the Western Himalayas, it's a paradise for nature lovers and photographers alike.",
+    organizerName: "Mountain Explorers",
+    organizerVerified: true,
+    organizerId: "mountain-explorers",
+    organizerDescription: "Specialized in UNESCO Heritage site treks with certified naturalist guides.",
   },  {
     id: "hampta-pass",
     image: "https://images.unsplash.com/photo-1522163723043-478ef79a5bb4?q=80&w=1470&auto=format&fit=crop", // Using Unsplash image
@@ -45,6 +53,10 @@ const sampleTreks = [
     location: "Himachal Pradesh",
     season: "Jun-Oct",
     description: "The Hampta Pass trek is a dramatic crossover trek that takes you from the lush green valleys of Kullu to the stark landscapes of Lahaul. Experience the best of both worlds on this incredible journey.",
+    organizerName: "Trek Masters India",
+    organizerVerified: true,
+    organizerId: "trek-masters-india",
+    organizerDescription: "Leading adventure company offering premium trekking experiences across India.",
   }
 ];
 
