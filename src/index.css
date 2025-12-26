@@ -40,26 +40,118 @@ body {
 }
 
 /* Responsive design variables */
+@media (max-width: 1440px) {
+  :root {
+    --container-padding: 24px;
+  }
+}
+
 @media (max-width: 1200px) {
   :root {
     --container-padding: 20px;
+    --spacing-xxl: 40px;
+  }
+}
+
+@media (max-width: 992px) {
+  :root {
+    --container-padding: 18px;
+    --spacing-xl: 28px;
+    --spacing-xxl: 36px;
   }
 }
 
 @media (max-width: 768px) {
   :root {
+    --spacing-md: 14px;
+    --spacing-lg: 20px;
     --spacing-xl: 24px;
-    --spacing-xxl: 36px;
+    --spacing-xxl: 32px;
     --container-padding: 16px;
   }
 }
 
 @media (max-width: 480px) {
   :root {
+    --spacing-xs: 4px;
+    --spacing-sm: 6px;
+    --spacing-md: 12px;
     --spacing-lg: 16px;
     --spacing-xl: 20px;
-    --spacing-xxl: 28px;
+    --spacing-xxl: 24px;
     --container-padding: 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  :root {
+    --spacing-md: 10px;
+    --spacing-lg: 14px;
+    --spacing-xl: 18px;
+    --spacing-xxl: 20px;
+    --container-padding: 10px;
+  }
+}
+
+/* Responsive utility classes */
+.container-responsive {
+  width: 100%;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--container-padding);
+}
+
+@media (max-width: 768px) {
+  .container-responsive {
+    padding: 0 var(--container-padding);
+  }
+}
+
+/* Responsive text utilities */
+.text-responsive {
+  font-size: clamp(0.875rem, 2vw, 1rem);
+}
+
+.heading-responsive {
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.subheading-responsive {
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+}
+
+/* Responsive image utilities */
+.img-responsive {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Responsive grid utilities */
+.grid-responsive {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--spacing-md);
+}
+
+@media (max-width: 768px) {
+  .grid-responsive {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+  }
+}
+
+/* Responsive flex utilities */
+.flex-responsive {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+@media (max-width: 768px) {
+  .flex-responsive {
+    flex-direction: column;
+    gap: var(--spacing-sm);
   }
 }
 
