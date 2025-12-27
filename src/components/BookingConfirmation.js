@@ -194,6 +194,10 @@ const Container = styled.div`
     animation: ${floatParticle} 8s ease-in-out infinite;
     z-index: -2;
   }
+  @media (max-width: 480px) {
+    margin: 20px auto; /* Reduced from 40px */
+    padding: 0 16px;   /* Slightly tighter gutters */
+  }
 `;
 
 const BackgroundOrb = styled.div`
@@ -561,6 +565,11 @@ const DetailValue = styled.div`
   font-weight: 600;
   color: rgba(255, 255, 255, 0.95);
   line-height: 1.4;
+  
+  /* ADD THESE LINES FOR SAFETY */
+  word-break: break-word;       /* Breaks long words if necessary */
+  overflow-wrap: break-word;    /* Modern standard for wrapping */
+  min-width: 0;
 `;
 
 const TrekImageContainer = styled.div`

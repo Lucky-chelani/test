@@ -62,6 +62,13 @@ const AnimatedTextBase = styled.span`
   white-space: nowrap;
   overflow: hidden;
   display: inline-block;
+
+  min-width: 180px; 
+  
+  @media (max-width: 350px) {
+    min-width: auto; /* Let flexbox handle it on tiny screens */
+    font-size: 1rem; /* Slightly smaller text */
+  }
 `;
 
 const FadeInText = styled(AnimatedTextBase)`

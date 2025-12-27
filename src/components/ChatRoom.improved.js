@@ -86,18 +86,23 @@ const ChatContainer = styled.div`
   position: relative;
   z-index: 1;
   
+  height: calc(100vh - 100px);
+
   @media (max-width: 768px) {
-    height: 100%;
+    /* Use dvh for mobile to account for address bars */
+    height: 100dvh; 
+    
+    /* Fallback for older browsers */
+    height: -webkit-fill-available;
+    
     border-radius: 0;
     margin: 0;
     max-width: 100%;
-    position: absolute;
+    position: fixed; /* Keep fixed */
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    /* Ensure it's not affected by the soft keyboard */
-    position: fixed;
     overflow: hidden;
   }
 `;
@@ -166,6 +171,10 @@ const MessageContainer = styled.div`
     flex: 1 1 auto;
   }
   
+  -webkit-overflow-scrolling: touch;
+
+  overflow-x: hidden; 
+  
   &::-webkit-scrollbar {
     width: 8px;
   }
@@ -222,12 +231,13 @@ const ChatForm = styled.form`
   z-index: 5;
   
   @media (max-width: 768px) {
-    /* Ensures the input stays at the bottom even when keyboard is open */
     position: sticky;
     bottom: 0;
     width: 100%;
-    padding: 15px;
-    box-sizing: border-box;
+    
+    /* CRITICAL FIX: Adds padding so the home bar doesn't cover the input */
+    padding-bottom: calc(15px + env(safe-area-inset-bottom)); 
+    background: rgba(10, 17, 30, 1); /* Make background solid on mobile to hide content behind it */
   }
 `;
 
@@ -445,6 +455,8 @@ const MessageBubble = styled.div`
 `;
 
 const MessageText = styled.div`
+  /* Change word-break to overflow-wrap for better support */
+  overflow-wrap: anywhere; 
   word-break: break-word;
   white-space: pre-wrap;
   font-size: 0.95rem;

@@ -63,9 +63,16 @@ const Month = styled.div`
 
 const MonthName = styled.div`
   font-weight: 600;
-  color: ${props => props.selected 
-    ? 'rgba(90, 220, 128, 0.9)' 
-    : 'rgba(255, 255, 255, 0.8)'};
+  /* ... color logic ... */
+  
+  /* Add this to prevent layout breaking on tiny screens */
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis; 
+  
+  @media (max-width: 380px) {
+    font-size: 0.8rem; /* Scale down text slightly on tiny phones */
+  }
 `;
 
 const CheckIcon = styled.div`

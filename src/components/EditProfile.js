@@ -5,7 +5,7 @@ import { auth, db, storage } from '../firebase';
 import { updateProfile } from 'firebase/auth';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { FaUpload, FaSave, FaTimes, FaArrowLeft, FaUser, FaEnvelope, FaBirthdayCake, FaMapMarkerAlt, FaPhoneAlt } from 'react-icons/fa';
 import mapPattern from '../assets/images/map-pattren.png';
 
@@ -166,8 +166,39 @@ const SectionTitle = styled.h3`
   border-left: 3px solid #4CC9F0;
 `;
 
+// Replace your existing FormGroup with this:
 const FormGroup = styled.div`
   margin-bottom: 24px;
+  position: relative;
+  transition: all 0.3s ease;
+
+  /* This highlights the label/icon when user types in the input */
+  &:focus-within {
+    label {
+      color: #4CC9F0;
+      text-shadow: 0 0 10px rgba(76, 201, 240, 0.3);
+    }
+    
+    svg {
+      transform: scale(1.2);
+      filter: drop-shadow(0 0 5px rgba(76, 201, 240, 0.5));
+    }
+  }
+
+  /* Smooth transition for the label items */
+  label, svg {
+    transition: all 0.3s ease;
+  }
+`;
+
+const CharCount = styled.div`
+  text-align: right;
+  font-size: 0.75rem;
+  margin-top: 6px;
+  font-weight: 500;
+  /* Change color based on props */
+  color: ${props => props.$isNearLimit ? '#FF6B6B' : 'rgba(255, 255, 255, 0.5)'};
+  transition: color 0.3s ease;
 `;
 
 const FormLabel = styled.label`
@@ -232,18 +263,36 @@ const AvatarContainer = styled.div`
   margin-bottom: 15px;
   width: 140px;
   height: 140px;
-  
+  cursor: pointer;
+  transition: transform 0.3s ease;
+
+  /* Glow effect behind the avatar */
   &::after {
     content: '';
     position: absolute;
-    top: -8px;
-    left: -8px;
-    right: -8px;
-    bottom: -8px;
+    top: -5px;
+    left: -5px;
+    right: -5px;
+    bottom: -5px;
     border-radius: 50%;
     background: linear-gradient(135deg, #4CC9F0, #FF6B6B);
     z-index: -1;
     opacity: 0.6;
+    transition: all 0.3s ease;
+  }
+
+  /* 👇 HOVER EFFECTS ADDED HERE 👇 */
+  &:hover {
+    transform: scale(1.05); /* Slight zoom */
+    
+    &::after {
+      opacity: 1; /* Brighten the glow */
+      top: -8px;
+      left: -8px;
+      right: -8px;
+      bottom: -8px;
+      filter: blur(10px); /* Soften the glow */
+    }
   }
 `;
 
@@ -279,6 +328,11 @@ const UploadButton = styled.label`
   
   svg {
     font-size: 1rem;
+  }
+
+  ${AvatarContainer}:hover ~ & {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
   }
 `;
 
@@ -355,7 +409,8 @@ const FormFieldContainer = styled.div`
   flex-direction: column;
 `;
 
-const Alert = styled.div`
+// Change 'styled.div' to 'styled(motion.div)'
+const Alert = styled(motion.div)`
   padding: 15px;
   border-radius: 12px;
   margin-bottom: 25px;
@@ -364,6 +419,8 @@ const Alert = styled.div`
   background: ${props => props.type === 'error' ? 'rgba(255, 87, 87, 0.2)' : 'rgba(76, 201, 240, 0.2)'};
   border-left: 4px solid ${props => props.type === 'error' ? '#FF5757' : '#4CC9F0'};
   color: ${props => props.type === 'error' ? '#FF5757' : '#4CC9F0'};
+  backdrop-filter: blur(5px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
   
   svg {
     margin-right: 10px;
@@ -394,6 +451,68 @@ const ErrorText = styled.div`
     content: "⚠️";
     margin-right: 5px;
     font-size: 0.9rem;
+  }
+`;
+
+
+const LoadingText = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  font-size: 1.5rem;
+  margin-top: 100px;
+  color: #ffffff;
+  font-weight: 500;
+  
+  &::before {
+    content: '';
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(76, 201, 240, 0.3);
+    border-top: 3px solid #4CC9F0;
+    border-radius: 50%;
+    margin-bottom: 20px;
+    animation: ${rotate} 1s linear infinite;
+  }
+  
+  .loading-dots {
+    display: inline-block;
+    &::after {
+      content: '...';
+      display: inline-block;
+      animation: ${shimmer} 1.5s infinite;
+    }
+  }
+`;
+
+const ErrorMessage = styled.div`
+  margin-top: 8px;
+  font-size: 0.875rem;
+  color: #ff6b6b;
+`;
+
+
+// Add this new component
+const BackgroundDecoration = styled.div`
+  position: absolute;
+  top: 15%;
+  right: 5%;
+  font-size: 25rem;
+  color: rgba(255, 255, 255, 0.02); /* Very subtle transparency */
+  z-index: 1;
+  transform: rotate(-15deg);
+  pointer-events: none; /* Ensures clicks pass through it */
+  animation: ${float} 6s ease-in-out infinite;
+
+  @media (max-width: 1200px) {
+    font-size: 15rem;
+    top: 10%;
+    right: -5%;
+  }
+  
+  @media (max-width: 768px) {
+    display: none; /* Hide on mobile to save space */
   }
 `;
 
@@ -692,6 +811,9 @@ const EditProfile = () => {
   
   return (
     <Page>
+      <BackgroundDecoration>
+        <FaUser /> 
+      </BackgroundDecoration>
       <Container>
         <PageHeader>
           <BackButton onClick={() => navigate('/profile')}>
@@ -700,12 +822,20 @@ const EditProfile = () => {
           <PageTitle>Edit Your Profile</PageTitle>
         </PageHeader>
         
-        {alert.show && (
-          <Alert type={alert.type}>
-            {alert.type === 'error' ? <FaTimes /> : <FaSave />}
-            {alert.message}
-          </Alert>
-        )}
+        <AnimatePresence> {/* Wrap in AnimatePresence if you import it from framer-motion */}
+          {alert.show && (
+            <Alert 
+              type={alert.type}
+              initial={{ opacity: 0, y: -20, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: 'auto' }}
+              exit={{ opacity: 0, y: -20, height: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {alert.type === 'error' ? <FaTimes /> : <FaSave />}
+              {alert.message}
+            </Alert>
+          )}
+        </AnimatePresence>
         
         <EditForm onSubmit={handleSubmit}>
           <AvatarSection>
@@ -792,6 +922,9 @@ const EditProfile = () => {
                 style={{ height: '100px', resize: 'vertical' }}
                 $isError={!!formErrors.bio}
               />
+              <CharCount $isNearLimit={formData.bio.length > 450}>
+                {formData.bio.length} / 500 characters
+              </CharCount>
               {formErrors.bio && <ErrorText>{formErrors.bio}</ErrorText>}
             </FormGroup>
           </FormSection>
@@ -818,41 +951,5 @@ const EditProfile = () => {
   );
 };
 
-const LoadingText = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  font-size: 1.5rem;
-  margin-top: 100px;
-  color: #ffffff;
-  font-weight: 500;
-  
-  &::before {
-    content: '';
-    width: 50px;
-    height: 50px;
-    border: 3px solid rgba(76, 201, 240, 0.3);
-    border-top: 3px solid #4CC9F0;
-    border-radius: 50%;
-    margin-bottom: 20px;
-    animation: ${rotate} 1s linear infinite;
-  }
-  
-  .loading-dots {
-    display: inline-block;
-    &::after {
-      content: '...';
-      display: inline-block;
-      animation: ${shimmer} 1.5s infinite;
-    }
-  }
-`;
-
-const ErrorMessage = styled.div`
-  margin-top: 8px;
-  font-size: 0.875rem;
-  color: #ff6b6b;
-`;
 
 export default EditProfile;

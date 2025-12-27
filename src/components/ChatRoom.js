@@ -68,6 +68,8 @@ const Page = styled.div`
   background-size: cover;
   background-repeat: repeat;
   min-height: 100vh;
+  /* Use dynamic viewport height for mobile browsers */
+  min-height: 100dvh; 
   color: #fff;
   padding-top: 80px;
   position: relative;
@@ -75,12 +77,17 @@ const Page = styled.div`
   &:before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    top: 0; left: 0; right: 0; bottom: 0;
     background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%);
     pointer-events: none;
+  }
+
+  /* CRITICAL MOBILE FIX */
+  @media (max-width: 768px) {
+    padding-top: 0; /* Remove top padding to use full screen */
+    background: #181828; /* Solid background is better for performance/readability on mobile */
+    height: 100dvh;
+    overflow: hidden; /* Prevent body scroll */
   }
 `;
 
@@ -92,12 +99,22 @@ const ChatContainer = styled.div`
   z-index: 1;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 140px); /* Adjusted to account for bottom navbar */
+  
+  /* Desktop Height */
+  height: calc(100vh - 140px);
   min-height: 600px;
   
   @media (max-width: 768px) {
-    padding: 10px;
-    height: calc(100vh - 160px); /* More space for mobile */
+    padding: 0; /* Remove padding */
+    margin: 0;
+    
+    /* CRITICAL: Use 100dvh to account for mobile URL bars */
+    height: 100dvh; 
+    min-height: 0; /* Reset min-height so landscape mode works */
+    
+    border-radius: 0; /* Remove rounded corners */
+    position: fixed; /* Lock to screen */
+    top: 0; left: 0; right: 0; bottom: 0;
   }
 `;
 
@@ -181,9 +198,13 @@ const MessagesContainer = styled.div`
   min-height: 300px; /* Ensure minimum height */
   max-height: calc(100vh - 320px); /* Prevent overflow */
   
+  -webkit-overflow-scrolling: touch; 
+  
   @media (max-width: 768px) {
     padding: 16px;
-    max-height: calc(100vh - 280px);
+    /* Reset max-height because container is fixed height now */
+    max-height: none; 
+    flex: 1;
   }
   
   &::-webkit-scrollbar {
@@ -360,7 +381,14 @@ const InputContainer = styled.form`
   
   @media (max-width: 768px) {
     padding: 12px 16px;
-    border-radius: 0 0 12px 12px;
+    border-radius: 0; /* Full width on mobile */
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    
+    /* CRITICAL: Push input up above the iPhone Home Bar */
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    background: #181828; /* Solid background prevents weird overlaps */
   }
 `;
 

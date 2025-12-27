@@ -1,21 +1,23 @@
-// ExploreComponents.js - Additional styled components for Explore.js
-import styled from 'styled-components';
+// ExploreComponents.js
+import styled, { keyframes } from 'styled-components';
 
-// Define animations for the ActionButton
-const buttonHover = `
-  @keyframes buttonHover {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
+// 1. Correctly define animations using the keyframes helper
+const buttonHover = keyframes`
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 `;
 
-const arrowAnimation = `
-  @keyframes arrowAnimation {
-    0% { transform: translateX(0); }
-    50% { transform: translateX(4px); }
-    100% { transform: translateX(0); }
-  }
+const arrowAnimation = keyframes`
+  0% { transform: translateX(0); }
+  50% { transform: translateX(4px); }
+  100% { transform: translateX(0); }
+`;
+
+const badgePulse = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
 `;
 
 export const ActionButton = styled.button`
@@ -40,10 +42,6 @@ export const ActionButton = styled.button`
   text-decoration: none;
   position: relative;
   overflow: hidden;
-  
-  /* Inject keyframes */
-  ${buttonHover}
-  ${arrowAnimation}
   
   &:before {
     content: '';
@@ -82,9 +80,13 @@ export const ActionButton = styled.button`
   }
   
   &:hover {
-    animation: buttonHover 3s ease infinite;
+    animation: ${buttonHover} 3s ease infinite; /* Use the variable directly */
     transform: translateY(-5px) scale(1.02);
     box-shadow: 0 15px 30px rgba(76, 111, 255, 0.5);
+    
+    svg {
+      transform: translateX(6px);
+    }
   }
   
   &:active {
@@ -103,8 +105,10 @@ export const ActionButton = styled.button`
     z-index: 1;
   }
   
-  &:hover svg {
-    transform: translateX(6px);
+  /* Media query for mobile responsiveness */
+  @media (max-width: 480px) {
+    padding: 14px 24px;
+    font-size: 1rem;
   }
 `;
 
@@ -118,20 +122,15 @@ export const EventButton = styled(ActionButton)`
   }
   
   &:hover {
-    animation: buttonHover 3s ease infinite;
+    animation: ${buttonHover} 3s ease infinite;
     box-shadow: 0 15px 30px rgba(255, 152, 0, 0.5);
   }
 `;
 
-const badgeAnimation = `
-  @keyframes badgePulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-  }
-`;
-
 export const BadgeTag = styled.span`
+  position: absolute; /* Add absolute positioning to overlay on images */
+  top: 15px;
+  right: 15px;
   padding: 8px 16px;
   background: linear-gradient(135deg, #FF8A65, #FF5722);
   color: white;
@@ -148,10 +147,6 @@ export const BadgeTag = styled.span`
   align-items: center;
   justify-content: center;
   gap: 7px;
-  margin-right: auto; /* Push to the right of DifficultyTag */
-  
-  /* Inject keyframes */
-  ${badgeAnimation}
   
   &::before {
     content: '';
@@ -173,7 +168,7 @@ export const BadgeTag = styled.span`
   &:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 20px rgba(255, 87, 34, 0.5);
-    animation: badgePulse 2s infinite;
+    animation: ${badgePulse} 2s infinite;
     
     &::before {
       opacity: 1;
@@ -181,7 +176,9 @@ export const BadgeTag = styled.span`
   }
   
   @media (max-width: 480px) {
-    font-size: 0.9rem;
-    padding: 7px 14px;
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    top: 10px;
+    right: 10px;
   }
 `;

@@ -272,6 +272,8 @@ const SectionUnderline = styled.div`
 // UPDATED CARD COMPONENTS - Clean and Premium Style
 // Premium Trek Card Component
 const TrekCard = styled.div`
+  background: rgba(13, 15, 20, 0.85); /* Slightly transparent */
+  backdrop-filter: blur(12px);
   width: 100%;
   max-width: 320px;
   border-radius: 16px;
@@ -286,6 +288,21 @@ const TrekCard = styled.div`
   flex: 0 0 320px;
   scroll-snap-align: start;
   
+  position: relative;
+  background: #0d0f14;
+  background-clip: padding-box;
+  border: 1px solid transparent;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    margin: -1px;
+    border-radius: inherit;
+    background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02));
+  }
+    
   &:hover {
     transform: translateY(-6px);
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);

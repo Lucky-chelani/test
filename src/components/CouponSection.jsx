@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { FiCheckCircle, FiXCircle, FiTag, FiLoader } from 'react-icons/fi';
 import { db } from '../firebase';
 import { collection, getDocs, query, where, Timestamp } from 'firebase/firestore';
+
+const rotate = keyframes`
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+`;
 
 const CouponContainer = styled.div`
   margin: 20px 0;
@@ -89,6 +94,10 @@ const ApplyButton = styled.button`
   @media (max-width: 480px) {
     width: 100%;
     padding: 12px;
+  }
+
+  .spin {
+    animation: ${rotate} 1s linear infinite;
   }
 `;
 

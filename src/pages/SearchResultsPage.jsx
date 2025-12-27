@@ -92,6 +92,7 @@ const HeaderContent = styled.div`
   @media (max-width: 768px) {
     flex-direction: column;
     gap: 15px;
+    align-items: stretch; /* CHANGE: Ensures children take full width */
   }
 `;
 
@@ -126,7 +127,8 @@ const BackButton = styled.button`
 const SearchInputContainer = styled.div`
   flex: 1;
   position: relative;
-  max-width: 500px;
+  /* CHANGE: Removed max-width restriction on mobile so it fills space */
+  width: 100%; 
 `;
 
 const SearchInput = styled.input`
@@ -167,8 +169,16 @@ const FiltersContainer = styled.div`
   
   @media (max-width: 768px) {
     width: 100%;
-    justify-content: center;
-    flex-wrap: wrap;
+    /* CHANGE: Switch from wrapping to horizontal scrolling */
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 5px; /* Space for scrollbar */
+    -webkit-overflow-scrolling: touch;
+    
+    /* Hide scrollbar for cleaner look */
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 `;
 
@@ -271,13 +281,18 @@ const SortDropdown = styled.select`
 // Grid and List layouts
 const TreksGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  /* CHANGE 1: Reduced min-width from 350px to 280px to fit mobile screens */
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 30px;
   margin-bottom: 40px;
   
   @media (max-width: 768px) {
-    grid-template-columns: 1fr;
     gap: 20px;
+  }
+
+  /* CHANGE 2: Force single column on very small devices */
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
   }
 `;
 
@@ -576,9 +591,11 @@ const TrekListItem = styled.div`
   }
 `;
 
+// Replace ListTrekImage with this:
 const ListTrekImage = styled.div`
   width: 200px;
-  height: 150px;
+  height: 100%; /* CHANGE: Fill height in desktop view */
+  min-height: 200px; /* Ensure height */
   background: linear-gradient(135deg, #667eea, #764ba2);
   background-image: url(${props => props.src});
   background-size: cover;
@@ -594,10 +611,7 @@ const ListTrekImage = styled.div`
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(180deg,
-      rgba(0, 0, 0, 0.2) 0%,
-      rgba(0, 0, 0, 0.6) 100%
-    );
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.6) 100%);
     z-index: 1;
   }
   
@@ -606,8 +620,8 @@ const ListTrekImage = styled.div`
   }
   
   @media (max-width: 768px) {
-    width: 100%;
-    height: 200px;
+    width: 100%; /* CHANGE: Full width on mobile */
+    height: 200px; /* Fixed height on mobile */
   }
 `;
 
@@ -721,13 +735,19 @@ const QuickFilters = styled.div`
   margin-bottom: 30px;
   overflow-x: auto;
   padding: 5px 0;
+  -webkit-overflow-scrolling: touch; /* CHANGE: Smooth scroll on iOS */
   
+  /* CHANGE: Hide scrollbar on Firefox/IE */
+  scrollbar-width: none; 
+  -ms-overflow-style: none;
+
   &::-webkit-scrollbar {
     display: none;
   }
   
   @media (max-width: 768px) {
     gap: 8px;
+    padding-bottom: 15px; /* Give space for touch interaction */
   }
 `;
 

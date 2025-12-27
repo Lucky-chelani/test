@@ -1,12 +1,14 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* =========================================
+   1. Global Reset & Box Sizing
+   (Crucial for responsive layouts)
+   ========================================= */
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
+/* =========================================
+   2. Variables (Your Configuration)
+   ========================================= */
 :root {
   /* Colors */
   --primary-color: #5A70B7;
@@ -27,6 +29,7 @@ body {
   /* Sizing */
   --container-max: 1400px;
   --container-padding: 24px;
+  --header-height: 70px;
   
   /* Borders */
   --border-radius-sm: 8px;
@@ -39,23 +42,29 @@ body {
   --transition-slow: 0.5s ease;
 }
 
-/* Responsive design variables */
+/* =========================================
+   3. Responsive Variable Adjustments
+   ========================================= */
 @media (max-width: 1200px) {
   :root {
     --container-padding: 20px;
+    --spacing-xxl: 40px;
   }
 }
 
 @media (max-width: 768px) {
   :root {
+    --spacing-lg: 20px;
     --spacing-xl: 24px;
-    --spacing-xxl: 36px;
+    --spacing-xxl: 32px;
     --container-padding: 16px;
+    --header-height: 60px;
   }
 }
 
 @media (max-width: 480px) {
   :root {
+    --spacing-md: 12px;
     --spacing-lg: 16px;
     --spacing-xl: 20px;
     --spacing-xxl: 28px;
@@ -63,28 +72,113 @@ body {
   }
 }
 
-/* Smooth scrolling for entire site */
+/* =========================================
+   4. Base Styles
+   ========================================= */
 html {
   scroll-behavior: smooth;
+  font-size: 100%; /* Ensures rem units work correctly */
 }
 
-/* Focus styles for accessibility */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--text-dark);
+  background-color: var(--text-light);
+  line-height: 1.6; /* Better readability on mobile */
+  font-size: 1rem;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+/* =========================================
+   5. Responsive Typography
+   ========================================= */
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-md);
+  line-height: 1.2;
+}
+
+h1 { font-size: 2.5rem; }
+h2 { font-size: 2rem; }
+h3 { font-size: 1.75rem; }
+
+/* Scale down fonts on smaller screens */
+@media (max-width: 768px) {
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.75rem; }
+  h3 { font-size: 1.5rem; }
+}
+
+/* =========================================
+   6. Responsive Layout Utilities
+   ========================================= */
+
+/* The main wrapper that prevents content from touching edges */
+.container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--container-padding);
+  padding-right: var(--container-padding);
+}
+
+/* Responsive Grid: Automatically stacks columns on mobile */
+/* Usage: <div class="grid"> <div>Item</div> <div>Item</div> </div> */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+/* Flex utilities for alignment */
+.flex {
+  display: flex;
+  flex-wrap: wrap; /* Allows items to wrap on small screens */
+  gap: var(--spacing-md);
+}
+
+/* =========================================
+   7. Media & Form Responsiveness
+   ========================================= */
+
+/* Ensures images never overflow their container */
+img, video, iframe, svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Ensures form elements don't break layout on mobile */
+input, button, textarea, select {
+  font-family: inherit;
+  font-size: 1rem;
+  max-width: 100%;
+}
+
+/* =========================================
+   8. Accessibility & Interactive
+   ========================================= */
 :focus {
   outline: 3px solid rgba(90, 112, 183, 0.5);
   outline-offset: 2px;
 }
 
-/* Hide focus outline for mouse users, keep for keyboard */
 :focus:not(:focus-visible) {
   outline: none;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-}
-
-/* Global loading animation */
+/* =========================================
+   9. Loading Animation
+   ========================================= */
 .loading-spinner {
   border: 4px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
