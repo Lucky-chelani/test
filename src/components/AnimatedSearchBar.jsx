@@ -299,8 +299,12 @@ const CloseButton = styled.button`
   @media (max-width: 480px) {
     width: 32px;
     height: 32px;
-    top: -10px;
-    right: -10px;
+    /* Move it inside the box slightly or flush to edge */
+    top: 8px; 
+    right: 8px;
+    background: transparent; /* Optional: make it cleaner on mobile */
+    border: none;
+    box-shadow: none;
   }
 `;
 
@@ -467,6 +471,9 @@ const AnimatedSearchBar = () => {
         </CloseButton>
         
         <DialogContent>
+          <CloseButton onClick={() => setIsOpen(false)}>
+            <FiX />
+          </CloseButton>
           <SearchForm onSubmit={handleSearchSubmit}>
             <SearchInputWrapper>
               <SearchInput

@@ -1,13 +1,17 @@
 .banner {
   position: relative;
   width: 100%;
+  /* Use dvh for mobile browsers to account for address bars */
   height: 100vh;
+  height: 100dvh; 
   overflow: hidden;
-  background: #3e97ba; /* Sky blue background */
+  background: #3e97ba;
   color: #333;
   display: flex;
   flex-direction: column;
   align-items: center;
+  /* Ensure centering happens here */
+  justify-content: center;
 }
 
 .banner-overlay {
@@ -76,9 +80,10 @@
   position: absolute;
   bottom: 0;
   width: 100%;
-  height: 45%;
+  height: 40%; /* Reduced slightly from 45% to give text more room */
   pointer-events: none;
   z-index: 4;
+  transition: height 0.3s ease;
 }
 
 .mountain-back {
@@ -230,12 +235,16 @@
   position: relative;
   z-index: 7;
   max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
-  padding-top: 120px;
+  /* REMOVED fixed padding-top. We use flexbox centering now. */
+  /* padding-top: 120px; <--- DELETE THIS */
+  padding: 0 20px; /* Horizontal padding only */
   height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center; /* Vertically center content */
   text-align: center;
   gap: 20px;
 }
@@ -499,6 +508,7 @@
     padding-top: 120px;
     padding-left: 20px;
     padding-right: 20px;
+    padding-bottom: 50px;
   }
 
   .banner-title {
@@ -543,11 +553,12 @@
 
 @media (max-width: 768px) {
   .banner-content {
-    padding: 120px 24px 0;
+    padding: 0 24px;
+    justify-content: center;
   }
 
   .banner-title {
-    font-size: 3.25rem;
+    font-size: 3rem;
   }
 
   .banner-subtitle {
@@ -558,7 +569,7 @@
   .banner-actions {
     flex-direction: column;
     width: 100%;
-    max-width: 260px;
+    max-width: 300px; /* Restrict max width so they don't look weird */
     gap: 15px;
   }
 
@@ -587,8 +598,8 @@
   }
   
   .scroll-indicator {
-    bottom: 80px;
-    transform: scale(0.9);
+    bottom: 20px; /* Move closer to bottom */
+    transform: scale(0.8);
   }
   
   .scroll-text {
@@ -606,12 +617,12 @@
   }
 
   .banner-title {
-    font-size: 2.5rem;
+    font-size: 2.2rem;
   }
 
   .banner-subtitle {
-    font-size: 1rem;
-    margin-bottom: 30px;
+    font-size: 0.95rem;
+    margin-bottom: 15px;
   }
 
   .birds {
@@ -624,7 +635,7 @@
   }
 
   .mountains {
-    height: 30%;
+    height: 25%;
   }
 
   .mountain-right,
@@ -650,6 +661,36 @@
   }
     .cloud1, .cloud2, .cloud3 {
     transform: scale(0.6);
+  }
+}
+
+/* --- CRITICAL: LANDSCAPE MODE FIX --- */
+/* This handles phones turned sideways */
+@media (max-height: 500px) and (orientation: landscape) {
+  .banner {
+    height: auto;
+    min-height: 100vh;
+    padding: 40px 0; /* Add scroll room */
+    overflow-y: auto; /* Allow scrolling */
+  }
+
+  .banner-content {
+    height: auto;
+    padding-top: 20px;
+  }
+
+  .mountains {
+    height: 20%;
+    opacity: 0.5; /* Fade mountains so text is readable over them */
+  }
+
+  .scroll-indicator {
+    display: none; /* Hide scroll arrow in landscape to save space */
+  }
+  
+  .banner-title {
+    font-size: 2rem;
+    margin-top: 20px;
   }
 }
 

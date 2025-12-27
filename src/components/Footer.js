@@ -873,7 +873,7 @@ const Footer = () => {
               TROVIA<br />
               204, Nai Sadak, Shubey Ki Goth,<br />
               Gwalior, Madhya Pradesh – 474001<br />
-              📧 Email: <a href="mailto:trovia.in@gmail.com" style={{ color: '#FFD2BF', textDecoration: 'underline' }}>trovia.in@gmail.com</a>
+              📧 Email: <a href="mailto:trovia.in@gmail.com" style={{ color: '#FFD2BF', textDecoration: 'underline' , wordBreak: 'break-all'}}>trovia.in@gmail.com</a>
             </div>
           </LinksWrapper>
         </FooterSection>

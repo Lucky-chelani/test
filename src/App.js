@@ -244,7 +244,8 @@ function App() {
             <PageTransition>
               <RazorpayDebugger />
             </PageTransition>
-          } />          <Route path="/admin/users" element={
+          } />          
+          <Route path="/admin/users" element={
             <PageTransition>
               <AccessControl requiredRole="admin">
                 <UserAdmin />

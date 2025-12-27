@@ -17,9 +17,9 @@ const SearchBarWrapper = styled.div`
   position: relative;
   z-index: 100;
   filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
-  width: 100%;
+  width: 90%; /* Changed from 100% to 90% to prevent edge touching */
   max-width: 380px;
-  margin: 15px auto;
+  margin: 10px auto; /* Reduced margin */
   transform: translateY(0);
   transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   
@@ -28,12 +28,9 @@ const SearchBarWrapper = styled.div`
   }
   
   @media (max-width: 768px) {
-    max-width: 450px;
+    max-width: 100%; /* Let parent padding control width */
   }
   
-  @media (max-width: 480px) {
-    max-width: 340px;
-  }
 `;
 
 const Banner = () => {

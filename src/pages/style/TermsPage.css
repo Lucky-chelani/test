@@ -1,0 +1,144 @@
+/* =========================================
+   1. Layout & Container
+   ========================================= */
+.terms-container {
+  min-height: 100vh;
+  background-color: #050505; /* Deep background matching other pages */
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.terms-card {
+  max-width: 800px;
+  width: 100%;
+  background: #181818;
+  color: #e4e4e7; /* Softer white for reading */
+  border-radius: 16px;
+  padding: 3rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle top glow effect */
+.terms-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #7c3aed, #FFD2BF);
+}
+
+/* =========================================
+   2. Typography
+   ========================================= */
+.terms-title {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+
+.terms-list {
+  padding-left: 0;
+  list-style: none; /* Custom numbering */
+  counter-reset: section;
+}
+
+.terms-item {
+  margin-bottom: 2rem;
+  line-height: 1.7;
+  font-size: 1.05rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.terms-item:last-child {
+  border-bottom: none;
+}
+
+/* Custom Numbering Design */
+.terms-item::before {
+  counter-increment: section;
+  content: counter(section) ".";
+  color: #FFD2BF;
+  font-weight: 700;
+  margin-right: 8px;
+  font-size: 1.1rem;
+  display: inline-block;
+}
+
+/* The Bold Titles */
+.terms-heading {
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.2rem;
+  display: inline-block;
+  margin-bottom: 0.5rem;
+}
+
+/* Sub-points formatting */
+.terms-content {
+  display: block;
+  margin-top: 0.5rem;
+  color: #d4d4d8;
+  padding-left: 24px; /* Indent the text body */
+}
+
+/* =========================================
+   3. Footer / Date
+   ========================================= */
+.terms-footer {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+  color: #FFD2BF;
+  font-weight: 600;
+  font-size: 0.95rem;
+  background: rgba(255, 210, 191, 0.05);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+/* =========================================
+   4. Mobile Responsiveness
+   ========================================= */
+@media (max-width: 768px) {
+  .terms-container {
+    padding: 20px 16px;
+  }
+
+  .terms-card {
+    padding: 1.5rem;
+    border-radius: 12px;
+  }
+
+  .terms-title {
+    font-size: 1.75rem;
+    margin-bottom: 2rem;
+  }
+
+  .terms-item {
+    font-size: 0.95rem;
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .terms-heading {
+    font-size: 1.1rem;
+    display: block; /* Stack numbering and title */
+  }
+  
+  /* Reset indentation on small screens for more space */
+  .terms-content {
+    padding-left: 0; 
+  }
+}

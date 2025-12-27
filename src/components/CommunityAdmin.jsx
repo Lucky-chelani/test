@@ -95,7 +95,7 @@ const TableHeader = styled.div`
   border-bottom: 1px solid #e4e9f2;
   
   @media (max-width: 1000px) {
-    grid-template-columns: 40px 1fr 120px 120px 100px;
+    grid-template-columns: 40px 1fr 100px 100px 90px 90px;
   }
   
   @media (max-width: 768px) {
@@ -108,10 +108,17 @@ const Cell = styled.div`
   align-items: center;
   
   @media (max-width: 768px) {
-    ${props => !props.alwaysShow && `
-      margin-top: 6px;
-      font-size: 0.9rem;
-      color: #666;
+    /* DEFAULT: Add margin/labels for card view */
+    margin-top: 6px;
+    font-size: 0.9rem;
+    color: #666;
+    width: 100%; /* Ensure full width in flex column */
+    justify-content: space-between; /* Push label and value apart */
+
+    /* HIDE DUPLICATES: */
+    /* If this cell contains the desktop Name or desktop Actions, hide it */
+    ${props => props.hideOnMobile && `
+      display: none;
     `}
   }
 `;
@@ -129,7 +136,7 @@ const CommunityRow = styled.div`
   }
   
   @media (max-width: 1000px) {
-    grid-template-columns: 40px 1fr 120px 120px 100px;
+    grid-template-columns: 40px 1fr 100px 100px 90px 90px;
   }
   
   @media (max-width: 768px) {
@@ -580,9 +587,9 @@ const CommunityAdmin = () => {
                     </IconButton>
                   </ActionButtons>
                 </CommunityNameMobile>
-                {index + 1}
+                <span className="desktop-only">{index + 1}</span>
               </Cell>
-              <Cell>
+              <Cell hideOnMobile>
                 <CommunityName>{community.name}</CommunityName>
               </Cell>
               <Cell>
@@ -603,7 +610,7 @@ const CommunityAdmin = () => {
                   {savingId === community.id ? 'Saving...' : 'Active'}
                 </span>
               </Cell>
-              <Cell>
+              <Cell hideOnMobile>
                 <ActionButtons>
                   <IconButton
                     success={community.featured}

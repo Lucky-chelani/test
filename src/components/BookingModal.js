@@ -201,6 +201,9 @@ const ModalHeader = styled.div`
     background: linear-gradient(90deg, #3399cc, #00b4db);
     border-radius: 1px;
   }
+  @media (max-width: 480px) {
+    padding: 1.5rem 1.25rem 1rem; /* Reduced padding */
+  }
 `;
 
 const ModalTitle = styled.h2`
@@ -214,6 +217,10 @@ const ModalTitle = styled.h2`
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   letter-spacing: -0.025em;
   animation: ${slideInFromLeft} 0.6s ease-out;
+
+  @media (max-width: 480px) {
+    font-size: 1.4rem;
+  }
 `;
 
 const CloseButton = styled.button`
@@ -271,6 +278,11 @@ const ModalBody = styled.div`
   &::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(135deg, #2388bb, #0095b6);
   }
+
+  @media (max-width: 480px) {
+    padding: 1.25rem; /* Reduced padding */
+    gap: 1.5rem;
+  }
 `;
 
 const TrekInfo = styled.div`
@@ -295,6 +307,13 @@ const TrekInfo = styled.div`
     background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
     animation: ${shimmer} 2s infinite;
   }
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    gap: 1rem;
+  }
 `;
 
 const TrekImage = styled.img`
@@ -307,6 +326,11 @@ const TrekImage = styled.img`
   
   &:hover {
     transform: scale(1.05);
+  }
+
+  @media (max-width: 480px) {
+    width: 100%;
+    height: 150px; /* Make image the hero on mobile */
   }
 `;
 
@@ -637,6 +661,10 @@ const DateGrid = styled.div`
   gap: 12px;
   max-height: 280px;
   overflow-y: auto;
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr; /* 1 column of dates on mobile for easier tapping */
+  }
 `;
 
 const DateOption = styled.button`
@@ -807,6 +835,12 @@ const ModalFooter = styled.div`
     background: linear-gradient(90deg, #3399cc, #00b4db);
     border-radius: 1px;
   }
+
+  @media (max-width: 480px) {
+    flex-direction: column-reverse; /* Put primary button on top */
+    padding: 1.25rem;
+    gap: 0.75rem;
+  }
 `;
 
 const Button = styled.button`
@@ -838,6 +872,11 @@ const Button = styled.button`
   
   &:hover::before {
     left: 100%;
+  }
+
+  @media (max-width: 480px) {
+    width: 100%; /* Make buttons full width on mobile */
+    min-width: 0;
   }
 `;
 

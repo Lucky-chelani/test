@@ -192,7 +192,10 @@ const Container = styled.div`
   }
   
   @media (max-width: 480px) {
-    padding: 0 16px;
+    /* Increase side padding slightly or use env() */
+    padding: 0 20px; 
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
   }
 `;
 
@@ -438,9 +441,7 @@ const ArrowButton = styled.button`
   }
 
   @media (max-width: 768px) {
-    width: 45px;
-    height: 45px;
-    font-size: 1.5rem;
+    display: none;
   }
 
   @media (max-width: 480px) {
@@ -479,7 +480,8 @@ const RightArrowButton = styled(ArrowButton)`
 
 // Premium Trek Card - Updated to match SearchResultsPage design
 const TrekCard = styled.div`
-  background: #0d0f14;
+  background: rgba(13, 15, 20, 0.85); /* Slightly transparent */
+  backdrop-filter: blur(12px);
   border-radius: 16px;
   overflow: hidden;
   width: 320px;
@@ -493,6 +495,20 @@ const TrekCard = styled.div`
   font-family: 'Inter', sans-serif;
   cursor: pointer;
   
+
+  background-clip: padding-box;
+  border: 1px solid transparent;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    margin: -1px;
+    border-radius: inherit;
+    background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02));
+  }
+
   &:hover {
     transform: translateY(-6px);
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
@@ -971,6 +987,13 @@ const ViewTrekButton = styled.button`
     background: #8b5cf6;
     transform: translateY(-2px);
   }
+
+  min-height: 44px; /* Increased from height: 38px */
+  
+  @media (max-width: 480px) {
+    width: 100%; /* Make button full width on mobile for easier tapping */
+  }
+
 `;
 
 const FavoriteButton = styled.button`
@@ -1533,12 +1556,14 @@ const Explore = () => {
         {renderTrekSection("Upcoming Treks", filteredUpcomingTreks, "upcoming-treks")}
         {renderTrekSection("Trending Treks", filteredTrendingTreks, "trending-treks")}
         
+
+        
         {/* Active Groups Section */}
         {/* <SectionTitleContainer>
           <SectionTitle>Active Groups</SectionTitle>
           <SectionUnderline />
         </SectionTitleContainer> */}
-          {/* <SliderWithArrows data={activeGroups} sectionId="active-groups">
+          {/* {/* <SliderWithArrows data={activeGroups} sectionId="active-groups">
           {activeGroups.map((group, idx) => (            <TrekCard key={idx} style={{
               background: 'linear-gradient(135deg, rgba(103, 58, 183, 0.2), rgba(81, 45, 168, 0.4))',
               border: '1px solid rgba(103, 58, 183, 0.3)',
@@ -1583,6 +1608,7 @@ const Explore = () => {
             </TrekCard>
           ))}
         </SliderWithArrows> */}
+
         
 
         {/* <SectionTitleContainer>

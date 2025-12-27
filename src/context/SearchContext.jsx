@@ -16,11 +16,17 @@ export const SearchProvider = ({ children }) => {
 
   // Search function that can be used across components
   const searchTreks = (treks, query) => {
-    if (!query.trim()) return treks;
+    // Safety check: Prevents crash on mobile if data is still loading
+    if (!treks || !Array.isArray(treks)) return [];
+
+    if (!query || !query.trim()) return treks;
     
     const lowercaseQuery = query.toLowerCase().trim();
     
     return treks.filter(trek => {
+      // Safety check: Ensure trek object exists
+      if (!trek) return false;
+
       // Search in multiple fields
       return (
         (trek.title && trek.title.toLowerCase().includes(lowercaseQuery)) ||

@@ -213,6 +213,9 @@ const SectionContent = styled.div`
   
   @media (max-width: 480px) {
     padding: 0 20px;
+    /* Add safe area support */
+    padding-left: max(20px, env(safe-area-inset-left)); 
+    padding-right: max(20px, env(safe-area-inset-right));
   }
 `;
 
@@ -447,11 +450,17 @@ const NavigationButton = styled.button`
     box-shadow: none;
     animation: none;
   }
+    @media (max-width: 768px) {
+    display: none; /* Hide arrows on tablet/mobile where swiping is natural */
+  }
 `;
 
 const PrevButton = styled(NavigationButton)`
-  left: -30px;
+  left: -70px; 
   
+  @media (max-width: 1300px) {
+    left: -20px; /* Bring it back in on smaller laptops */
+  }
   svg {
     margin-left: -2px;
   }
@@ -470,8 +479,12 @@ const PrevButton = styled(NavigationButton)`
 `;
 
 const NextButton = styled(NavigationButton)`
-  right: -30px;
-  
+  /* Change -30px to -60px or -70px to push it further out */
+  right: -70px;
+
+  @media (max-width: 1300px) {
+    right: -20px; /* Bring it back in on smaller laptops */
+  }
   svg {
     margin-right: -2px;
   }
@@ -516,7 +529,8 @@ const cardShine = keyframes`
 `;
 
 const TrekCard = styled.div`
-  background: #0d0f14;
+  background: rgba(13, 15, 20, 0.85); /* Slightly transparent */
+  backdrop-filter: blur(12px);
   border-radius: 16px;
   overflow: hidden;
   min-width: 320px; /* Adjusted to more reasonable width */
@@ -530,6 +544,21 @@ const TrekCard = styled.div`
   animation: ${fadeIn} 0.6s ease-out;
   font-family: 'Inter', sans-serif;
   
+  position: relative;
+  background: #0d0f14;
+  background-clip: padding-box;
+  border: 1px solid transparent;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    margin: -1px;
+    border-radius: inherit;
+    background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02));
+  }
+
   &:hover {
     transform: translateY(-6px);
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);

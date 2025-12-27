@@ -51,6 +51,10 @@ const Container = styled.div`
   padding: 40px 24px 80px 24px;
   position: relative;
   z-index: 1;
+
+  @media (max-width: 768px) {
+    padding: 40px 16px 60px 16px; /* Reduce padding on mobile */
+  }
 `;
 
 const Header = styled.div`
@@ -96,9 +100,15 @@ const Subtitle = styled.p`
 
 const BlogGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  /* Changed 340px to 300px */
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
   gap: 32px;
   margin-top: 40px;
+  
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr; /* Force single column on very small screens */
+    gap: 24px;
+  }
 `;
 
 const BlogCard = styled.div`

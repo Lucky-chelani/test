@@ -155,6 +155,17 @@ const AddButton = styled.button`
   }
 `;
 
+// Add this new component definition
+const DualInputRow = styled.div`
+  display: flex;
+  gap: 12px;
+  
+  /* This is the responsive magic */
+  @media (max-width: 480px) {
+    flex-direction: column; 
+  }
+`;
+
 /**
  * Itinerary Manager Component for Day-by-Day Trek Planning
  */
@@ -280,7 +291,7 @@ const ItineraryManager = ({ itinerary = [], onChange }) => {
                   />
                 </InputGroup>
                 
-                <div style={{ display: 'flex', gap: '12px' }}>
+                <DualInputRow>
                   <InputGroup style={{ flex: 1 }}>
                     <Label>Distance (km)</Label>
                     <Input
@@ -300,7 +311,7 @@ const ItineraryManager = ({ itinerary = [], onChange }) => {
                       placeholder="e.g., 650"
                     />
                   </InputGroup>
-                </div>
+                </DualInputRow>
                 
                 <InputGroup>
                   <Label>Accommodation</Label>

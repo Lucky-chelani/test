@@ -10,12 +10,22 @@ const Container = styled.div`
   background-color: white;
   border-radius: 10px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+
+  /* Responsive Tweak: Ensure gap on sides of mobile screens */
+  @media (max-width: 768px) {
+    margin: 20px 16px; /* Reduced vertical margin, added side margins */
+    padding: 15px;     /* Slightly less padding to save space */
+  }
 `;
 
 const Title = styled.h2`
   text-align: center;
   color: #333;
   margin-bottom: 20px;
+
+  @media (max-width: 480px) {
+    font-size: 1.5rem; /* Prevent headline wrapping on tiny screens */
+  }
 `;
 
 const TestModeWarning = styled.div`
@@ -48,6 +58,8 @@ const Input = styled.input`
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
+  width: 100%; /* Ensures input fills the container */
+  box-sizing: border-box; /* Ensures padding doesn't break width */
 `;
 
 const Button = styled.button`

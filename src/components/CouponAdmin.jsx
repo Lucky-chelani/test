@@ -111,15 +111,25 @@ const ButtonGroup = styled.div`
 const CouponTable = styled.table`
   width: 100%;
   border-collapse: collapse;
-  margin-top: 30px;
   background-color: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   overflow: hidden;
+
+  /* RESPONSIVE LOGIC */
+  @media (max-width: 768px) {
+    display: block;
+    box-shadow: none;
+    background: transparent;
+  }
 `;
 
 const TableHead = styled.thead`
   background-color: #f0f0f0;
+
+  @media (max-width: 768px) {
+    display: none; /* Hide headers on mobile */
+  }
 `;
 
 const TableRow = styled.tr`
@@ -129,6 +139,16 @@ const TableRow = styled.tr`
   
   &:hover {
     background-color: #f0f4fa;
+  }
+
+  @media (max-width: 768px) {
+    display: block; /* Turn row into a block */
+    background-color: white !important; /* Reset background */
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border: 1px solid #eee;
+    padding: 15px;
   }
 `;
 
@@ -143,6 +163,30 @@ const TableHeader = styled.th`
 const TableCell = styled.td`
   padding: 15px;
   border-bottom: 1px solid #eee;
+
+  @media (max-width: 768px) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f0f0f0;
+    padding: 10px 0;
+    text-align: right;
+    
+    &:last-child {
+      border-bottom: none;
+      padding-top: 15px;
+      justify-content: flex-end;
+    }
+
+    /* Add Labels via pseudo-elements so users know what the data is */
+    &::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: #555;
+      text-align: left;
+      margin-right: 15px;
+    }
+  }
 `;
 
 const ActionButton = styled.button`
@@ -194,6 +238,13 @@ const SuccessMessage = styled.div`
   border-radius: 5px;
   margin-bottom: 15px;
   border-left: 4px solid #2e7d32;
+`;
+
+// Add this wrapper to handle scrolling if card view isn't enough
+const TableWrapper = styled.div`
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 30px;
 `;
 
 const CouponAdmin = () => {
@@ -566,60 +617,60 @@ const CouponAdmin = () => {
         <tbody>
           {coupons.map(coupon => (
             <TableRow key={coupon.id}>
-              <TableCell>
-                <strong>{coupon.code}</strong>
-                {coupon.description && <p style={{ margin: '5px 0 0', fontSize: '14px', color: '#666' }}>{coupon.description}</p>}
+              <TableCell data-label="Code">
+                <div style={{ textAlign: 'left' }}> {/* Align text left on mobile inside flex */}
+                  <strong>{coupon.code}</strong>
+                  {coupon.description && <p style={{ margin: '5px 0 0', fontSize: '12px', color: '#666' }}>{coupon.description}</p>}
+                </div>
               </TableCell>
-              <TableCell>
+              
+              <TableCell data-label="Discount">
                 {discountType === 'percentage' 
                   ? `${coupon.discountValue}%` 
                   : `₹${coupon.discountValue}`}
                   
-                {coupon.minPurchase && <div style={{ fontSize: '14px' }}>Min: ₹{coupon.minPurchase}</div>}
-                {coupon.maxDiscount && <div style={{ fontSize: '14px' }}>Max: ₹{coupon.maxDiscount}</div>}
+                {coupon.minPurchase && <div style={{ fontSize: '12px', color: '#666' }}>Min: ₹{coupon.minPurchase}</div>}
               </TableCell>
-              <TableCell>
-                {coupon.validFrom ? formatDateForDisplay(coupon.validFrom) : 'Any time'} 
-                {' - '}
-                {coupon.validUntil ? formatDateForDisplay(coupon.validUntil) : 'No expiry'}
+              
+              <TableCell data-label="Validity">
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                  <span>{coupon.validFrom ? formatDateForDisplay(coupon.validFrom) : 'Any time'}</span>
+                  <span style={{ fontSize: '12px', color: '#888' }}>to</span>
+                  <span>{coupon.validUntil ? formatDateForDisplay(coupon.validUntil) : 'No expiry'}</span>
+                </div>
               </TableCell>
-              <TableCell>
+              
+              <TableCell data-label="Status">
                 <StatusBadge status={getCouponStatus(coupon)}>
                   {getCouponStatus(coupon).charAt(0).toUpperCase() + getCouponStatus(coupon).slice(1)}
                 </StatusBadge>
               </TableCell>
-              <TableCell>
-                {coupon.usageCount || 0} 
-                {coupon.usageLimit ? ` / ${coupon.usageLimit}` : ''}
-                <div style={{ fontSize: '14px' }}>
-                  {coupon.usageLimit 
-                    ? `${Math.round((coupon.usageCount || 0) / coupon.usageLimit * 100)}%`
-                    : '∞'}
-                </div>
+              
+              <TableCell data-label="Usage">
+                <span>
+                  {coupon.usageCount || 0} 
+                  {coupon.usageLimit ? ` / ${coupon.usageLimit}` : ''}
+                </span>
               </TableCell>
-              <TableCell>
-                <ActionButton 
-                  color="#4285F4"
-                  onClick={() => handleEdit(coupon)}
-                >
-                  <FiEdit />
-                </ActionButton>
-                <ActionButton 
-                  color="#F44336"
-                  onClick={() => handleDelete(coupon.id)}
-                >
-                  <FiTrash2 />
-                </ActionButton>
+              
+              <TableCell data-label="Actions">
+                <div style={{ display: 'flex' }}>
+                  <ActionButton 
+                    color="#4285F4"
+                    onClick={() => handleEdit(coupon)}
+                  >
+                    <FiEdit />
+                  </ActionButton>
+                  <ActionButton 
+                    color="#F44336"
+                    onClick={() => handleDelete(coupon.id)}
+                  >
+                    <FiTrash2 />
+                  </ActionButton>
+                </div>
               </TableCell>
             </TableRow>
           ))}
-          {coupons.length === 0 && (
-            <TableRow>
-              <TableCell colSpan="6" style={{ textAlign: 'center', padding: '30px' }}>
-                No coupons found. Add your first coupon above!
-              </TableCell>
-            </TableRow>
-          )}
         </tbody>
       </CouponTable>
     </Container>

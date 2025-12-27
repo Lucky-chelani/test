@@ -1,0 +1,146 @@
+/* Main Layout */
+.privacy-container {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  width: 100%;
+}
+
+.privacy-wrapper {
+  background: #181818;
+  color: #fff;
+  border-radius: 12px;
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 800px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+/* Typography */
+.privacy-title {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+  line-height: 1.2;
+}
+
+.privacy-meta {
+  color: #FFD2BF;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.5;
+}
+
+.privacy-intro {
+  margin-bottom: 2rem;
+  line-height: 1.6;
+  color: #e0e0e0;
+}
+
+/* Lists and Sections */
+.privacy-list {
+  counter-reset: item;
+  padding-left: 0;
+  list-style: none; /* Custom numbering looks cleaner */
+}
+
+.privacy-list > li {
+  margin-bottom: 2rem;
+  padding-left: 0;
+}
+
+.privacy-heading {
+  color: #FFD2BF;
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 0.5rem;
+  display: inline-block;
+  width: 100%;
+}
+
+.privacy-sub-section p {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  color: #fff;
+}
+
+.privacy-bullet-list {
+  padding-left: 1.2rem;
+  margin-bottom: 1rem;
+  color: #d1d1d1;
+}
+
+.privacy-bullet-list li {
+  margin-bottom: 0.5rem;
+  list-style-type: disc;
+  line-height: 1.5;
+}
+
+.privacy-note {
+  font-style: italic;
+  color: #aaa;
+  margin-top: 0.5rem;
+}
+
+/* Links & Contact */
+.privacy-link, .privacy-email {
+  color: #FFD2BF;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.privacy-link:hover, .privacy-email:hover {
+  text-decoration: underline;
+}
+
+.privacy-contact-box {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+
+.privacy-address {
+  margin-top: 0.5rem;
+  color: #d1d1d1;
+}
+
+/* Mobile Break Helper */
+.mobile-break {
+  display: block;
+}
+
+/* =========================================
+   MOBILE RESPONSIVENESS
+   ========================================= */
+@media (max-width: 600px) {
+  .privacy-container {
+    padding: 10px;
+  }
+
+  .privacy-wrapper {
+    padding: 1.5rem;
+    border-radius: 8px;
+  }
+
+  .privacy-title {
+    font-size: 1.5rem;
+  }
+
+  .privacy-heading {
+    font-size: 1.1rem;
+  }
+
+  .privacy-list > li {
+    margin-bottom: 1.5rem;
+  }
+
+  .privacy-bullet-list {
+    padding-left: 1rem; /* Save space on mobile */
+  }
+}

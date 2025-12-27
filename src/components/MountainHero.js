@@ -310,6 +310,11 @@ const ImagesWrapper = styled.div`
   height: 100%;
   pointer-events: none;
   z-index: 2;
+
+  @media (min-width: 1600px) {
+    right: 10%; /* Bring image closer to center on huge screens */
+  }
+    
 `;
 
 const MountainReach = styled.img`

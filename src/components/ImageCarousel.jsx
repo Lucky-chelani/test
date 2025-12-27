@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { FiChevronLeft, FiChevronRight, FiImage, FiX, FiMaximize2 } from 'react-icons/fi';
 import { getValidImageUrl } from '../utils/images';
@@ -136,9 +136,11 @@ const ImageCarousel = ({
   const autoplayTimerRef = useRef(null);
   
   // Ensure we have a valid array of images and filter out any invalid ones
-  const validImages = Array.isArray(images) 
-    ? images.filter(img => img && typeof img === 'string')
-    : [];
+  const validImages = useMemo(() => {
+    return Array.isArray(images) 
+      ? images.filter(img => img && typeof img === 'string')
+      : [];
+  }, [images]);
   
   // Set up autoplay
   useEffect(() => {
