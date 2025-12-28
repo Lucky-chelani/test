@@ -25,12 +25,28 @@ const DashboardContainer = styled.div`
   background: linear-gradient(135deg, #111827 0%, #0F172A 100%);
   color: #ffffff;
   padding: 80px 0 80px 0;
+  
+  @media (max-width: 768px) {
+    padding: 70px 0 70px 0;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 60px 0 60px 0;
+  }
 `;
 
 const DashboardContent = styled.div`
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
+  
+  @media (max-width: 768px) {
+    padding: 0 16px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 0 12px;
+  }
 `;
 
 const DashboardHeader = styled.div`
@@ -80,6 +96,14 @@ const Title = styled.h1`
   background: linear-gradient(135deg, #7DD8F8 0%, #4CC9F0 50%, #4361EE 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  
+  @media (max-width: 768px) {
+    font-size: 1.9rem;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 1.6rem;
+  }
 `;
 
 const SubTitle = styled.p`
@@ -87,6 +111,14 @@ const SubTitle = styled.p`
   color: #cbd5e1;
   margin: 0;
   max-width: 600px;
+  
+  @media (max-width: 768px) {
+    font-size: 1rem;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 0.95rem;
+  }
 `;
 
 const QuickStats = styled.div`
@@ -95,8 +127,20 @@ const QuickStats = styled.div`
   gap: 20px;
   margin-bottom: 40px;
   
+  @media (max-width: 768px) {
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  
   @media (max-width: 640px) {
     grid-template-columns: 1fr;
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  
+  @media (max-width: 480px) {
+    gap: 12px;
+    margin-bottom: 24px;
   }
 `;
 
@@ -113,6 +157,16 @@ const StatCard = styled.div`
     transform: translateY(-5px);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     background: rgba(30, 41, 59, 0.9);
+  }
+  
+  @media (max-width: 768px) {
+    padding: 18px;
+    border-radius: 14px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 16px;
+    border-radius: 12px;
   }
 `;
 
@@ -137,6 +191,14 @@ const StatValue = styled.span`
   font-weight: 700;
   margin-bottom: 5px;
   color: #ffffff;
+  
+  @media (max-width: 768px) {
+    font-size: 2rem;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 1.8rem;
+  }
 `;
 
 const StatLabel = styled.span`
@@ -149,6 +211,18 @@ const ActionGrid = styled.div`
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
   margin-bottom: 40px;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-bottom: 28px;
+  }
 `;
 
 const ActionCard = styled(Link)`

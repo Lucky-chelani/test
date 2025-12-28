@@ -33,6 +33,16 @@ const AdminContainer = styled.div`
   margin: 50px auto;
   padding: 0 20px;
   font-family: 'Inter', sans-serif;
+  
+  @media (max-width: 768px) {
+    margin: 40px auto;
+    padding: 0 16px;
+  }
+  
+  @media (max-width: 480px) {
+    margin: 30px auto;
+    padding: 0 12px;
+  }
 `;
 
 const Header = styled.div`
@@ -52,6 +62,14 @@ const Title = styled.h1`
   font-size: 2.5rem;
   color: #333;
   margin: 0;
+  
+  @media (max-width: 768px) {
+    font-size: 2rem;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 1.75rem;
+  }
 `;
 
 const ButtonsContainer = styled.div`

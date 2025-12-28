@@ -44,6 +44,16 @@ const Page = styled.div`
     pointer-events: none;
     z-index: 1;
   }
+  
+  @media (max-width: 768px) {
+    padding-top: 70px;
+    padding-bottom: 80px;
+  }
+  
+  @media (max-width: 480px) {
+    padding-top: 60px;
+    padding-bottom: 60px;
+  }
 `;
 
 const Container = styled.div`
@@ -53,6 +63,14 @@ const Container = styled.div`
   position: relative;
   z-index: 2;
   color: #fff;
+  
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 12px;
+  }
 `;
 
 const Header = styled.div`
@@ -65,11 +83,29 @@ const Title = styled.h1`
   color: #fff;
   font-size: 2rem;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  
+  @media (max-width: 768px) {
+    font-size: 1.75rem;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 1.5rem;
+  }
 `;
 
 const Subtitle = styled.p`
   color: rgba(255, 255, 255, 0.8);
   margin-top: 10px;
+  
+  @media (max-width: 768px) {
+    font-size: 0.95rem;
+    margin-top: 8px;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 0.9rem;
+    margin-top: 6px;
+  }
 `;
 
 const Form = styled.form`
@@ -79,10 +115,28 @@ const Form = styled.form`
   padding: 30px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  
+  @media (max-width: 768px) {
+    padding: 24px;
+    border-radius: 10px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 18px;
+    border-radius: 8px;
+  }
 `;
 
 const FormGroup = styled.div`
   margin-bottom: 24px;
+  
+  @media (max-width: 768px) {
+    margin-bottom: 20px;
+  }
+  
+  @media (max-width: 480px) {
+    margin-bottom: 16px;
+  }
 `;
 
 const FormRow = styled.div`
@@ -92,6 +146,11 @@ const FormRow = styled.div`
   
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  @media (max-width: 480px) {
+    gap: 12px;
   }
 `;
 
@@ -121,6 +180,16 @@ const Input = styled.input`
   &::placeholder {
     color: rgba(255, 255, 255, 0.5);
   }
+  
+  @media (max-width: 768px) {
+    padding: 10px 14px;
+    font-size: 0.95rem;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
 `;
 
 const TextArea = styled.textarea`
@@ -142,6 +211,18 @@ const TextArea = styled.textarea`
   
   &::placeholder {
     color: rgba(255, 255, 255, 0.5);
+  }
+  
+  @media (max-width: 768px) {
+    padding: 10px 14px;
+    font-size: 0.95rem;
+    min-height: 100px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    min-height: 90px;
   }
 `;
 
@@ -179,6 +260,17 @@ const ImageUploadContainer = styled.div`
   &:hover {
     border-color: rgba(255, 255, 255, 0.5);
     background: rgba(255, 255, 255, 0.05);
+  }
+  
+  @media (max-width: 768px) {
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 16px;
+    margin-bottom: 16px;
+    border-radius: 6px;
   }
 `;
 
@@ -248,6 +340,23 @@ const ErrorMessage = styled.div`
     margin-right: 10px;
     flex-shrink: 0;
   }
+  
+  @media (max-width: 768px) {
+    padding: 12px;
+    margin-bottom: 16px;
+    font-size: 0.95rem;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 10px;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    
+    svg {
+      margin-right: 8px;
+      font-size: 1rem;
+    }
+  }
 `;
 
 const SuccessMessage = styled.div`
@@ -263,6 +372,23 @@ const SuccessMessage = styled.div`
   svg {
     margin-right: 10px;
     flex-shrink: 0;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 12px;
+    margin-bottom: 16px;
+    font-size: 0.95rem;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 10px;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    
+    svg {
+      margin-right: 8px;
+      font-size: 1rem;
+    }
   }
 `;
 

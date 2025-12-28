@@ -42,6 +42,16 @@ const Page = styled.div`
   flex-direction: column;
   align-items: center;
   position: relative;
+  
+  @media (max-width: 768px) {
+    padding-top: 70px;
+    padding-bottom: 30px;
+  }
+  
+  @media (max-width: 480px) {
+    padding-top: 60px;
+    padding-bottom: 20px;
+  }
 `;
 
 const FormContainer = styled.div`
@@ -107,6 +117,14 @@ const Title = styled.h2`
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   font-weight: 700;
+  
+  @media (max-width: 768px) {
+    font-size: 1.75rem;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 1.5rem;
+  }
 `;
 
 const Subtitle = styled.p`
@@ -114,6 +132,14 @@ const Subtitle = styled.p`
   color: #b2c2d6;
   margin: 0 0 12px 0;
   font-weight: 400;
+  
+  @media (max-width: 768px) {
+    font-size: 1rem;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 0.95rem;
+  }
 `;
 
 const FormGroup = styled.div`

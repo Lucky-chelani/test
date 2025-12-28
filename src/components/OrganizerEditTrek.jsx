@@ -44,6 +44,16 @@ const Page = styled.div`
     pointer-events: none;
     z-index: 1;
   }
+  
+  @media (max-width: 768px) {
+    padding-top: 70px;
+    padding-bottom: 80px;
+  }
+  
+  @media (max-width: 480px) {
+    padding-top: 60px;
+    padding-bottom: 60px;
+  }
 `;
 
 const Container = styled.div`
@@ -53,6 +63,14 @@ const Container = styled.div`
   position: relative;
   z-index: 2;
   color: #fff;
+  
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 12px;
+  }
 `;
 
 const Header = styled.div`
@@ -65,6 +83,14 @@ const Title = styled.h1`
   color: #fff;
   font-size: 2rem;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  
+  @media (max-width: 768px) {
+    font-size: 1.75rem;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 1.5rem;
+  }
 `;
 
 const Subtitle = styled.p`
@@ -79,6 +105,16 @@ const Form = styled.form`
   padding: 30px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  
+  @media (max-width: 768px) {
+    padding: 24px;
+    border-radius: 10px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 18px;
+    border-radius: 8px;
+  }
 `;
 
 const FormGroup = styled.div`

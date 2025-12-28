@@ -16,6 +16,17 @@ const Page = styled.div`
   padding-top: 80px;
   padding-bottom: 100px;
   color: #fff;
+  
+  @media (max-width: 768px) {
+    padding-top: 70px;
+    padding-bottom: 80px;
+    background-attachment: scroll;
+  }
+  
+  @media (max-width: 480px) {
+    padding-top: 60px;
+    padding-bottom: 60px;
+  }
 `;
 
 const Container = styled.div`
@@ -64,6 +75,21 @@ const OrganizerLogo = styled.div`
   
   @media (max-width: 768px) {
     margin: 0 auto;
+    width: 100px;
+    height: 100px;
+    
+    svg {
+      font-size: 42px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    width: 80px;
+    height: 80px;
+    
+    svg {
+      font-size: 36px;
+    }
   }
 `;
 
@@ -91,6 +117,20 @@ const OrganizerName = styled.h1`
   @media (max-width: 768px) {
     justify-content: center;
     font-size: 1.8rem;
+    gap: 6px;
+    
+    svg {
+      font-size: 1.1rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 1.5rem;
+    gap: 5px;
+    
+    svg {
+      font-size: 1rem;
+    }
   }
 `;
 
