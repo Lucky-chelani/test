@@ -81,14 +81,52 @@ const NavigationButton = styled.button`
     background: rgba(0, 0, 0, 0.6);
     transform: translateY(-50%) scale(1.05);
   }
+  
+  @media (max-width: 768px) {
+    width: 40px;
+    height: 40px;
+    font-size: 1.3rem;
+    opacity: 0.7;
+    
+    ${CarouselContainer}:hover & {
+      opacity: 0.9;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+    opacity: 0.6;
+    
+    ${CarouselContainer}:hover & {
+      opacity: 0.8;
+    }
+  }
 `;
 
 const PrevButton = styled(NavigationButton)`
   left: 20px;
+  
+  @media (max-width: 768px) {
+    left: 12px;
+  }
+  
+  @media (max-width: 480px) {
+    left: 8px;
+  }
 `;
 
 const NextButton = styled(NavigationButton)`
   right: 20px;
+  
+  @media (max-width: 768px) {
+    right: 12px;
+  }
+  
+  @media (max-width: 480px) {
+    right: 8px;
+  }
 `;
 
 const DotsContainer = styled.div`
@@ -100,6 +138,16 @@ const DotsContainer = styled.div`
   justify-content: center;
   gap: 8px;
   z-index: 10;
+  
+  @media (max-width: 768px) {
+    bottom: 15px;
+    gap: 6px;
+  }
+  
+  @media (max-width: 480px) {
+    bottom: 12px;
+    gap: 5px;
+  }
 `;
 
 const Dot = styled.button`
@@ -115,6 +163,16 @@ const Dot = styled.button`
   
   &:hover {
     transform: scale(1.2);
+  }
+  
+  @media (max-width: 768px) {
+    width: 7px;
+    height: 7px;
+  }
+  
+  @media (max-width: 480px) {
+    width: 6px;
+    height: 6px;
   }
 `;
 

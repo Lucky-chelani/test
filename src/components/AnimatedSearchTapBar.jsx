@@ -46,12 +46,35 @@ const SearchTapContainer = styled.div`
   &:active {
     transform: translateY(-1px) scale(0.98);
   }
+  
+  @media (max-width: 768px) {
+    max-width: 100%;
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 22px;
+  }
+  
+  @media (max-width: 480px) {
+    min-height: 42px;
+    padding: 0 14px;
+    border-radius: 21px;
+  }
 `;
 const SearchIcon = styled(FiSearch)`
   font-size: 1.3rem;
   color: #2d3748;
   margin-right: 12px;
   flex-shrink: 0;
+  
+  @media (max-width: 768px) {
+    font-size: 1.2rem;
+    margin-right: 10px;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 1.1rem;
+    margin-right: 8px;
+  }
 `;
 const AnimatedTextBase = styled.span`
   font-size: 1.13rem;
@@ -62,6 +85,18 @@ const AnimatedTextBase = styled.span`
   white-space: nowrap;
   overflow: hidden;
   display: inline-block;
+  
+  @media (max-width: 768px) {
+    font-size: 1rem;
+    min-width: 150px;
+    max-width: 180px;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 0.95rem;
+    min-width: 120px;
+    max-width: 150px;
+  }
 `;
 
 const FadeInText = styled(AnimatedTextBase)`
@@ -138,6 +173,15 @@ const SearchForm = styled.form`
   width: 100%;
   max-width: 600px;
   margin-bottom: 30px;
+  
+  @media (max-width: 768px) {
+    max-width: 100%;
+    margin-bottom: 25px;
+  }
+  
+  @media (max-width: 480px) {
+    margin-bottom: 20px;
+  }
 `;
 const SearchInputWrapper = styled.div`
   position: relative;
@@ -276,6 +320,16 @@ const RecentSearches = styled.div`
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 20px;
+  
+  @media (max-width: 768px) {
+    gap: 8px;
+    margin-top: 15px;
+  }
+  
+  @media (max-width: 480px) {
+    gap: 6px;
+    margin-top: 12px;
+  }
 `;
 const RecentSearchItem = styled.button`
   padding: 8px 16px 8px 14px;
@@ -295,6 +349,19 @@ const RecentSearchItem = styled.button`
     background: #e2e8f0;
     color: #3182ce;
     border-color: #bcd0ea;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 7px 14px 7px 12px;
+    font-size: 0.9rem;
+    border-radius: 8px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 6px 12px 6px 10px;
+    font-size: 0.85rem;
+    border-radius: 8px;
+    gap: 4px;
   }
 `;
 const RemoveIcon = styled(FiX)`
@@ -347,6 +414,15 @@ const RecentSearchesWrapper = styled.div`
   margin-top: 20px;
   width: 100%;
   max-width: 600px;
+  
+  @media (max-width: 768px) {
+    max-width: 100%;
+    margin-top: 15px;
+  }
+  
+  @media (max-width: 480px) {
+    margin-top: 12px;
+  }
 `;
 
 const RecentLabel = styled.div`
@@ -355,6 +431,16 @@ const RecentLabel = styled.div`
   color: #2d3748;
   margin-bottom: 12px;
   text-align: center;
+  
+  @media (max-width: 768px) {
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+  }
 `;
 
 const BackButton = styled.button`

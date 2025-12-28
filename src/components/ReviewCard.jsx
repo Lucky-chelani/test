@@ -29,6 +29,16 @@ const ReviewCardContainer = styled.div`
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
   }
+  
+  @media (max-width: 768px) {
+    border-radius: 14px;
+    margin-bottom: 16px;
+  }
+  
+  @media (max-width: 480px) {
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
 `;
 
 const ReviewHeader = styled.div`
@@ -36,6 +46,17 @@ const ReviewHeader = styled.div`
   justify-content: space-between;
   align-items: flex-start;
   padding: 20px 20px 15px;
+  
+  @media (max-width: 768px) {
+    padding: 16px 16px 12px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 14px 14px 10px;
+    gap: 10px;
+  }
 `;
 
 const UserInfo = styled.div`
@@ -56,6 +77,18 @@ const Avatar = styled.div`
   font-weight: 600;
   font-size: 1.2rem;
   border: 2px solid rgba(255, 255, 255, 0.2);
+  
+  @media (max-width: 768px) {
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
+  }
+  
+  @media (max-width: 480px) {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
 `;
 
 const UserDetails = styled.div`
@@ -87,6 +120,14 @@ const Star = styled(FaStar)`
 
 const ReviewContent = styled.div`
   padding: 0 20px 20px;
+  
+  @media (max-width: 768px) {
+    padding: 0 16px 16px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 0 14px 14px;
+  }
 `;
 
 const ReviewText = styled.p`
@@ -104,6 +145,21 @@ const ReviewText = styled.p`
   
   &:empty {
     display: none;
+  }
+  
+  @media (max-width: 768px) {
+    font-size: 1rem;
+    padding: 10px;
+    border-radius: 7px;
+    margin-bottom: ${props => props.noActions ? '0' : '12px'};
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 0.95rem;
+    padding: 8px;
+    border-radius: 6px;
+    margin-bottom: ${props => props.noActions ? '0' : '10px'};
+    line-height: 1.5;
   }
 `;
 
@@ -124,6 +180,13 @@ const ReviewActions = styled.div`
   align-items: center;
   padding-top: 10px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+  
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding-top: 8px;
+  }
 `;
 
 const HelpfulButton = styled.button`
