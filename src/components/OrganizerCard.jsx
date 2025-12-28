@@ -21,6 +21,13 @@ const OrganizerCardContainer = styled.div`
 
   @media (max-width: 768px) {
     padding: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 1rem;
+    margin-bottom: 1.25rem;
+    border-radius: 8px;
   }
 `;
 
@@ -42,6 +49,18 @@ const OrganizerIcon = styled.div`
   justify-content: center;
   font-size: 1.2rem;
   flex-shrink: 0;
+  
+  @media (max-width: 768px) {
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
+  }
+  
+  @media (max-width: 480px) {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
 `;
 
 const OrganizerInfo = styled.div`
@@ -62,6 +81,24 @@ const OrganizerName = styled.h4`
     color: #4CC9F0;
     font-size: 0.9rem;
   }
+  
+  @media (max-width: 768px) {
+    font-size: 1rem;
+    gap: 5px;
+    
+    svg {
+      font-size: 0.85rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 0.95rem;
+    gap: 4px;
+    
+    svg {
+      font-size: 0.8rem;
+    }
+  }
 `;
 
 const OrganizerMeta = styled.div`
@@ -70,6 +107,17 @@ const OrganizerMeta = styled.div`
   gap: 0.75rem;
   color: #000;  /* Changed to always use black color */
   font-size: 0.85rem;
+  
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 0.75rem;
+    gap: 0.5rem;
+  }
 `;
 
 const MetaItem = styled.div`
@@ -87,6 +135,17 @@ const OrganizerBody = styled.div`
   color: #000;  /* Changed to always use black color */
   font-size: 0.95rem;
   line-height: 1.6;
+  
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 0.85rem;
+    margin-bottom: 0.875rem;
+  }
 `;
 
 const OrganizerAction = styled.div`
@@ -105,14 +164,35 @@ const ViewMoreButton = styled(Link)`
   gap: 6px;
   text-decoration: none;
   transition: all 0.2s;
-    &:hover {
+  &:hover {
     background: rgba(67, 97, 238, 0.2);
-      : 'rgba(67, 97, 238, 0.2)'};
     text-decoration: none;
   }
   
   svg {
     font-size: 0.85rem;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 0.55rem 0.9rem;
+    font-size: 0.85rem;
+    gap: 5px;
+    
+    svg {
+      font-size: 0.8rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.8rem;
+    gap: 4px;
+    width: 100%;
+    justify-content: center;
+    
+    svg {
+      font-size: 0.75rem;
+    }
   }
 `;
 

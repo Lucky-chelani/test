@@ -37,6 +37,16 @@ const AdminContainer = styled.div`
   color: #fff;
   position: relative;
   z-index: 5;
+  
+  @media (max-width: 768px) {
+    margin: 40px auto;
+    padding: 16px;
+  }
+  
+  @media (max-width: 480px) {
+    margin: 30px auto;
+    padding: 12px;
+  }
 `;
 
 const Header = styled.div`
@@ -57,6 +67,14 @@ const Title = styled.h1`
   color: #fff;
   font-size: 2rem;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  
+  @media (max-width: 768px) {
+    font-size: 1.75rem;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 1.5rem;
+  }
 `;
 
 const ButtonsContainer = styled.div`

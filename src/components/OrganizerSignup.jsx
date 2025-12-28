@@ -60,6 +60,14 @@ const Page = styled.div`
     background: linear-gradient(135deg, rgba(20, 30, 48, 0.92) 0%, rgba(36, 59, 85, 0.9) 100%);
     z-index: 1;
   }
+  
+  @media (max-width: 768px) {
+    padding-top: 80px;
+  }
+  
+  @media (max-width: 480px) {
+    padding-top: 70px;
+  }
 `;
 
 const Container = styled.div`
@@ -79,6 +87,14 @@ const Container = styled.div`
   @media (max-width: 768px) {
     padding: 30px 20px;
     width: 90%;
+    border-radius: 16px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 24px 16px;
+    width: 95%;
+    margin: 0 10px;
+    border-radius: 12px;
   }
 `;
 
@@ -96,6 +112,26 @@ const Title = styled.h2`
     margin-top: 10px;
     font-weight: 500;
     color: rgba(255, 255, 255, 0.85);
+  }
+  
+  @media (max-width: 768px) {
+    font-size: 1.9rem;
+    margin-bottom: 24px;
+    
+    span {
+      font-size: 1.1rem;
+      margin-top: 8px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 1.6rem;
+    margin-bottom: 20px;
+    
+    span {
+      font-size: 1rem;
+      margin-top: 6px;
+    }
   }
 `;
 
@@ -138,6 +174,18 @@ const Input = styled.input`
   
   &::placeholder {
     color: rgba(255, 255, 255, 0.5);
+  }
+  
+  @media (max-width: 768px) {
+    padding: 12px;
+    font-size: 0.95rem;
+    border-radius: 8px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 10px;
+    font-size: 0.9rem;
+    border-radius: 6px;
   }
 `;
 

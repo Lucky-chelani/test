@@ -7,12 +7,32 @@ const AdminContainer = styled.div`
   margin: 50px auto;
   padding: 20px;
   font-family: 'Inter', sans-serif;
+  
+  @media (max-width: 768px) {
+    margin: 40px auto;
+    padding: 16px;
+  }
+  
+  @media (max-width: 480px) {
+    margin: 30px auto;
+    padding: 12px;
+  }
 `;
 
 const Header = styled.h1`
   color: #333;
   margin-bottom: 2rem;
   text-align: center;
+  
+  @media (max-width: 768px) {
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
 `;
 
 const AdminCard = styled(Link)`
@@ -32,6 +52,18 @@ const AdminCard = styled(Link)`
   &:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  }
+  
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+    border-radius: 10px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
   }
 `;
 
