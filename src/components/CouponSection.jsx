@@ -12,6 +12,18 @@ const CouponContainer = styled.div`
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   border: 2px solid ${props => props.theme.inputBorder || 'rgba(255, 255, 255, 0.2)'};
+  
+  @media (max-width: 768px) {
+    padding: 16px;
+    margin: 16px 0;
+    border-radius: 10px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 14px;
+    margin: 12px 0;
+    border-radius: 8px;
+  }
 `;
 
 const CouponHeader = styled.div`
@@ -58,6 +70,18 @@ const CouponInput = styled.input`
     border-color: ${props => props.theme.mainColor || '#5390D9'};
     transform: translateY(-1px);
   }
+  
+  @media (max-width: 768px) {
+    padding: 11px 14px;
+    font-size: 15px;
+    border-radius: 7px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 10px 12px;
+    font-size: 14px;
+    border-radius: 6px;
+  }
 `;
 
 const ApplyButton = styled.button`
@@ -86,9 +110,18 @@ const ApplyButton = styled.button`
     transform: none;
   }
   
+  @media (max-width: 768px) {
+    padding: 0 18px;
+    min-width: 90px;
+    font-size: 14px;
+    border-radius: 7px;
+  }
+  
   @media (max-width: 480px) {
     width: 100%;
     padding: 12px;
+    min-width: auto;
+    border-radius: 6px;
   }
 `;
 

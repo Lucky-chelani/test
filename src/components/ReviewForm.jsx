@@ -35,6 +35,7 @@ const FormContainer = styled.div`
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.1);
   animation: ${fadeIn} 0.5s ease-out;
+  position: relative;
   
   &::before {
     content: '';
@@ -48,18 +49,62 @@ const FormContainer = styled.div`
     border-top-left-radius: 20px;
     border-top-right-radius: 20px;
   }
+  
+  @media (max-width: 768px) {
+    padding: 20px;
+    margin-bottom: 24px;
+    border-radius: 16px;
+    
+    &::before {
+      border-top-left-radius: 16px;
+      border-top-right-radius: 16px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    padding: 16px;
+    margin-bottom: 20px;
+    border-radius: 14px;
+    
+    &::before {
+      border-top-left-radius: 14px;
+      border-top-right-radius: 14px;
+    }
+  }
 `;
 
 const Title = styled.h3`
   font-size: 1.4rem;
   margin-bottom: 20px;
   color: #ffffff;
+  
+  @media (max-width: 768px) {
+    font-size: 1.25rem;
+    margin-bottom: 16px;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 1.1rem;
+    margin-bottom: 14px;
+  }
 `;
 
 const StarContainer = styled.div`
   display: flex;
   gap: 12px;
   margin-bottom: 25px;
+  
+  @media (max-width: 768px) {
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  
+  @media (max-width: 480px) {
+    gap: 8px;
+    margin-bottom: 18px;
+    flex-direction: column;
+  }
 `;
 
 const StarLabel = styled.div`
@@ -92,6 +137,14 @@ const StarButton = styled.button`
   &:focus {
     outline: none;
   }
+  
+  @media (max-width: 768px) {
+    font-size: 1.6rem;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 1.4rem;
+  }
 `;
 
 const CommentBox = styled.textarea`
@@ -116,12 +169,42 @@ const CommentBox = styled.textarea`
   &::placeholder {
     color: rgba(255, 255, 255, 0.5);
   }
+  
+  @media (max-width: 768px) {
+    height: 100px;
+    padding: 12px;
+    font-size: 0.95rem;
+    margin-bottom: 16px;
+    border-radius: 10px;
+  }
+  
+  @media (max-width: 480px) {
+    height: 90px;
+    padding: 10px;
+    font-size: 0.9rem;
+    margin-bottom: 14px;
+    border-radius: 8px;
+  }
 `;
 
 const ButtonContainer = styled.div`
   display: flex;
   justify-content: flex-end;
   gap: 15px;
+  
+  @media (max-width: 768px) {
+    gap: 12px;
+  }
+  
+  @media (max-width: 480px) {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+    
+    button {
+      width: 100%;
+    }
+  }
 `;
 
 const Button = styled.button`
@@ -149,6 +232,18 @@ const Button = styled.button`
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    border-radius: 10px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    border-radius: 8px;
   }
 `;
 

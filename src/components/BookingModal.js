@@ -150,6 +150,16 @@ const ModalOverlay = styled.div`
   padding: 1rem;
   overflow-y: auto;
   animation: ${fadeIn} 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  @media (max-width: 768px) {
+    padding: 0.5rem;
+    align-items: flex-end;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 0;
+    align-items: flex-end;
+  }
 `;
 
 const ModalContainer = styled.div`
@@ -179,6 +189,19 @@ const ModalContainer = styled.div`
     background-size: 200% 100%;
     animation: ${shimmer} 2s infinite linear;
   }
+  
+  @media (max-width: 768px) {
+    max-width: 95%;
+    border-radius: 20px;
+    max-height: 98vh;
+  }
+  
+  @media (max-width: 480px) {
+    max-width: 100%;
+    border-radius: 16px 16px 0 0;
+    max-height: 100vh;
+    margin: 0;
+  }
 `;
 
 const ModalHeader = styled.div`
@@ -201,6 +224,14 @@ const ModalHeader = styled.div`
     background: linear-gradient(90deg, #3399cc, #00b4db);
     border-radius: 1px;
   }
+  
+  @media (max-width: 768px) {
+    padding: 1.5rem 1.5rem 0.75rem;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 1.25rem 1rem 0.75rem;
+  }
 `;
 
 const ModalTitle = styled.h2`
@@ -214,6 +245,14 @@ const ModalTitle = styled.h2`
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   letter-spacing: -0.025em;
   animation: ${slideInFromLeft} 0.6s ease-out;
+  
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 1.25rem;
+  }
 `;
 
 const CloseButton = styled.button`
@@ -243,6 +282,18 @@ const CloseButton = styled.button`
   &:active {
     transform: scale(0.95);
   }
+  
+  @media (max-width: 768px) {
+    width: 42px;
+    height: 42px;
+    font-size: 1.1rem;
+  }
+  
+  @media (max-width: 480px) {
+    width: 38px;
+    height: 38px;
+    font-size: 1rem;
+  }
 `;
 
 const ModalBody = styled.div`
@@ -271,6 +322,16 @@ const ModalBody = styled.div`
   &::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(135deg, #2388bb, #0095b6);
   }
+  
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+    gap: 1.5rem;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 1rem;
+    gap: 1.25rem;
+  }
 `;
 
 const TrekInfo = styled.div`
@@ -295,6 +356,20 @@ const TrekInfo = styled.div`
     background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
     animation: ${shimmer} 2s infinite;
   }
+  
+  @media (max-width: 768px) {
+    padding: 1.25rem;
+    gap: 1.25rem;
+    border-radius: 14px;
+  }
+  
+  @media (max-width: 480px) {
+    flex-direction: column;
+    text-align: center;
+    padding: 1rem;
+    gap: 1rem;
+    border-radius: 12px;
+  }
 `;
 
 const TrekImage = styled.img`
@@ -307,6 +382,19 @@ const TrekImage = styled.img`
   
   &:hover {
     transform: scale(1.05);
+  }
+  
+  @media (max-width: 768px) {
+    width: 90px;
+    height: 72px;
+    border-radius: 10px;
+  }
+  
+  @media (max-width: 480px) {
+    width: 100%;
+    max-width: 200px;
+    height: 120px;
+    border-radius: 10px;
   }
 `;
 
@@ -398,6 +486,18 @@ const Input = styled.input`
   &:hover:not(:focus) {
     border-color: rgba(51, 153, 204, 0.4);
     transform: translateY(-1px);
+  }
+  
+  @media (max-width: 768px) {
+    padding: 0.9rem 1.1rem;
+    font-size: 0.95rem;
+    border-radius: 10px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 0.85rem 1rem;
+    font-size: 0.9rem;
+    border-radius: 10px;
   }
 `;
 
@@ -637,6 +737,20 @@ const DateGrid = styled.div`
   gap: 12px;
   max-height: 280px;
   overflow-y: auto;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    padding: 1.25rem;
+    gap: 10px;
+    max-height: 250px;
+  }
+  
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+    gap: 8px;
+    max-height: 200px;
+  }
 `;
 
 const DateOption = styled.button`
@@ -807,6 +921,21 @@ const ModalFooter = styled.div`
     background: linear-gradient(90deg, #3399cc, #00b4db);
     border-radius: 1px;
   }
+  
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+    gap: 0.75rem;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 1rem;
+    flex-direction: column-reverse;
+    gap: 0.75rem;
+    
+    button {
+      width: 100%;
+    }
+  }
 `;
 
 const Button = styled.button`
@@ -838,6 +967,19 @@ const Button = styled.button`
   
   &:hover::before {
     left: 100%;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 0.9rem 1.75rem;
+    font-size: 0.95rem;
+    border-radius: 10px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 0.85rem 1.5rem;
+    font-size: 0.9rem;
+    border-radius: 10px;
+    width: 100%;
   }
 `;
 
