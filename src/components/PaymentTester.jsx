@@ -6,18 +6,32 @@ import { auth } from '../firebase';
 import CouponSection from './CouponSection';
 
 const Container = styled.div`
+  width: 90%; /* FIX: Ensures it doesn't touch edges on mobile */
   max-width: 600px;
   margin: 40px auto;
-  padding: 20px;
+  padding: 30px;
   background-color: white;
   border-radius: 10px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+
+  /* Mobile Optimization */
+  @media (max-width: 480px) {
+    margin: 20px auto;
+    padding: 20px 15px; /* Reduce padding to give inputs more space */
+    width: 95%;
+  }
 `;
 
 const Title = styled.h2`
   text-align: center;
   color: #333;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
+  font-size: 1.8rem;
+
+  @media (max-width: 480px) {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
 `;
 
 const Form = styled.form`
@@ -33,24 +47,35 @@ const FormGroup = styled.div`
 `;
 
 const Label = styled.label`
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #444;
 `;
 
 const Input = styled.input`
-  padding: 10px;
+  padding: 12px; /* Increased touch target */
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 6px;
+  font-size: 1rem; /* Prevents zoom on iOS inputs */
+  transition: border-color 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: #3399cc;
+  }
 `;
 
 const Button = styled.button`
   background-color: #3399cc;
   color: white;
   border: none;
-  padding: 12px;
+  padding: 14px;
   font-size: 16px;
-  border-radius: 4px;
+  font-weight: 600;
+  border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.3s;
+  margin-top: 10px;
 
   &:hover {
     background-color: #2388bb;
@@ -64,9 +89,11 @@ const Button = styled.button`
 
 const Message = styled.div`
   padding: 15px;
-  border-radius: 4px;
+  border-radius: 6px;
   text-align: center;
   margin-top: 20px;
+  font-size: 0.9rem;
+  line-height: 1.5;
   
   &.success {
     background-color: #d4edda;
@@ -80,6 +107,28 @@ const Message = styled.div`
     border: 1px solid #f5c6cb;
   }
 `;
+
+const ReceiptBox = styled.div`
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+`;
+
+const ReceiptRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  align-items: center;
+  
+  /* Handle text wrapping on very small screens */
+  @media (max-width: 350px) {
+    font-size: 0.9rem;
+  }
+`;
+
 
 const PaymentTester = () => {
   const [amount, setAmount] = useState('100');
@@ -402,57 +451,51 @@ const PaymentTester = () => {
         />
           {/* Display price breakdown if discount is applied */}
         {activeCoupon && (
-          <div style={{
-            padding: '15px',
-            backgroundColor: '#f8f9fa',
-            borderRadius: '5px',
-            marginBottom: '20px',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
-            border: '1px solid rgba(0, 0, 0, 0.05)'
-          }}>
+          <ReceiptBox>
             <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '5px' }}>
               <span style={{ fontWeight: 'bold' }}>Receipt Preview</span>
               <span style={{ 
-                fontSize: '12px', 
+                fontSize: '11px', 
                 background: '#e6f7ff', 
                 color: '#0066cc', 
-                padding: '3px 8px',
+                padding: '4px 8px',
                 borderRadius: '50px',
-                display: 'inline-block' 
+                fontWeight: '600'
               }}>
                 Coupon Applied
               </span>
             </div>
             
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <ReceiptRow>
               <span>Original amount:</span>
               <span>₹{originalAmount}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: '#2e7d32' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            </ReceiptRow>
+            
+            <ReceiptRow style={{ color: '#2e7d32' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
                 <span>Discount ({activeCoupon.code}):</span>
                 <span style={{ 
                   fontSize: '11px', 
                   background: '#e8f5e9', 
                   color: '#2e7d32', 
                   padding: '2px 6px',
-                  borderRadius: '50px',
-                  display: 'inline-block' 
+                  borderRadius: '50px'
                 }}>
                   {activeCoupon.discountType === 'percentage' ? `${activeCoupon.discountValue}%` : 'Fixed'}
                 </span>
               </span>
               <span>-₹{discountAmount.toFixed(2)}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', marginTop: '10px', paddingTop: '10px', borderTop: '1px dashed #ddd' }}>
+            </ReceiptRow>
+            
+            <ReceiptRow style={{ fontWeight: 'bold', marginTop: '10px', paddingTop: '10px', borderTop: '1px dashed #ddd' }}>
               <span>Final amount:</span>
-              <span style={{ fontSize: '1.1em', color: '#0066cc' }}>₹{amount}</span>
-            </div>
+              <span style={{ fontSize: '1.2em', color: '#0066cc' }}>₹{amount}</span>
+            </ReceiptRow>
             
             <div style={{ marginTop: '10px', fontSize: '12px', color: '#666', fontStyle: 'italic' }}>
-              This discount will be applied when you complete the payment
+              * Discount applied at payment
             </div>
-          </div>
+          </ReceiptBox>
         )}
         
         <FormGroup>

@@ -48,6 +48,9 @@ const FormContainer = styled.div`
     border-top-left-radius: 20px;
     border-top-right-radius: 20px;
   }
+  @media (max-width: 480px) {
+    padding: 20px;
+  }
 `;
 
 const Title = styled.h3`
@@ -60,13 +63,25 @@ const StarContainer = styled.div`
   display: flex;
   gap: 12px;
   margin-bottom: 25px;
+
+  align-items: center;
+
+  @media (max-width: 400px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
 `;
 
 const StarLabel = styled.div`
   font-size: 0.9rem;
   color: #ddd;
-  margin-top: 5px;
-  width: 100px;
+  /* Remove fixed margin-top since we use flex align-items */
+  /* margin-top: 5px; */ 
+  
+  /* Change fixed width to min-width or auto */
+  width: auto; 
+  min-width: 100px;
 `;
 
 const StarRating = styled.div`

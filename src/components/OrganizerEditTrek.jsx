@@ -27,7 +27,7 @@ import mapPattern from '../assets/images/map-pattren.png';
 const Page = styled.div`
   background: #000 url(${mapPattern});
   background-size: cover;
-  background-repeat: repeat;
+  background-attachment: fixed; 
   min-height: 100vh;
   padding-top: 80px;
   padding-bottom: 100px;
@@ -53,6 +53,10 @@ const Container = styled.div`
   position: relative;
   z-index: 2;
   color: #fff;
+
+  @media (max-width: 480px) {
+    padding: 15px;
+  }
 `;
 
 const Header = styled.div`
@@ -79,6 +83,11 @@ const Form = styled.form`
   padding: 30px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
+
+  /* FIX: Reduce internal form padding on mobile */
+  @media (max-width: 480px) {
+    padding: 20px 15px;
+  }
 `;
 
 const FormGroup = styled.div`
@@ -842,6 +851,17 @@ const OrganizerEditTrek = () => {
             availableMonths={formData.availableMonths || []}
             onChange={handleMonthsChange}
           />
+          
+          <FormGroup>
+            <DateAvailabilitySelector
+              selectedDates={formData.availableDates}
+              onChange={(dates) => setFormData(prev => ({ ...prev, availableDates: dates }))}
+              label="Trek Available Dates"
+              minDate={new Date().toISOString().split('T')[0]}
+              // Set max date to 2 years from now or whatever logic you prefer
+              maxDate={new Date(new Date().setFullYear(new Date().getFullYear() + 2)).toISOString().split('T')[0]}
+            />
+          </FormGroup>
           
           {/* Itinerary Manager */}
           <ItineraryManager 

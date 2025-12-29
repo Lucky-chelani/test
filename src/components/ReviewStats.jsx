@@ -13,8 +13,13 @@ const Container = styled.div`
     0 2px 16px rgba(255, 255, 255, 0.05),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.1);
-`;
 
+  /* ADD THIS: Optimize space on mobile */
+  @media (max-width: 480px) {
+    padding: 20px; 
+    border-radius: 16px;
+  }
+`;
 const Header = styled.div`
   display: flex;
   justify-content: space-between;

@@ -36,6 +36,12 @@ const ReviewHeader = styled.div`
   justify-content: space-between;
   align-items: flex-start;
   padding: 20px 20px 15px;
+
+  @media (max-width: 400px) {
+    flex-direction: column;
+    gap: 10px;
+  }
+    
 `;
 
 const UserInfo = styled.div`

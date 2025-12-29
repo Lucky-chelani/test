@@ -65,6 +65,13 @@ const ReviewsHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+    
 `;
 
 const ReviewsTitle = styled.h3`

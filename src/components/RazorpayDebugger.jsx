@@ -9,6 +9,13 @@ const Container = styled.div`
   background-color: white;
   border-radius: 10px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+
+  /* ADD THIS: Optimize for mobile */
+  @media (max-width: 480px) {
+    margin: 20px auto; /* Reduce vertical gap */
+    padding: 15px;     /* Reduce internal padding */
+    width: 95%;        /* Ensure it fills the screen width */
+  }
 `;
 
 const Title = styled.h2`
