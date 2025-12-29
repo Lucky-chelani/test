@@ -90,6 +90,9 @@ const ButtonsContainer = styled.div`
   @media (max-width: 768px) {
     width: 100%;
     justify-content: space-between;
+    
+    /* ADD THIS: Allow wrapping if text is too long */
+    flex-wrap: wrap; 
   }
 `;
 

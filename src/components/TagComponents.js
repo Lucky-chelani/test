@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-// Tag components for admin-assigned tags
+// Tag components (These are already good)
 export const TagsContainer = styled.div`
   position: absolute;
   top: 12px;
@@ -35,11 +35,16 @@ export const OrganizerRow = styled.div`
   align-items: center;
   gap: 8px;
   z-index: 2;
+  
+  /* ADD THIS: Prevent row from overflowing card on mobile */
+  max-width: calc(100% - 32px); 
 `;
 
 export const OrganizerIcon = styled.div`
   width: 30px;
   height: 30px;
+  /* Add flex-shrink to prevent icon from squashing */
+  flex-shrink: 0; 
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
@@ -62,6 +67,12 @@ export const OrganizerText = styled.div`
   padding: 4px 8px;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  
+  /* ADD THIS: Text Truncation for mobile safety */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%; 
 `;
 
 export const OrganizerName = styled.span`

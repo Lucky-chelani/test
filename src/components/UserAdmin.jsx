@@ -478,7 +478,7 @@ const UserAdmin = () => {
   
   const navigate = useNavigate();  // Check authentication and admin role
   useEffect(() => {
-    const ADMIN_EMAILS = ['luckychelani950@gmail.com', 'harsh68968@gmail.com', 'youremail@example.com'];
+    const ADMIN_EMAILS = ['luckychelani950@gmail.com', 'harsh68968@gmail.com', 'ayushmanpatel13@gmail.com'];
     
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {

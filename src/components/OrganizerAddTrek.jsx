@@ -26,8 +26,8 @@ import mapPattern from '../assets/images/map-pattren.png';
 // Styled components for the add trek page
 const Page = styled.div`
   background: #000 url(${mapPattern});
-  background-size: cover;
-  background-repeat: repeat;
+  background-size: cover; 
+  background-attachment: fixed;
   min-height: 100vh;
   padding-top: 80px;
   padding-bottom: 100px;
@@ -53,6 +53,11 @@ const Container = styled.div`
   position: relative;
   z-index: 2;
   color: #fff;
+
+  @media (max-width: 480px) {
+    padding: 15px;
+  }
+
 `;
 
 const Header = styled.div`
@@ -79,6 +84,11 @@ const Form = styled.form`
   padding: 30px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
+
+  /* ADD THIS */
+  @media (max-width: 480px) {
+    padding: 20px 15px; /* Reduce padding significantly on mobile */
+  }
 `;
 
 const FormGroup = styled.div`

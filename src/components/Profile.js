@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import styled, { keyframes } from 'styled-components';
+import styled, { keyframes, css } from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -10,25 +10,10 @@ import BookingService from '../services/BookingService';
 import profileImg from '../assets/images/trek1.png';
 import mapPattern from '../assets/images/map-pattren.png';
 
-// Animations
+// --- Animations (Kept Exactly as is) ---
 const fadeInUp = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-`;
-
-const shimmer = keyframes`
-  0% {
-    background-position: -200px 0;
-  }
-  100% {
-    background-position: calc(200px + 100%) 0;
-  }
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
 `;
 
 const buttonFlare = keyframes`
@@ -38,12 +23,8 @@ const buttonFlare = keyframes`
 `;
 
 const float = keyframes`
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
 `;
 
 const pulse = keyframes`
@@ -61,11 +42,13 @@ const rotate = keyframes`
   to { transform: rotate(360deg); }
 `;
 
-// Styled Components
+// --- Styled Components (Responsive Fixes Applied) ---
+
 const Page = styled.div`
   background: #000 url(${mapPattern});
   background-size: cover;
   background-repeat: repeat;
+  background-attachment: fixed; /* Keeps background steady on mobile scroll */
   min-height: 100vh;
   color: #fff;
   padding-top: 100px;
@@ -73,7 +56,9 @@ const Page = styled.div`
   flex-direction: column;
   align-items: center;
   position: relative;
-  padding-bottom: 100px; /* Added space for bottom navbar */
+  padding-bottom: 100px;
+  overflow-x: hidden; /* Fixes horizontal scrollbar issues */
+  width: 100%;
 
   &::before {
     content: '';
@@ -99,6 +84,10 @@ const Container = styled.div`
   position: relative;
   z-index: 2;
   animation: ${fadeInUp} 0.8s ease-out;
+
+  @media (max-width: 480px) {
+    padding: 20px 16px 80px 16px; /* Optimized padding for small screens */
+  }
 `;
 
 const ProfileHeader = styled.div`
@@ -144,16 +133,14 @@ const ProfileHeader = styled.div`
   @media (max-width: 768px) {
     flex-direction: column;
     text-align: center;
-    padding: 40px 32px;
-  }
-  
-  @media (max-width: 480px) {
-    padding: 32px 24px;
+    padding: 40px 24px;
+    gap: 20px;
   }
 `;
 
 const AvatarContainer = styled.div`
   position: relative;
+  flex-shrink: 0; /* Prevents avatar from getting squashed */
   
   &::after {
     content: '';
@@ -184,13 +171,15 @@ const Avatar = styled.img`
   }
   
   @media (max-width: 480px) {
-    width: 130px;
-    height: 130px;
+    width: 120px;
+    height: 120px;
   }
 `;
 
 const Info = styled.div`
   flex: 1;
+  width: 100%; /* Ensures children can take full width */
+  min-width: 0; /* Critical for text truncation in flex children */
   animation: ${fadeInUp} 0.8s ease-out;
 `;
 
@@ -206,6 +195,12 @@ const Name = styled.h2`
   position: relative;
   display: inline-block;
   
+  /* Text Truncation Logic */
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  
   &::after {
     content: '';
     position: absolute;
@@ -218,16 +213,13 @@ const Name = styled.h2`
   }
   
   @media (max-width: 768px) {
-    font-size: 2.2rem;
+    font-size: 2rem;
+    white-space: normal; /* Allow wrapping on mobile */
     
     &::after {
       left: 50%;
       transform: translateX(-50%);
     }
-  }
-  
-  @media (max-width: 480px) {
-    font-size: 1.8rem;
   }
 `;
 
@@ -238,13 +230,21 @@ const Email = styled.div`
   display: flex;
   align-items: center;
   
+  /* Text Truncation */
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  
   svg {
     margin-right: 8px;
     color: #4CC9F0;
+    flex-shrink: 0;
   }
   
   @media (max-width: 768px) {
     justify-content: center;
+    font-size: 1rem;
   }
 `;
 
@@ -272,13 +272,13 @@ const ButtonGroup = styled.div`
   
   @media (max-width: 768px) {
     justify-content: center;
+    flex-wrap: wrap; /* Allows wrapping on medium screens */
   }
   
   @media (max-width: 480px) {
     flex-direction: column;
     gap: 12px;
     width: 100%;
-    max-width: 200px;
     margin: 20px auto 0;
   }
 `;
@@ -307,10 +307,7 @@ const Button = styled.button`
   
   &:hover {
     transform: translateY(-2px);
-    
-    &::before {
-      left: 100%;
-    }
+    &::before { left: 100%; }
   }
   
   &:active {
@@ -323,7 +320,7 @@ const Button = styled.button`
   }
   
   @media (max-width: 480px) {
-    width: 100%;
+    width: 100%; /* Full width on mobile */
   }
 `;
 
@@ -335,10 +332,6 @@ const EditButton = styled(Button)`
   align-items: center;
   justify-content: center;
   gap: 8px;
-  
-  svg {
-    font-size: 1.2rem;
-  }
   
   &:hover {
     box-shadow: 0 8px 25px rgba(76, 201, 240, 0.4);
@@ -353,10 +346,6 @@ const LogoutButton = styled(Button)`
   align-items: center;
   justify-content: center;
   gap: 8px;
-  
-  svg {
-    font-size: 1.2rem;
-  }
   
   &:hover {
     box-shadow: 0 8px 25px rgba(211, 47, 47, 0.4);
@@ -401,7 +390,7 @@ const StatsGrid = styled.div`
   margin-bottom: 40px;
   
   @media (max-width: 480px) {
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: 1fr; /* Force 1 column on small phones */
   }
 `;
 
@@ -484,6 +473,220 @@ const StatLabel = styled.div`
   }
 `;
 
+// --- HISTORY & BOOKINGS ---
+
+const TrekHistory = styled.div`
+  background: rgba(25, 28, 35, 0.85);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 40px 30px;
+  margin-top: 40px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.2),
+    0 2px 16px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #4CC9F0, #FF6B6B);
+    opacity: 0.8;
+  }
+
+  @media (max-width: 480px) {
+    padding: 20px 16px;
+  }
+`;
+
+const TrekList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+`;
+
+const TrekCard = styled(motion.div)`
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 15px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
+  }
+  
+  @media (max-width: 550px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+`;
+
+const TrekImage = styled.img`
+  width: 80px;
+  height: 60px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  
+  @media (max-width: 550px) {
+    width: 100%;
+    height: 140px;
+  }
+`;
+
+const TrekInfo = styled.div`
+  flex: 1;
+  width: 100%;
+`;
+
+const TrekName = styled.h4`
+  margin: 0 0 5px;
+  font-size: 1.1rem;
+  color: #ffffff;
+`;
+
+const TrekDate = styled.div`
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+`;
+
+const TrekStats = styled.div`
+  display: flex;
+  gap: 15px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  flex-wrap: wrap; /* Important for small screens */
+  
+  span {
+    display: flex;
+    align-items: center;
+    
+    svg {
+      margin-right: 5px;
+      color: #4CC9F0;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+`;
+
+// Bookings Section Styled Components
+const BookingsSection = styled(TrekHistory)`
+  /* Reuses TrekHistory styles */
+`;
+
+const BookingsList = styled(TrekList)``;
+
+const BookingCard = styled(TrekCard)`
+  padding: 20px;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+`;
+
+const BookingImage = styled(TrekImage)`
+  width: 100px;
+  height: 75px;
+  
+  @media (max-width: 768px) {
+    width: 100%;
+    height: 160px;
+  }
+`;
+
+const BookingInfo = styled(TrekInfo)``;
+const BookingTitle = styled(TrekName)``;
+const BookingDate = styled(TrekDate)` margin-bottom: 8px; `;
+const BookingDetails = styled(TrekStats)``;
+
+const BookingStatus = styled.div`
+  background: ${props => {
+    switch(props.status?.toLowerCase()) {
+      case 'confirmed': return 'rgba(39, 174, 96, 0.3)';
+      case 'pending': return 'rgba(241, 196, 15, 0.3)';
+      case 'cancelled': return 'rgba(231, 76, 60, 0.3)';
+      default: return 'rgba(41, 128, 185, 0.3)';
+    }
+  }};
+  color: ${props => {
+    switch(props.status?.toLowerCase()) {
+      case 'confirmed': return '#2ecc71';
+      case 'pending': return '#f1c40f';
+      case 'cancelled': return '#e74c3c';
+      default: return '#3498db';
+    }
+  }};
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  display: inline-block;
+  margin-top: 10px;
+`;
+
+const ViewDetailsButton = styled.button`
+  background: linear-gradient(135deg, #4CC9F0, #06D6A0);
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(76, 201, 240, 0.3);
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(76, 201, 240, 0.4);
+  }
+  
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(76, 201, 240, 0.3);
+  }
+  
+  @media (max-width: 768px) {
+    margin-top: 10px;
+    width: 100%;
+    justify-content: center;
+  }
+`;
+
+const BookingActions = styled.div`
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  
+  @media (max-width: 768px) {
+    width: 100%;
+    justify-content: flex-end;
+  }
+`;
+
+// --- BADGES ---
+
 const BadgesSection = styled.div`
   background: rgba(25, 28, 35, 0.85);
   backdrop-filter: blur(20px);
@@ -518,6 +721,10 @@ const BadgesSection = styled.div`
     height: 40%;
     background: linear-gradient(to top, rgba(76, 201, 240, 0.05), transparent);
     pointer-events: none;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 20px;
   }
 `;
 
@@ -575,8 +782,8 @@ const Badge = styled(motion.div)`
   }
   
   @media (max-width: 480px) {
-    width: 70px;
-    height: 70px;
+    width: 60px;
+    height: 60px;
     font-size: 1.8rem;
   }
 `;
@@ -627,10 +834,60 @@ const RoleText = styled.div`
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
   }
+  
+  @media (max-width: 768px) {
+    justify-content: center;
+  }
 `;
 
+const LoadingText = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  font-size: 1.5rem;
+  margin-top: 100px;
+  color: #ffffff;
+  font-weight: 500;
+  
+  &::before {
+    content: '';
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(76, 201, 240, 0.3);
+    border-top: 3px solid #4CC9F0;
+    border-radius: 50%;
+    margin-bottom: 20px;
+    animation: ${rotate} 1s linear infinite;
+  }
+  
+  .loading-dots {
+    display: inline-block;
+    &::after {
+      content: '...';
+      display: inline-block;
+      animation: ${loading} 1.5s infinite;
+    }
+  }
+`;
 
-// Role configuration will stay as it defines UI appearance for user roles
+const LoadingBookingsIndicator = styled.div`
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  color: rgba(255, 255, 255, 0.7);
+  
+  &::after {
+    content: '';
+    width: 25px;
+    height: 25px;
+    border: 2px solid rgba(76, 201, 240, 0.3);
+    border-top: 2px solid #4CC9F0;
+    border-radius: 50%;
+    margin-left: 10px;
+    animation: ${rotate} 1s linear infinite;
+  }
+`;
 
 // Role configuration
 const roleConfig = {
@@ -933,322 +1190,3 @@ const Profile = () => {
 };
 
 export default Profile;
-
-const LoadingText = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  font-size: 1.5rem;
-  margin-top: 100px;
-  color: #ffffff;
-  font-weight: 500;
-  
-  &::before {
-    content: '';
-    width: 50px;
-    height: 50px;
-    border: 3px solid rgba(76, 201, 240, 0.3);
-    border-top: 3px solid #4CC9F0;
-    border-radius: 50%;
-    margin-bottom: 20px;
-    animation: ${rotate} 1s linear infinite;
-  }
-  
-  .loading-dots {
-    display: inline-block;
-    &::after {
-      content: '...';
-      display: inline-block;
-      animation: ${loading} 1.5s infinite;
-    }
-  }
-`;
-
-// Adding new Trek History component
-const TrekHistory = styled.div`
-  background: rgba(25, 28, 35, 0.85);
-  backdrop-filter: blur(20px);
-  border-radius: 24px;
-  padding: 40px 30px;
-  margin-top: 40px;
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.2),
-    0 2px 16px rgba(255, 255, 255, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  position: relative;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #4CC9F0, #FF6B6B);
-    opacity: 0.8;
-  }
-`;
-
-const TrekList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-`;
-
-const TrekCard = styled(motion.div)`
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 15px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateX(5px);
-  }
-  
-  @media (max-width: 480px) {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-`;
-
-const TrekImage = styled.img`
-  width: 80px;
-  height: 60px;
-  border-radius: 10px;
-  object-fit: cover;
-`;
-
-const TrekInfo = styled.div`
-  flex: 1;
-`;
-
-const TrekName = styled.h4`
-  margin: 0 0 5px;
-  font-size: 1.1rem;
-  color: #ffffff;
-`;
-
-const TrekDate = styled.div`
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.7);
-`;
-
-const TrekStats = styled.div`
-  display: flex;
-  gap: 15px;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.9rem;
-  
-  span {
-    display: flex;
-    align-items: center;
-    
-    svg {
-      margin-right: 5px;
-      color: #4CC9F0;
-    }
-  }
-  
-  @media (max-width: 480px) {
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-`;
-
-// Bookings Section Styled Components
-const BookingsSection = styled.div`
-  background: rgba(25, 28, 35, 0.85);
-  backdrop-filter: blur(20px);
-  border-radius: 24px;
-  padding: 40px 30px;
-  margin-top: 40px;
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.2),
-    0 2px 16px rgba(255, 255, 255, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  position: relative;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #FF6B6B, #4CC9F0);
-    opacity: 0.8;
-  }
-`;
-
-const BookingsList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-`;
-
-const BookingCard = styled(motion.div)`
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 20px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateX(5px);
-  }
-  
-  @media (max-width: 768px) {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-  }
-`;
-
-const BookingImage = styled.img`
-  width: 100px;
-  height: 75px;
-  border-radius: 10px;
-  object-fit: cover;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-`;
-
-const BookingInfo = styled.div`
-  flex: 1;
-`;
-
-const BookingTitle = styled.h4`
-  margin: 0 0 5px;
-  font-size: 1.1rem;
-  color: #ffffff;
-`;
-
-const BookingDate = styled.div`
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 5px;
-`;
-
-const BookingDetails = styled.div`
-  display: flex;
-  gap: 15px;
-  flex-wrap: wrap;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.9rem;
-  
-  span {
-    display: flex;
-    align-items: center;
-    
-    svg {
-      margin-right: 5px;
-      color: #4CC9F0;
-    }
-  }
-`;
-
-const BookingStatus = styled.div`
-  background: ${props => {
-    switch(props.status?.toLowerCase()) {
-      case 'confirmed':
-        return 'rgba(39, 174, 96, 0.3)';
-      case 'pending':
-        return 'rgba(241, 196, 15, 0.3)';
-      case 'cancelled':
-        return 'rgba(231, 76, 60, 0.3)';
-      default:
-        return 'rgba(41, 128, 185, 0.3)';
-    }
-  }};
-  color: ${props => {
-    switch(props.status?.toLowerCase()) {
-      case 'confirmed':
-        return '#2ecc71';
-      case 'pending':
-        return '#f1c40f';
-      case 'cancelled':
-        return '#e74c3c';
-      default:
-        return '#3498db';
-    }
-  }};
-  font-weight: 600;
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  display: inline-block;
-  margin-top: 10px;
-`;
-
-const ViewDetailsButton = styled.button`
-  background: linear-gradient(135deg, #4CC9F0, #06D6A0);
-  color: white;
-  border: none;
-  padding: 8px 15px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(76, 201, 240, 0.3);
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 14px rgba(76, 201, 240, 0.4);
-  }
-  
-  &:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 8px rgba(76, 201, 240, 0.3);
-  }
-  
-  @media (max-width: 768px) {
-    margin-top: 10px;
-  }
-`;
-
-const BookingActions = styled.div`
-  display: flex;
-  gap: 15px;
-  align-items: center;
-  
-  @media (max-width: 768px) {
-    width: 100%;
-    justify-content: flex-end;
-  }
-`;
-
-const LoadingBookingsIndicator = styled.div`
-  display: flex;
-  justify-content: center;
-  padding: 20px;
-  color: rgba(255, 255, 255, 0.7);
-  
-  &::after {
-    content: '';
-    width: 25px;
-    height: 25px;
-    border: 2px solid rgba(76, 201, 240, 0.3);
-    border-top: 2px solid #4CC9F0;
-    border-radius: 50%;
-    margin-left: 10px;
-    animation: ${rotate} 1s linear infinite;
-  }
-`;

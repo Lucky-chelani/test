@@ -7,6 +7,9 @@ const AdminContainer = styled.div`
   margin: 50px auto;
   padding: 20px;
   font-family: 'Inter', sans-serif;
+  @media (max-width: 480px) {
+    margin: 20px auto;
+  }
 `;
 
 const Header = styled.h1`

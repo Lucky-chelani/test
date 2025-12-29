@@ -65,7 +65,7 @@ const FileInput = styled.input`
 
 const ImagePreviewsContainer = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   gap: 15px;
   margin-top: 20px;
 `;
@@ -102,11 +102,22 @@ const ImageOverlay = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  opacity: 0;
+  
+  /* DEFAULT: Hidden (for desktop mouse users) */
+  opacity: 0; 
   transition: opacity 0.3s ease;
   
+  /* SHOW ON HOVER (Mouse) */
   ${ImagePreviewWrapper}:hover & {
     opacity: 1;
+  }
+
+  /* CRITICAL FIX: SHOW ALWAYS ON TOUCH DEVICES */
+  @media (hover: none) {
+    opacity: 1;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 40%);
+    justify-content: flex-start; /* Move buttons to top so image is visible */
+    padding-top: 10px;
   }
 `;
 
@@ -150,6 +161,12 @@ const ActionButton = styled.button`
     background: ${props => props.danger ? 'rgba(220, 38, 38, 0.8)' : props.primary ? 'rgba(79, 70, 229, 0.8)' : 'rgba(0, 0, 0, 0.8)'};
     transform: scale(1.1);
   }
+
+  @media (max-width: 768px) {
+    width: 36px;
+    height: 36px;
+  }
+
 `;
 
 const ProgressContainer = styled.div`

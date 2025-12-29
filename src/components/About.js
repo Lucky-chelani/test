@@ -1,69 +1,39 @@
 import React, { useEffect, useState } from 'react';
 import styled, { keyframes, css } from 'styled-components';
+import { FaUsers, FaLeaf, FaShieldAlt } from 'react-icons/fa'; // Import icons
 import mapPattern from '../assets/images/map-pattren.png';
 import mountainBottomArt from '../assets/images/mountains-bottom-art.png';
 import Footer from './Footer';
 
-// Animations
+// --- ANIMATIONS ---
+
 const fadeInUp = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(40px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
 `;
 
-const slideInLeft = keyframes`
-  from {
-    opacity: 0;
-    transform: translateX(-60px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-`;
-
-const slideInRight = keyframes`
-  from {
-    opacity: 0;
-    transform: translateX(60px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+const textShine = keyframes`
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 `;
 
 const float = keyframes`
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
 `;
 
 const shimmer = keyframes`
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 `;
 
 const pulse = keyframes`
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.02);
-  }
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
 `;
+
+// --- STYLED COMPONENTS ---
 
 const Page = styled.div`
   background: #000 url(${mapPattern});
@@ -78,17 +48,16 @@ const Page = styled.div`
   &::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, rgba(255, 210, 191, 0.05) 0%, rgba(0, 0, 0, 0.3) 50%, rgba(255, 210, 191, 0.05) 100%);
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(45deg, rgba(255, 210, 191, 0.05) 0%, rgba(0, 0, 0, 0.4) 50%, rgba(255, 210, 191, 0.05) 100%);
     pointer-events: none;
     z-index: 1;
   }
 
   @media (max-width: 768px) {
     padding-top: 60px;
+    background-attachment: scroll; // Fixes mobile jitter
+    background-position: center top;
   }
 `;
 
@@ -115,43 +84,42 @@ const Hero = styled.div`
 `;
 
 const Title = styled.h1`
-  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-size: clamp(3rem, 6vw, 5rem);
   font-weight: 800;
   margin-bottom: 32px;
-  background: linear-gradient(135deg, #fff 0%, #FFD2BF 50%, #fff 100%);
+  /* Premium Animated Gradient */
+  background: linear-gradient(
+    300deg,
+    #ffffff 0%,
+    #FFD2BF 25%,
+    #ffb89e 50%,
+    #FFD2BF 75%,
+    #ffffff 100%
+  );
+  background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  line-height: 1.2;
-  animation: ${fadeInUp} 1s ease-out;
+  line-height: 1.1;
+  letter-spacing: -1px;
+  animation: ${fadeInUp} 1s ease-out, ${textShine} 5s ease-in-out infinite;
   position: relative;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 60%;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, rgba(255, 210, 191, 0.6), transparent);
-    border-radius: 1px;
-  }
 `;
 
 const Subtitle = styled.p`
   font-size: clamp(1.1rem, 2vw, 1.3rem);
-  max-width: 900px;
+  max-width: 800px;
   margin: 0 auto;
-  opacity: 0.95;
+  opacity: 0.9;
   line-height: 1.8;
   animation: ${fadeInUp} 1s ease-out 0.2s both;
   font-weight: 300;
   letter-spacing: 0.5px;
+  color: #e0e0e0;
 `;
 
 const Section = styled.section`
-  margin-bottom: 80px;
+  margin-bottom: 100px;
   position: relative;
   
   ${props => props.delay && css`
@@ -159,14 +127,14 @@ const Section = styled.section`
   `}
 
   @media (max-width: 768px) {
-    margin-bottom: 60px;
+    margin-bottom: 80px;
   }
 `;
 
 const SectionTitle = styled.h2`
-  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 700;
-  margin-bottom: 48px;
+  margin-bottom: 56px;
   text-align: center;
   position: relative;
   color: #fff;
@@ -174,125 +142,122 @@ const SectionTitle = styled.h2`
   &::before {
     content: '';
     position: absolute;
-    bottom: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80px;
-    height: 3px;
-    background: linear-gradient(90deg, #FFD2BF, rgba(255, 210, 191, 0.3));
-    border-radius: 2px;
-  }
-  
-  &::after {
-    content: '';
-    position: absolute;
     bottom: -16px;
     left: 50%;
     transform: translateX(-50%);
-    width: 40px;
-    height: 3px;
-    background: #FFD2BF;
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, #FFD2BF, rgba(255, 210, 191, 0.3));
     border-radius: 2px;
   }
 `;
 
 const Grid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 48px;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 32px;
   margin-top: 64px;
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
-    gap: 32px;
     margin-top: 40px;
   }
 `;
 
+// Premium Glassmorphism Card
 const Card = styled.div`
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 210, 191, 0.2);
-  border-radius: 32px;
-  padding: 40px;
-  backdrop-filter: blur(20px);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.3),
-    0 2px 8px rgba(255, 210, 191, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  background: rgba(20, 20, 20, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 48px 32px;
+  backdrop-filter: blur(12px);
   position: relative;
   overflow: hidden;
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
   
-  &::before {
+  // Inner Glow Effect
+  &::after {
     content: '';
     position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, #FFD2BF, transparent);
-    transition: left 0.6s ease;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle at center, rgba(255, 210, 191, 0.1), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.5s;
+    pointer-events: none;
   }
-  
+
   &:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 
-      0 16px 48px rgba(0, 0, 0, 0.4),
-      0 4px 16px rgba(255, 210, 191, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 210, 191, 0.4);
+    transform: translateY(-10px);
+    border-color: rgba(255, 210, 191, 0.5);
+    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5), 0 0 20px rgba(255, 210, 191, 0.1);
     
-    &::before {
-      left: 100%;
+    &::after {
+      opacity: 1;
     }
   }
   
   animation: ${fadeInUp} 0.6s ease-out;
 `;
 
+// Icon Wrapper for Grid
+const IconWrapper = styled.div`
+  font-size: 2.5rem;
+  color: #FFD2BF;
+  margin-bottom: 24px;
+  background: rgba(255, 210, 191, 0.1);
+  width: 70px;
+  height: 70px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+
+  ${Card}:hover & {
+    background: #FFD2BF;
+    color: #000;
+    transform: scale(1.1) rotate(5deg);
+  }
+`;
+
 const MissionCard = styled(Card)`
   text-align: center;
-  background: linear-gradient(135deg, rgba(255, 210, 191, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
-  border: 2px solid rgba(255, 210, 191, 0.3);
-  animation: ${pulse} 3s ease-in-out infinite;
+  max-width: 900px;
+  margin: 0 auto;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 210, 191, 0.05) 100%);
+  border: 1px solid rgba(255, 210, 191, 0.3);
+  animation: ${pulse} 4s ease-in-out infinite;
+  padding: 60px 40px;
   
   &:hover {
     animation-play-state: paused;
   }
+
+  &::before {
+    content: '"';
+    position: absolute;
+    top: -20px;
+    left: 20px;
+    font-size: 8rem;
+    color: rgba(255, 210, 191, 0.1);
+    font-family: serif;
+    line-height: 1;
+  }
 `;
 
 const CardTitle = styled.h3`
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  margin-bottom: 20px;
-  color: #FFD2BF;
-  position: relative;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -8px;
-    left: 0;
-    width: 30px;
-    height: 2px;
-    background: #FFD2BF;
-    border-radius: 1px;
-    transition: width 0.3s ease;
-  }
-  
-  ${Card}:hover & {
-    &::after {
-      width: 60px;
-    }
-  }
+  margin-bottom: 16px;
+  color: #fff;
 `;
 
 const CardText = styled.p`
-  font-size: 1.15rem;
-  line-height: 1.8;
-  opacity: 0.95;
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.8);
   font-weight: 300;
-  letter-spacing: 0.3px;
 `;
 
 const TeamGrid = styled.div`
@@ -303,128 +268,64 @@ const TeamGrid = styled.div`
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
-    gap: 32px;
     margin-top: 40px;
   }
 `;
 
-const TeamCard = styled.div`
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 210, 191, 0.2);
-  border-radius: 32px;
-  padding: 40px;
+const TeamCard = styled(Card)`
   text-align: center;
-  backdrop-filter: blur(20px);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  position: relative;
-  overflow: hidden;
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  animation: ${fadeInUp} 0.6s ease-out;
+  padding: 50px 30px;
   
   &:nth-child(1) { animation-delay: 0.1s; }
   &:nth-child(2) { animation-delay: 0.2s; }
-  &:nth-child(3) { animation-delay: 0.3s; }
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: linear-gradient(45deg, transparent, rgba(255, 210, 191, 0.1), transparent);
-    transform: rotate(45deg);
-    transition: all 0.6s ease;
-    opacity: 0;
-  }
-  
-  &:hover {
-    transform: translateY(-12px) rotateY(5deg);
-    box-shadow: 
-      0 20px 60px rgba(0, 0, 0, 0.4),
-      0 4px 20px rgba(255, 210, 191, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 210, 191, 0.5);
-    
-    &::before {
-      opacity: 1;
-      top: -100%;
-      left: -100%;
-    }
-  }
 `;
 
 const TeamMemberAvatar = styled.div`
-  width: 80px;
-  height: 80px;
+  width: 110px;
+  height: 110px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #FFD2BF 0%, rgba(255, 210, 191, 0.6) 100%);
+  // Modern gradient mesh look
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), transparent),
+              linear-gradient(135deg, #FFD2BF 0%, #ff9a76 50%, #ff6b6b 100%);
   margin: 0 auto 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
-  font-weight: 700;
-  color: #000;
-  position: relative;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-    animation: ${shimmer} 2s infinite;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 30px rgba(255, 210, 191, 0.2);
+  transition: transform 0.3s ease;
+
+  ${TeamCard}:hover & {
+    transform: scale(1.1) rotate(-5deg);
+    border-color: #FFD2BF;
   }
 `;
 
 const TeamMemberName = styled.h3`
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  margin: 20px 0 12px 0;
+  margin: 20px 0 8px 0;
   color: #fff;
 `;
 
 const TeamMemberRole = styled.p`
   color: #FFD2BF;
   font-weight: 600;
-  margin-bottom: 20px;
-  font-size: 1.1rem;
+  margin-bottom: 24px;
+  font-size: 1rem;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 2px;
 `;
 
 const TeamMemberQuote = styled.p`
   font-style: italic;
-  opacity: 0.9;
-  line-height: 1.8;
-  font-size: 1.05rem;
-  position: relative;
-  padding: 0 20px;
-  
-  &::before,
-  &::after {
-    content: '"';
-    font-size: 2rem;
-    color: #FFD2BF;
-    position: absolute;
-    font-family: Georgia, serif;
-  }
-  
-  &::before {
-    top: -10px;
-    left: 0;
-  }
-  
-  &::after {
-    bottom: -20px;
-    right: 0;
-  }
+  color: rgba(255,255,255,0.7);
+  line-height: 1.6;
+  font-size: 1rem;
 `;
 
 const MountainBottom = styled.div`
@@ -434,21 +335,15 @@ const MountainBottom = styled.div`
   overflow: hidden;
   margin-top: -60px;
   z-index: 2;
+  pointer-events: none;
   
   &::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 100px;
-    background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.3));
+    top: 0; left: 0; right: 0;
+    height: 150px;
+    background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.5));
     z-index: 1;
-  }
-
-  @media (max-width: 768px) {
-    margin-top: -30px;
-    height: auto;
   }
 `;
 
@@ -457,13 +352,8 @@ const MountainImg = styled.img`
   height: auto;
   display: block;
   margin-bottom: -2px;
-  transition: transform 0.3s ease;
   animation: ${float} 6s ease-in-out infinite;
   
-  &:hover {
-    transform: scale(1.02);
-  }
-
   @media (max-width: 768px) {
     animation: none;
   }
@@ -471,8 +361,7 @@ const MountainImg = styled.img`
 
 const FloatingElements = styled.div`
   position: fixed;
-  top: 0;
-  left: 0;
+  top: 0; left: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
@@ -513,23 +402,11 @@ const About = () => {
   return (
     <Page>
       <FloatingElements>
-        <FloatingCircle 
-          style={{ top: '10%', left: '10%', width: '100px', height: '100px' }}
-          duration={8}
-          delay={0}
-        />
-        <FloatingCircle 
-          style={{ top: '60%', right: '15%', width: '60px', height: '60px' }}
-          duration={10}
-          delay={2}
-        />
-        <FloatingCircle 
-          style={{ bottom: '20%', left: '20%', width: '80px', height: '80px' }}          duration={12}
-          delay={4}
-        />
+        <FloatingCircle style={{ top: '10%', left: '10%', width: '100px', height: '100px' }} duration={8} delay={0} />
+        <FloatingCircle style={{ top: '60%', right: '15%', width: '60px', height: '60px' }} duration={10} delay={2} />
+        <FloatingCircle style={{ bottom: '20%', left: '20%', width: '80px', height: '80px' }} duration={12} delay={4} />
       </FloatingElements>
       
-      {/* Removed Navbar - using BottomNavbar from App.js */}
       <Container>
         <Hero>
           <Title>Transforming How The World Experiences Trekking</Title>
@@ -550,6 +427,9 @@ const About = () => {
         <Section delay={0.5}>
           <Grid>
             <Card>
+              <IconWrapper>
+                <FaUsers />
+              </IconWrapper>
               <CardTitle>Community First</CardTitle>
               <CardText>
                 We foster meaningful connections between trekkers, creating a vibrant community that shares knowledge, experiences, and friendship.
@@ -557,16 +437,22 @@ const About = () => {
             </Card>
 
             <Card>
+              <IconWrapper>
+                <FaLeaf />
+              </IconWrapper>
               <CardTitle>Sustainable Travel</CardTitle>
               <CardText>
-                We promote responsible trekking practices and partner with local communities to ensure our adventures have a positive impact on the environment and local economies.
+                We promote responsible trekking practices and partner with local communities to ensure our adventures have a positive impact.
               </CardText>
             </Card>
 
             <Card>
+              <IconWrapper>
+                <FaShieldAlt />
+              </IconWrapper>
               <CardTitle>Safety & Trust</CardTitle>
               <CardText>
-                We prioritize the safety and well-being of our community through comprehensive risk assessments, clear safety guidelines, and trustworthy support systems.
+                We prioritize the safety and well-being of our community through comprehensive risk assessments and trustworthy support systems.
               </CardText>
             </Card>
           </Grid>
@@ -597,4 +483,3 @@ const About = () => {
 };
 
 export default About;
-

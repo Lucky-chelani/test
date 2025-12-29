@@ -24,6 +24,7 @@ const SearchContainer = styled.div`
   @media (max-width: 480px) {
     width: ${props => props.expanded ? '85%' : '40px'};
     height: 40px;
+    margin: ${props => props.expanded ? '0 auto' : '0'};
   }
 `;
 
@@ -76,6 +77,7 @@ const SearchButton = styled.button`
   @media (max-width: 480px) {
     width: ${props => props.expanded ? '40px' : '100%'};
     height: ${props => props.expanded ? '40px' : '100%'};
+    
   }
 `;
 

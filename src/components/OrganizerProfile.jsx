@@ -39,7 +39,8 @@ const ProfileHeader = styled.div`
   border: 1px solid rgba(255, 255, 255, 0.1);
   
   @media (max-width: 768px) {
-    flex-direction: column;
+    flex-direction: column; /* Stacked */
+    text-align: center;
     gap: 20px;
     padding: 20px;
   }
