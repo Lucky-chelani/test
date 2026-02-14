@@ -529,6 +529,95 @@ const EmptyState = styled.div`
     line-height: 1.6;
   }
 `;
+// 1. The small preview bar that appears ABOVE the input when replying
+const ReplyPreviewContainer = styled.div`
+  padding: 12px 20px;
+  background: rgba(15, 24, 42, 0.95);
+  border-top: 1px solid rgba(128, 255, 219, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  animation: ${fadeIn} 0.2s ease-out;
+  position: relative;
+  z-index: 4; /* Below ChatForm */
+`;
+
+const ReplyInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.85rem;
+  
+  strong {
+    color: #80FFDB;
+  }
+  
+  span {
+    color: rgba(255, 255, 255, 0.6);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 300px;
+  }
+`;
+
+const CancelReplyButton = styled.button`
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  
+  &:hover {
+    color: #ff6b6b;
+    background: rgba(255, 255, 255, 0.1);
+  }
+`;
+
+// 2. The visual "Quote" inside a sent message bubble
+const QuotedMessage = styled.div`
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-left: 3px solid ${props => props.$isCurrentUser ? 'rgba(255, 255, 255, 0.5)' : '#80FFDB'};
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  
+  strong {
+    display: block;
+    color: ${props => props.$isCurrentUser ? 'rgba(255, 255, 255, 0.9)' : '#80FFDB'};
+    font-size: 0.75rem;
+    margin-bottom: 2px;
+  }
+  
+  span {
+    color: rgba(255, 255, 255, 0.7);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+`;
+
+// 3. The Reply Button (to be placed in MessageMeta)
+const ReplyButton = styled.button`
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.7rem;
+  cursor: pointer;
+  padding: 0 5px;
+  margin-left: 8px;
+  transition: color 0.2s;
+  
+  &:hover {
+    color: #80FFDB;
+    text-decoration: underline;
+  }
+`;
 
 // Format date for display
 const formatDate = (timestamp) => {
@@ -589,6 +678,8 @@ const ChatRoom = () => {
   const [isUserMember, setIsUserMember] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  // Add this near your other useState hooks
+  const [replyingTo, setReplyingTo] = useState(null);
 
   // Handle keyboard visibility
   useEffect(() => {
@@ -800,6 +891,27 @@ const ChatRoom = () => {
         clientMessageId: localMessageId // Include client ID to help with deduplication
       });
       
+      const messagePayload = {
+        text: messageText,
+        userId: auth.currentUser.uid,
+        userName: auth.currentUser.displayName || 'Anonymous',
+        userPhoto: auth.currentUser.photoURL || null,
+        timestamp: serverTimestamp(),
+        expiresAt: Timestamp.fromDate(expirationTime),
+        ttl: '8 hours',
+        clientMessageId: localMessageId,
+        // ADD THIS BLOCK:
+        replyTo: replyingTo ? {
+          id: replyingTo.id,
+          userName: replyingTo.userName,
+          text: replyingTo.text // Store the text for preview
+        } : null
+      };
+
+      await addDoc(collection(db, `chatrooms/${roomDocId}/messages`), messagePayload);
+
+      // Clear the reply state after sending
+      setReplyingTo(null);
       // After successful send, remove the local message - but give it a slight delay
       // to allow Firebase to sync the new message first
       setTimeout(() => {

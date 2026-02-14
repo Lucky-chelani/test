@@ -660,6 +660,82 @@ const LoadingSpinner = styled.div`
     }
   }
 `;
+const BlogRedirectSection = styled.div`
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(90deg, rgba(255, 210, 191, 0.08) 0%, rgba(76, 201, 240, 0.05) 100%);
+  border-radius: 16px;
+  padding: 24px 40px;
+  margin-bottom: 50px;
+  border: 1px dashed rgba(255, 210, 191, 0.3);
+  transition: all 0.3s ease;
+
+  &:hover {
+    border-style: solid;
+    background: rgba(255, 210, 191, 0.12);
+    transform: translateY(-2px);
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+    padding: 30px 20px;
+  }
+`;
+
+const BlogTextWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+const BlogMiniTitle = styled.h4`
+  color: #FFD2BF;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+`;
+
+const BlogTagline = styled.p`
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.95rem;
+  margin: 0;
+`;
+
+const ExploreBlogButton = styled(Link)`
+  background: transparent;
+  color: #FFD2BF;
+  border: 1.5px solid #FFD2BF;
+  padding: 10px 24px;
+  border-radius: 50px;
+  font-weight: 600;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.3s ease;
+  }
+
+  &:hover {
+    background: #FFD2BF;
+    color: #000;
+    box-shadow: 0 5px 15px rgba(255, 210, 191, 0.2);
+    
+    svg {
+      transform: translateX(4px);
+    }
+  }
+`;
+
 
 const Footer = () => {
   const [email, setEmail] = useState('');
@@ -809,6 +885,20 @@ const Footer = () => {
             </ErrorMessage>
           )}
         </NewsletterSection>
+
+        <BlogRedirectSection>
+          <BlogTextWrapper>
+            <BlogMiniTitle>Explore Our Adventure Blogs</BlogMiniTitle>
+            <BlogTagline>Deep dives into the world's most hidden trails and expert gear guides.</BlogTagline>
+          </BlogTextWrapper>
+          <ExploreBlogButton to="/blog">
+            Read Stories
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </ExploreBlogButton>
+        </BlogRedirectSection>
 
         <FooterSection delay="0.1s">
           <LogoContainer>

@@ -11,6 +11,8 @@ import Footer from './components/Footer';
 import Explore from './components/Explore';
 import Community from './components/Community';
 import Blog from './components/Blog';
+import CreateBlog from './components/CreateBlog'; // <--- ADD THIS CHECK PATH
+import BlogDetail from './components/BlogDetail';
 import { RewardsHero, RewardsSection } from './components/Rewards';
 import About from './components/About';
 import Profile from './components/Profile';
@@ -48,7 +50,6 @@ import BookingConfirmation from './components/BookingConfirmation';
 // ✅ ADDED: Import OrganizerBookings
 import OrganizerBookings from './components/OrganizerBookings'; 
 import OrganizerSettings from './components/OrganizerSettings';
-
 const PageTransition = ({ children }) => {
   return (
     <motion.div
@@ -119,6 +120,18 @@ function App() {
             <Route path="/blog" element={
               <PageTransition>
                 <Blog />
+              </PageTransition>
+            } />
+            <Route path="/create-blog" element={
+              <PageTransition>
+                <CreateBlog />
+              </PageTransition>
+            } />
+
+            {/* ✅ ADD THIS: BLOG DETAIL ROUTE */}
+            <Route path="/blogs/:id" element={
+              <PageTransition>
+                <BlogDetail />
               </PageTransition>
             } />
             <Route path="/rewards" element={

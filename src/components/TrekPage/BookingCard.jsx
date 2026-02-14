@@ -15,18 +15,11 @@ const getSeasonIcon = (season) => {
   return <FaSun />;
 };
 
-// --- ANIMATIONS ---
-const pulse = keyframes`
-  0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
-`;
-
 // --- STYLED COMPONENTS ---
 
 const CardWrapper = styled.div`
   /* Modern Dark Glass Aesthetic */
-  background: rgba(30, 41, 59, 0.6); /* Slightly more opaque than content for visibility */
+  background: rgba(30, 41, 59, 0.75); 
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   
@@ -36,6 +29,8 @@ const CardWrapper = styled.div`
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   
   position: relative;
+  width: 100%;
+  max-width: 400px; /* Default max-width for desktop sidebar */
   transition: transform 0.3s ease;
 
   /* Top Gradient Line */
@@ -48,11 +43,25 @@ const CardWrapper = styled.div`
     height: 4px;
     background: linear-gradient(90deg, #6366F1, #A855F7);
   }
+
+  /* --- RESPONSIVE ADJUSTMENTS --- */
+  @media (max-width: 1024px) {
+    max-width: 100%; /* Full width on tablets/mobile if needed */
+  }
+
+  @media (max-width: 768px) {
+    border-radius: 20px;
+    box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.4);
+  }
 `;
 
 const BookingHeader = styled.div`
   padding: 2rem 2rem 1.5rem;
   background: linear-gradient(to bottom, rgba(255,255,255,0.03), transparent);
+
+  @media (max-width: 480px) {
+    padding: 1.5rem 1.25rem 1.25rem;
+  }
 `;
 
 const PriceTag = styled.div`
@@ -65,16 +74,17 @@ const PriceRow = styled.div`
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
+  flex-wrap: wrap; /* Allows wrapping on very small screens */
 `;
 
 const Price = styled.div`
-  font-size: 2.25rem;
+  /* Fluid Typography: Scales between 1.75rem and 2.25rem */
+  font-size: clamp(1.75rem, 5vw, 2.25rem);
   font-weight: 800;
   color: #fff;
   letter-spacing: -0.02em;
   text-shadow: 0 2px 10px rgba(0,0,0,0.3);
   
-  /* Gradient Text Effect */
   background: linear-gradient(to right, #fff, #e2e8f0);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -84,6 +94,10 @@ const PricePerPerson = styled.span`
   font-size: 1rem;
   font-weight: 500;
   color: #94a3b8;
+  
+  @media (max-width: 480px) {
+    font-size: 0.9rem;
+  }
 `;
 
 const PriceCaption = styled.div`
@@ -98,9 +112,14 @@ const PriceCaption = styled.div`
     content: '';
     width: 6px;
     height: 6px;
-    background: #4ADE80; /* Green dot for 'All Inclusive' */
+    min-width: 6px; /* Prevents shrinking */
+    background: #4ADE80; 
     border-radius: 50%;
     box-shadow: 0 0 8px rgba(74, 222, 128, 0.4);
+  }
+
+  @media (max-width: 480px) {
+    font-size: 0.8rem;
   }
 `;
 
@@ -108,10 +127,18 @@ const BookingDivider = styled.div`
   height: 1px;
   background: rgba(255, 255, 255, 0.1);
   margin: 0 2rem;
+
+  @media (max-width: 480px) {
+    margin: 0 1.25rem;
+  }
 `;
 
 const BookingBody = styled.div`
   padding: 2rem;
+
+  @media (max-width: 480px) {
+    padding: 1.5rem 1.25rem;
+  }
 `;
 
 const BookingDetailsGrid = styled.div`
@@ -119,12 +146,18 @@ const BookingDetailsGrid = styled.div`
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem 1rem;
   margin-bottom: 2rem;
+
+  @media (max-width: 480px) {
+    gap: 1.25rem 0.75rem; /* Tighter gap on mobile */
+    margin-bottom: 1.5rem;
+  }
 `;
 
 const DetailItem = styled.div`
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0; /* Critical for text-overflow to work in grid */
 `;
 
 const DetailLabel = styled.div`
@@ -139,7 +172,8 @@ const DetailLabel = styled.div`
 
   svg {
     font-size: 0.9rem;
-    color: #6366F1; /* Indigo accents */
+    color: #6366F1;
+    flex-shrink: 0; /* Prevents icon from squishing */
   }
 `;
 
@@ -147,16 +181,21 @@ const DetailValue = styled.div`
   font-size: 1rem;
   font-weight: 600;
   color: #f1f5f9;
+  
+  /* Robust text truncation */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  @media (max-width: 480px) {
+    font-size: 0.95rem; /* Slightly smaller on mobile */
+  }
 `;
 
 const BookNowBtn = styled.button`
   width: 100%;
   padding: 1.1rem;
   
-  /* Indigo to Violet Gradient */
   background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
   color: #ffffff;
   
@@ -176,7 +215,6 @@ const BookNowBtn = styled.button`
   position: relative;
   overflow: hidden;
   
-  /* Shine effect on hover */
   &::after {
     content: '';
     position: absolute;
@@ -204,6 +242,11 @@ const BookNowBtn = styled.button`
   &:active {
     transform: translateY(0);
   }
+
+  @media (max-width: 480px) {
+    padding: 1rem;
+    font-size: 1rem;
+  }
 `;
 
 const SecureText = styled.div`
@@ -217,7 +260,13 @@ const SecureText = styled.div`
   gap: 6px;
   
   svg {
-    color: #10B981; /* Green shield */
+    color: #10B981;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 0.75rem;
+    margin-top: 0.75rem;
   }
 `;
 
@@ -262,7 +311,7 @@ const BookingCard = ({
             <DetailLabel>
               <FiMapPin /> Location
             </DetailLabel>
-            <DetailValue>{trekLocation}</DetailValue>
+            <DetailValue title={trekLocation}>{trekLocation}</DetailValue>
           </DetailItem>
           
           <DetailItem>
