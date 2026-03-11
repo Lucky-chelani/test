@@ -793,6 +793,7 @@ const EmptyState = styled.div`
 
 // Sample data for active groups and events (would come from backend in full app)
 
+
 const Explore = () => {
   const navigate = useNavigate();
   const [recommendedTreks, setRecommendedTreks] = useState([]);
@@ -807,7 +808,7 @@ const Explore = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { searchQuery, updateSearchQuery, searchTreks } = useSearch();
-
+  
   useEffect(() => {
     const fetchTreks = async () => {
       try {
