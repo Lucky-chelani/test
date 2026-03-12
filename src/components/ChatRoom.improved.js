@@ -1,23 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import styled, { keyframes, css } from 'styled-components';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, where, Timestamp, getDocs, arrayUnion } from 'firebase/firestore';
+
+// Move all image and component imports up here
 import mapPattern from '../assets/images/map-pattren.png';
-// Add this to your imports at the top
-import EmojiPicker from 'emoji-picker-react';
 import chatBg from '../assets/images/chatBackground.png';
 import SidebarNew from '../components/Sidebar';
 
+// NOW you can define your lazy-loaded components
+const EmojiPicker = lazy(() => import('emoji-picker-react'));
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 `;
 
-const shimmerEffect = keyframes`
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-`;
+
 
 export const EmojiPickerContainer = styled.div`
   position: absolute;
@@ -181,6 +180,8 @@ const floatIn = keyframes`
 `;
 
 export const ChatContainer = styled.div`
+  will-change: transform, opacity;
+ transform: translateZ(0);
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -301,6 +302,8 @@ export const MessageContainer = styled.div`
   /* Hardware acceleration for buttery smooth scrolling on mobile */
   -webkit-overflow-scrolling: touch;
   transform: translateZ(0);
+  background-color: #0A0F1E; 
+  background-image: linear-gradient(...), url(${chatBg});
 
   /* --- YOUR NEW CHAT BACKGROUND --- */
   background: 
@@ -537,14 +540,6 @@ export const Avatar = styled.div`
 `;
 
 
-const shimmerSweep = keyframes`
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(200%); }
-`;
-
-const spin = keyframes`
-  to { transform: rotate(360deg); }
-`;
 export const MessageContent = styled.div`
   display: flex;
   flex-direction: column;
@@ -1163,20 +1158,7 @@ export const TypingDots = styled.div`
   span:nth-child(2) { animation-delay: -0.16s; }
 `;
 
-const MobileOverlay = styled.div`
-  display: none;
-  @media (max-width: 768px) {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-    z-index: 1500;
-    opacity: ${props => props.$isOpen ? 1 : 0};
-    pointer-events: ${props => props.$isOpen ? 'auto' : 'none'};
-    transition: opacity 0.3s ease;
-  }
-`;
+
 
 // 2. Reactions UI
 export const ReactionRow = styled.div`
@@ -1277,8 +1259,8 @@ const ChatRoom = () => {
   const [isUserMember, setIsUserMember] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [showNewMessageBadge, setShowNewMessageBadge] = useState(false);
   
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   // NEW: Reply State
   const [replyingTo, setReplyingTo] = useState(null);
   // --- EMOJI PICKER STATE ---
@@ -1323,30 +1305,36 @@ const ChatRoom = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const scrollToBottom = (force = false) => {
-    if (messageContainerRef.current) {
-      const scrollContainer = messageContainerRef.current;
-      const isNearBottom = scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight < 150;
-      
-      if (isNearBottom || force) {
-        requestAnimationFrame(() => {
-          scrollContainer.scrollTop = scrollContainer.scrollHeight;
-        });
-      }
+  // Add a ref to track if it's the first time the messages have loaded
+const isInitialLoad = useRef(true);
+
+const scrollToBottom = (force = false) => {
+  if (messageContainerRef.current) {
+    const { scrollHeight, clientHeight, scrollTop } = messageContainerRef.current;
+    
+    // Check if the user is already within 150px of the bottom
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 150;
+
+    if (force || isNearBottom) {
+      requestAnimationFrame(() => {
+        messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+      });
     }
-  };
+  }
+};
 
-  // 1. When background messages update (like reactions), only scroll IF user is already near the bottom
-  useEffect(() => {
-    scrollToBottom(false); 
-  }, [messages]);
-
-  // 2. FORCE scroll to bottom when YOU send a message, open the keyboard, or hit reply
-  useEffect(() => {
-    if (localMessages.length > 0 || isKeyboardVisible || replyingTo) {
+useEffect(() => {
+  if (!loading && messages.length > 0) {
+    if (isInitialLoad.current) {
+      // FORCE scroll to bottom on the very first load
       scrollToBottom(true);
+      isInitialLoad.current = false;
+    } else {
+      // Only scroll if the user is already near the bottom
+      scrollToBottom(false);
     }
-  }, [localMessages, isKeyboardVisible, replyingTo]);
+  }
+}, [messages, loading]);
   // --- Firebase Fetching ---
   useEffect(() => {
     const fetchRoomData = async () => {
@@ -1537,38 +1525,6 @@ const ChatRoom = () => {
     }
   };
 
-  
-  const handleJoinCommunity = async () => {
-    if (!auth.currentUser) {
-      navigate('/login');
-      return;
-    }
-    try {
-      setLoading(true);
-      await updateDoc(doc(db, 'chatrooms', roomDocId), {
-        members: arrayUnion(auth.currentUser.uid),
-        memberCount: (roomData?.memberCount || 0) + 1
-      });
-      setIsUserMember(true);
-      setError('');
-      setInfoMessage('You have successfully joined this community!');
-      setRoomData(prev => ({
-        ...prev,
-        members: [...(prev.members || []), auth.currentUser.uid],
-        memberCount: (prev.memberCount || 0) + 1
-      }));
-      setTimeout(() => setInfoMessage(''), 5000); 
-    } catch (err) {
-      if (err.code === 'permission-denied') {
-        setError("You don't have permission to join this community.");
-      } else {
-        setError("Failed to join community: " + err.message);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleReplyClick = (message) => {
     setReplyingTo(message);
     document.getElementById('chat-input-field')?.focus();
@@ -1730,32 +1686,18 @@ const ChatRoom = () => {
       <StarryLayer />
       <AmbientLighting />
       <ForegroundRocks />
-      <MobileOverlay 
-        $isOpen={isSidebarOpen} 
-        onClick={() => setIsSidebarOpen(false)} 
-      />
       <AppWindow>
         <SidebarNew />
       <ChatContainer>
         {/* --- Header --- */}
         <ChatHeader>
           <HeaderLeft>
-            {/* HAMBURGER ICON: Hidden on Desktop, Visible on Mobile */}
-            <button 
-              className="mobile-menu-btn" 
-              onClick={() => setIsSidebarOpen(true)}
-              style={{ background: 'none', border: 'none', color: '#38BDF8', cursor: 'pointer', padding: '0 8px' }}
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
-              </svg>
+            {/* Removed the hamburger button entirely */}
+            <button onClick={() => navigate('/community')} style={{ background: 'none', border: 'none', color: '#38BDF8', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
             </button>
-            
             <RoomName>{room ? room.name : 'Alpine Adventurers'}</RoomName>
           </HeaderLeft>
-          
         </ChatHeader>
         
         {/* --- Message Area --- */}
@@ -1964,12 +1906,12 @@ const ChatRoom = () => {
             {/* THE EMOJI PICKER MENU */}
             {showEmojiPicker && (
               <EmojiPickerContainer ref={emojiPickerRef}>
-                <EmojiPicker 
-                  onEmojiClick={onEmojiClick} 
-                  theme="dark" 
-                  searchDisabled={false}
-                  skinTonesDisabled={true}
-                />
+                <React.Suspense fallback={<div style={{color: 'white'}}>Loading...</div>}>
+                  <EmojiPicker 
+                    onEmojiClick={onEmojiClick} 
+                    theme="dark" 
+                  />
+                </React.Suspense>
               </EmojiPickerContainer>
             )}
 

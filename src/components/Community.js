@@ -17,6 +17,8 @@ import {
   ErrorMessage, SuccessMessage, EmptyState, StarIcon
 } from './CommunityStyled';
 
+
+
 // Helper function to handle image URLs validation
 const getValidImageUrl = (url) => {
   return url && typeof url === 'string' ? url : chatroomImg;
@@ -39,38 +41,63 @@ const Community = () => {
   const navigate = useNavigate();
 
   // Check if current user is an admin
+  // Fetch chatrooms from Firestore with optimized pagination
   useEffect(() => {
-    // Only check admin status if user is authenticated
+    // Only fetch chatrooms if user is authenticated
     if (!isAuthenticated || isAuthChecking) {
-      setIsAdmin(false);
       return;
     }
 
-    const checkAdminStatus = async () => {
-      const currentUser = auth.currentUser;
-      if (currentUser) {
-        if (currentUser.email === 'luckychelani950@gmail.com') {
-          setIsAdmin(true);
-          return;
-        }
-
-        try {
-          const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-          if (userDoc.exists() && userDoc.data().role === 'admin') {
-            setIsAdmin(true);
-          } else {
-            setIsAdmin(false);
-          }
-        } catch (err) {
-          console.error('Error checking admin status:', err);
-          setIsAdmin(false);
-        }
+    setLoading(true);
+    
+    // Set up real-time listener IMMEDIATELY
+    const MESSAGES_PER_PAGE = 8;
+    const chatroomsCollection = collection(db, 'chatrooms');
+    const q = query(
+      chatroomsCollection, 
+      orderBy('createdAt', 'desc'),
+      limit(MESSAGES_PER_PAGE)
+    );
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      // If the database is completely empty, initialize it in the background!
+      // Once it finishes, this snapshot listener will automatically fire again.
+      if (snapshot.empty) {
+        initializeChatrooms().catch(console.error);
+        setHasMore(false);
       } else {
-        setIsAdmin(false);
+        setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
       }
-    };
-
-    checkAdminStatus();
+      
+      const roomsData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        const isNew = data.createdAt && 
+                    typeof data.createdAt.toDate === 'function' ? 
+                    (new Date().getTime() - data.createdAt.toDate().getTime()) < 24 * 60 * 60 * 1000 :
+                    false;
+                    
+        return {
+          ...data,
+          isNew,
+          docId: doc.id, 
+          memberCount: data.members?.length || 0,
+          messageCount: data.messageCount || 0,
+          rating: data.rating || (4 + Math.random()).toFixed(1),
+          reviews: data.reviews || Math.floor(Math.random() * 50) + 5,
+          featured: data.featured || false,
+          cachedImageUrl: getValidImageUrl(data.img)
+        };
+      });
+      
+      setChatrooms(roomsData);
+      setLoading(false); // Instantly turn off loading when data arrives
+    }, (error) => {
+      console.error('Error in chatrooms snapshot:', error);
+      setError('Failed to load communities. Please try again later.');
+      setLoading(false);
+    });
+    
+    return () => unsubscribe();
   }, [isAuthenticated, isAuthChecking]);
 
   // Add authentication state listener
@@ -289,201 +316,147 @@ const Community = () => {
   };
   return (
     <>
-      {/* SEO Components */}
       <CommunitySEO />
       
       <Page>
-      {/* Show loading while checking authentication */}
-      {isAuthChecking ? (
         <PageContainer>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            alignItems: 'center', 
-            minHeight: '50vh',
-            color: '#666' 
-          }}>
-            <div style={{ textAlign: 'center' }}>
-              <FiMessageCircle size={48} opacity={0.4} />
-              <p>Loading...</p>
-            </div>
-          </div>
-        </PageContainer>
-      ) : !isAuthenticated ? (
-        <PageContainer>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            alignItems: 'center', 
-            minHeight: '50vh',
-            color: '#666' 
-          }}>
-            <div style={{ textAlign: 'center' }}>
-              <FiMessageCircle size={48} opacity={0.4} />
-              <p>Redirecting to login...</p>
-            </div>
-          </div>
-        </PageContainer>
-      ) : (
-        <PageContainer>
-        <Header>
-          <HeaderTitle>
-            <HeadingIconContainer>
-              <FiMessageCircle size={28} />
-            </HeadingIconContainer>
-            <div>
-              <h1>Communities</h1>
-              <HeaderSubtitle>Connect with like-minded trekkers from around the world</HeaderSubtitle>
-            </div>
-          </HeaderTitle>
-          
-          {isAdmin ? (
-            <CreateButton onClick={() => setShowCreateModal(true)}>
-              <FiPlus size={18} />
-              <span>Create Community</span>
-            </CreateButton>
-          ) : (
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '8px', 
-              color: '#666',
-              fontSize: '0.9rem' 
-            }}>
-              <FiLock size={16} />
-              <span>Communities are managed by admins</span>
-            </div>
-          )}
-        </Header>
-
-        {error && (
-          <ErrorMessage>
-            <FiX onClick={() => setError('')} />
-            {error}
-          </ErrorMessage>
-        )}
-        
-        {success && (
-          <SuccessMessage>
-            <FiX onClick={() => setSuccess('')} />
-            {success}
-          </SuccessMessage>
-        )}
-
-        <CardsContainer>
-          {loading ? (
-            // Show skeleton loaders when loading
-            Array(8).fill().map((_, index) => (
-              <CardSkeleton key={index} />
-            ))
-          ) : chatrooms.length === 0 ? (
-            <EmptyState>
-              <FiMessageCircle size={60} opacity={0.4} />
-              <h3>No communities found</h3>
-              {isAdmin ? (
-                <>
-                  <p>You can create a new community or manage communities in the admin panel</p>
-                  <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '20px' }}>
-                    <CreateButton onClick={() => setShowCreateModal(true)}>
-                      <FiPlus size={18} />
-                      <span>Create Community</span>
-                    </CreateButton>
-                    <CreateButton 
-                      onClick={() => navigate('/admin/communities')} 
-                      style={{ background: '#4a5568', borderColor: '#4a5568' }}
-                    >
-                      <FiLock size={18} />
-                      <span>Admin Panel</span>
-                    </CreateButton>
-                  </div>
-                </>
-              ) : (
-                <p>Communities will appear here once created by administrators</p>
-              )}
-            </EmptyState>
-          ) : (
-            chatrooms.map((room) => (
-              <div key={room.id || room.docId}>
-                <CommunityRichSnippet community={room} />
-                <Card onClick={() => handleJoinRoom(room)}>
-                  <CardImageContainer>
-                    <CardImage 
-                      src={room.cachedImageUrl} 
-                      alt={`${room.name} - Join trekking community on Trovia`}
-                      loading="lazy" // Add lazy loading for better performance
-                    />
-                    <ImageOverlay />
-                    {room.isNew && <NewLabel>NEW</NewLabel>}
-                    {room.featured && <FeaturedLabel>FEATURED</FeaturedLabel>}
-                  </CardImageContainer>
-                  
-                  <CardContent>
-                    <CardHeader>
-                      <CardTitle>{room.name}</CardTitle>
-                      <CardRating>
-                        <StarIcon className="star" /> 
-                        <span>{room.rating}</span>
-                        <small>({room.reviews})</small>
-                      </CardRating>
-                    </CardHeader>
-                    
-                    <CardDescription>{room.desc || room.description || "Join this trekking community to connect with other adventure enthusiasts."}</CardDescription>
-                    
-                    <CardFooter>
-                      <CardStat>
-                        <FiUsers size={14} />
-                        <span>{room.memberCount} {room.memberCount === 1 ? 'member' : 'members'}</span>
-                      </CardStat>
-                      <CardStat>
-                        <FiMessageCircle size={14} />
-                        <span>{room.messageCount || 0} {(room.messageCount || 0) === 1 ? 'message' : 'messages'}</span>
-                      </CardStat>
-                    </CardFooter>
-                    
-                    <JoinButton>
-                      <span>Join Chat</span>
-                      <FiArrowRight size={16} />
-                    </JoinButton>
-                  </CardContent>
-                </Card>
+          {/* 1. Header loads INSTANTLY, no matter what */}
+          <Header>
+            <HeaderTitle>
+              <HeadingIconContainer>
+                <FiMessageCircle size={28} />
+              </HeadingIconContainer>
+              <div>
+                <h1>Communities</h1>
+                <HeaderSubtitle>Connect with like-minded trekkers from around the world</HeaderSubtitle>
               </div>
-            ))
+            </HeaderTitle>
+            
+            {isAdmin ? (
+              <CreateButton onClick={() => setShowCreateModal(true)}>
+                <FiPlus size={18} />
+                <span>Create Community</span>
+              </CreateButton>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#666', fontSize: '0.9rem' }}>
+                <FiLock size={16} />
+                <span>Communities are managed by admins</span>
+              </div>
+            )}
+          </Header>
+
+          {error && (
+            <ErrorMessage>
+              <FiX onClick={() => setError('')} />
+              {error}
+            </ErrorMessage>
           )}
-        </CardsContainer>
+          
+          {success && (
+            <SuccessMessage>
+              <FiX onClick={() => setSuccess('')} />
+              {success}
+            </SuccessMessage>
+          )}
 
-        {!loading && chatrooms.length > 0 && hasMore && (
-          <LoadMoreButton 
-            onClick={loadMoreChatrooms} 
-            disabled={isLoadingMore}
-          >
-            {isLoadingMore ? 'Loading...' : 'Load More Communities'}
-          </LoadMoreButton>
-        )}
+          <CardsContainer>
+            {/* 2. Show Skeletons if Auth is checking OR data is loading */}
+            {(loading || isAuthChecking) ? (
+              Array(8).fill().map((_, index) => (
+                <CardSkeleton key={index} />
+              ))
+            ) : chatrooms.length === 0 ? (
+              <EmptyState>
+                <FiMessageCircle size={60} opacity={0.4} />
+                <h3>No communities found</h3>
+                {isAdmin ? (
+                  <>
+                    <p>You can create a new community or manage communities in the admin panel</p>
+                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '20px' }}>
+                      <CreateButton onClick={() => setShowCreateModal(true)}>
+                        <FiPlus size={18} />
+                        <span>Create Community</span>
+                      </CreateButton>
+                      <CreateButton onClick={() => navigate('/admin/communities')} style={{ background: '#4a5568', borderColor: '#4a5568' }}>
+                        <FiLock size={18} />
+                        <span>Admin Panel</span>
+                      </CreateButton>
+                    </div>
+                  </>
+                ) : (
+                  <p>Communities will appear here once created by administrators</p>
+                )}
+              </EmptyState>
+            ) : (
+              chatrooms.map((room) => (
+                <div key={room.id || room.docId}>
+                  <CommunityRichSnippet community={room} />
+                  <Card onClick={() => handleJoinRoom(room)}>
+                    <CardImageContainer>
+                      <CardImage 
+                        src={room.cachedImageUrl} 
+                        alt={`${room.name} - Join trekking community on Trovia`}
+                        loading="lazy"
+                      />
+                      <ImageOverlay />
+                      {room.isNew && <NewLabel>NEW</NewLabel>}
+                      {room.featured && <FeaturedLabel>FEATURED</FeaturedLabel>}
+                    </CardImageContainer>
+                    
+                    <CardContent>
+                      <CardHeader>
+                        <CardTitle>{room.name}</CardTitle>
+                        <CardRating>
+                          <StarIcon className="star" /> 
+                          <span>{room.rating}</span>
+                          <small>({room.reviews})</small>
+                        </CardRating>
+                      </CardHeader>
+                      
+                      <CardDescription>{room.desc || room.description || "Join this trekking community to connect with other adventure enthusiasts."}</CardDescription>
+                      
+                      <CardFooter>
+                        <CardStat>
+                          <FiUsers size={14} />
+                          <span>{room.memberCount} {room.memberCount === 1 ? 'member' : 'members'}</span>
+                        </CardStat>
+                        <CardStat>
+                          <FiMessageCircle size={14} />
+                          <span>{room.messageCount || 0} {(room.messageCount || 0) === 1 ? 'message' : 'messages'}</span>
+                        </CardStat>
+                      </CardFooter>
+                      
+                      <JoinButton>
+                        <span>Join Chat</span>
+                        <FiArrowRight size={16} />
+                      </JoinButton>
+                    </CardContent>
+                  </Card>
+                </div>
+              ))
+            )}
+          </CardsContainer>
 
-        {/* Create Community Modal */}
-        {isAdmin && showCreateModal && (
-          <CreateCommunityModal 
-            isOpen={showCreateModal} 
-            onClose={() => setShowCreateModal(false)} 
-            onSuccess={(newCommunity) => {
-              setSuccess(`Community "${newCommunity.name}" has been created successfully!`);
-              // Refresh the list to include the new community
-              setChatrooms(prevRooms => [
-                {
-                  ...newCommunity,
-                  isNew: true,
-                  memberCount: 0,
-                  messageCount: 0,
-                  cachedImageUrl: getValidImageUrl(newCommunity.img)
-                },
-                ...prevRooms
-              ]);
-            }}
-            onError={(msg) => setError(msg)}
-          />
-        )}
+          {!loading && !isAuthChecking && chatrooms.length > 0 && hasMore && (
+            <LoadMoreButton onClick={loadMoreChatrooms} disabled={isLoadingMore}>
+              {isLoadingMore ? 'Loading...' : 'Load More Communities'}
+            </LoadMoreButton>
+          )}
+
+          {isAdmin && showCreateModal && (
+            <CreateCommunityModal 
+              isOpen={showCreateModal} 
+              onClose={() => setShowCreateModal(false)} 
+              onSuccess={(newCommunity) => {
+                setSuccess(`Community "${newCommunity.name}" has been created successfully!`);
+                setChatrooms(prevRooms => [{
+                    ...newCommunity, isNew: true, memberCount: 0, messageCount: 0, cachedImageUrl: getValidImageUrl(newCommunity.img)
+                  }, ...prevRooms]);
+              }}
+              onError={(msg) => setError(msg)}
+            />
+          )}
         </PageContainer>
-      )}
       </Page>
     </>
   );
