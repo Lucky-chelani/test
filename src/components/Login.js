@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link , useLocation  } from 'react-router-dom';
 import mapPattern from '../assets/images/map-pattren.png';
 import { auth } from '../firebase';
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-
 // Animations
 const fadeInUp = keyframes`
   from {
@@ -440,8 +439,12 @@ const LoadingSpinner = styled.div`
   }
 `;
 
+
+
 const Login = ({ organizerMode }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || "/profile";
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -457,7 +460,7 @@ const handleSubmit = async (e) => {
     await signInWithEmailAndPassword(auth, email, password);
     setLoading(false);
     setError(''); // Ensure error is cleared
-    navigate('/profile');
+    navigate(from, { replace: true });
   } catch (err) {
     if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
       setError('Invalid email or password. Please try again.');
@@ -480,7 +483,7 @@ const handleGoogleLogin = async () => {
     await signInWithPopup(auth, provider);
     setLoading(false);
     setError(''); // Ensure error is cleared
-    navigate('/profile');
+    navigate(from, { replace: true });
   } catch (err) {
     setError('Failed to log in with Google. Please try again.');
     console.error('Google login failed:', err);
