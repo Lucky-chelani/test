@@ -8,8 +8,12 @@ const fadeIn = keyframes`
 `;
 
 const shimmer = keyframes`
-  0% { background-position: -1000px 0; }
-  100% { background-position: 1000px 0; }
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
 `;
 
 const pulse = keyframes`
@@ -339,40 +343,49 @@ export const LoadMoreButton = styled.button`
 
 // Loading skeleton
 export const CardSkeleton = styled.div`
-  background: rgba(31, 41, 65, 0.7);
+  width: 100%;
+  height: 380px; /* Adjust this to match your actual Card height */
   border-radius: 16px;
+  background: #0F172A; /* Your dark theme base card color */
   overflow: hidden;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  height: 350px;
   position: relative;
-  
-  &:after {
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+
+  /* The Shimmer Gradient applied to the whole card */
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 1000px 100%;
+  animation: ${shimmer} 2s infinite linear;
+
+  /* We use pseudo-elements to "draw" the skeleton shapes (Image, Title, Text) */
+  &::before {
     content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
+    display: block;
+    height: 180px; /* Image area height */
     width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg, 
-      rgba(255, 255, 255, 0) 0%, 
-      rgba(255, 255, 255, 0.06) 50%, 
-      rgba(255, 255, 255, 0) 100%
-    );
-    background-size: 200% 100%;
-    animation: ${shimmer} 1.5s infinite;
-  }
-  
-  &:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 180px;
     background: rgba(255, 255, 255, 0.05);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+  }
+
+  &::after {
+    content: '';
+    display: block;
+    margin: 20px;
+    height: 24px;
+    width: 60%;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    /* Drawing the subtitle lines using multiple box-shadows */
+    box-shadow: 
+      0 40px 0 -4px rgba(255, 255, 255, 0.05), /* Line 1 */
+      0 70px 0 -4px rgba(255, 255, 255, 0.05), /* Line 2 */
+      0 120px 0 -2px rgba(255, 255, 255, 0.05); /* Footer area */
   }
 `;
 
