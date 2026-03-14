@@ -87,9 +87,12 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: var(--text-dark);
-  background-color: var(--text-light);
-  line-height: 1.6; /* Better readability on mobile */
+  
+  /* --- CRITICAL FIX HERE --- */
+  color: var(--text-light); /* Swapped to light text for dark mode */
+  background-color: #0a0a0a; /* Hardcoded to your dark theme color! */
+  
+  line-height: 1.6;
   font-size: 1rem;
 }
 

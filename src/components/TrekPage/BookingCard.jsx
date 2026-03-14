@@ -2,7 +2,7 @@ import React from "react";
 import styled, { keyframes } from "styled-components";
 import { FiCalendar, FiMapPin, FiUsers, FiArrowRight, FiShield } from 'react-icons/fi';
 import { 
-  FaMountain, FaMapMarkedAlt, FaLeaf, FaSnowflake, FaSun, FaCloudRain 
+  FaMountain, FaMapMarkedAlt, FaLeaf, FaSnowflake, FaSun, FaCloudRain , FaWhatsapp ,
 } from 'react-icons/fa';
 
 // --- HELPER FUNCTION ---
@@ -14,6 +14,30 @@ const getSeasonIcon = (season) => {
   if (s.includes('spring') || s.includes('autumn')) return <FaLeaf />;
   return <FaSun />;
 };
+
+
+const WhatsAppOutlineBtn = styled.button`
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.9rem;
+  background: rgba(37, 211, 102, 0.05); /* Very faint green background */
+  color: #25D366; /* WhatsApp Green */
+  border: 1px solid rgba(37, 211, 102, 0.3);
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(37, 211, 102, 0.15);
+    border-color: rgba(37, 211, 102, 0.6);
+  }
+`;
 
 // --- STYLED COMPONENTS ---
 
@@ -342,6 +366,7 @@ const BookingCard = ({
             <DetailValue>{trekAltitude}</DetailValue>
           </DetailItem>
         </BookingDetailsGrid>
+        
 
         <BookNowBtn onClick={onBookClick}>
           Book This Trek
@@ -351,6 +376,11 @@ const BookingCard = ({
         <SecureText>
           <FiShield /> No payment required today
         </SecureText>
+
+        <WhatsAppOutlineBtn onClick={() => window.open('https://wa.me/919876543210', '_blank')}>
+          <FaWhatsapp size={20} />
+          Ask a Question
+        </WhatsAppOutlineBtn>
       </BookingBody>
     </CardWrapper>
   );

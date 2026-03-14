@@ -25,6 +25,7 @@ import ReviewsSection from "./TrekPage/ReviewsSection";
 import BookingCard from "./TrekPage/BookingCard";
 import OrganizerSection from "./TrekPage/OrganizerSection";
 import GalleryModal from "./TrekPage/GalleryModal";
+import WhatsAppButton from './TrekPage/WhatsAppButton';
 
 // --- GLOBAL STYLES & FONTS ---
 const GlobalFonts = createGlobalStyle`
@@ -736,6 +737,7 @@ export default function TrekDetails() {
         images={trek?.imageUrls}
         initialIndex={currentImageIndex}
       />
+      <WhatsAppButton trekTitle={trekTitle} />
     </PageWrapper>
   );
 }

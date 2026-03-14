@@ -5,10 +5,11 @@ import { auth, db } from '../firebase';
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { motion } from 'framer-motion';
-import { FaEnvelope, FaBirthdayCake, FaEdit, FaSignOutAlt, FaMapMarkerAlt, FaMountain, FaClock, FaCrown, FaCompass, FaTicketAlt, FaChevronRight, FaCalendarAlt, FaUsers, FaMoneyBillWave, FaFileAlt } from 'react-icons/fa';
+import { FaEnvelope, FaBirthdayCake, FaEdit, FaSignOutAlt, FaMapMarkerAlt, FaMountain, FaClock, FaCrown, FaCompass, FaTicketAlt, FaChevronRight, FaCalendarAlt, FaUsers, FaMoneyBillWave, FaFileAlt, FaAward} from 'react-icons/fa';
 import BookingService from '../services/BookingService';
 import profileImg from '../assets/images/trek1.png';
 import mapPattern from '../assets/images/map-pattren.png';
+// Add FaAward to your existing react-icons/fa import
 
 // --- Animations (Kept Exactly as is) ---
 const fadeInUp = keyframes`
@@ -43,6 +44,59 @@ const rotate = keyframes`
 `;
 
 // --- Styled Components (Responsive Fixes Applied) ---
+
+
+const ManagementSection = styled(motion.div)`
+  width: 100%;
+  margin-top: 40px;
+  animation: ${fadeInUp} 0.8s ease-out;
+`;
+
+const AdminGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+`;
+
+const AdminToolCard = styled(motion.div)`
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: #4CC9F0;
+    transform: translateX(10px);
+  }
+
+  .icon-box {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #4CC9F0, #4361EE);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    box-shadow: 0 4px 15px rgba(76, 201, 240, 0.3);
+  }
+
+  .text-box {
+    flex: 1;
+    h4 { margin: 0; font-size: 1.1rem; color: #fff; }
+    p { margin: 4px 0 0 0; font-size: 0.85rem; color: #94a3b8; }
+  }
+`;
 
 const Page = styled.div`
   background: #000 url(${mapPattern});
@@ -642,6 +696,26 @@ const BookingStatus = styled.div`
   margin-top: 10px;
 `;
 
+
+// Add this styled component below your LogoutButton
+const AdminButton = styled(Button)`
+  background: linear-gradient(135deg, #FFD166, #FF9F1C);
+  color: #000;
+  box-shadow: 0 4px 15px rgba(255, 209, 102, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  
+  &:hover {
+    box-shadow: 0 8px 25px rgba(255, 209, 102, 0.4);
+    transform: translateY(-2px);
+  }
+
+  svg {
+    color: #000;
+  }
+`;
 const ViewDetailsButton = styled.button`
   background: linear-gradient(135deg, #4CC9F0, #06D6A0);
   color: white;
@@ -1018,7 +1092,13 @@ const Profile = () => {
                 <span>{roleConfig[userData.role]?.label || 'Explorer'}</span>
               </RoleText>
             )}
-            <ButtonGroup>              
+            <ButtonGroup>
+              {/* ✅ ADDED: Admin-only Certificate Button */}
+              {userData?.role === 'admin' && (
+                <AdminButton onClick={() => navigate('/admin/certificates')}>
+                  <FaAward /> Issue Certificates
+                </AdminButton>
+              )}              
               <EditButton onClick={() => navigate('/edit-profile')}>
                 <FaEdit /> Edit Profile
               </EditButton>
@@ -1028,6 +1108,29 @@ const Profile = () => {
             </ButtonGroup>
           </Info>
         </ProfileHeader>
+
+        {userData?.role === 'admin' && (
+          <ManagementSection>
+            <SectionTitle>Administrative Portal</SectionTitle>
+            <AdminGrid>
+              <AdminToolCard 
+                whileHover={{ scale: 1.02 }}
+                onClick={() => navigate('/admin/certificates')}
+              >
+                <div className="icon-box">
+                  <FaAward />
+                </div>
+                <div className="text-box">
+                  <h4>Internship Management</h4>
+                  <p>Issue and verify secure digital certificates.</p>
+                </div>
+                <FaChevronRight style={{ color: '#444' }} />
+              </AdminToolCard>
+
+              {/* You can add more admin cards here later, like "User Management" */}
+            </AdminGrid>
+          </ManagementSection>
+        )}
         
         <SectionTitle>Your Trekking Stats</SectionTitle>
         <StatsGrid>
@@ -1059,6 +1162,7 @@ const Profile = () => {
             <StatLabel>Elevation Gain</StatLabel>
           </StatCard>
         </StatsGrid>
+        
         
         <SectionTitle>Recent Trek History</SectionTitle>
         <TrekHistory>
