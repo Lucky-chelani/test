@@ -1,142 +1,145 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import styled, { keyframes, css, createGlobalStyle } from 'styled-components';
-import { FiSearch, FiX, FiFilter, FiMapPin, FiClock, FiUsers, FiHeart, 
-  FiChevronRight, FiStar, FiArrowLeft, FiGrid, FiList, FiSliders, 
-  FiCalendar, FiCheckCircle, FiShare2, FiMap, FiCompass, FiBookmark,
-  FiRefreshCw, FiPlusCircle, FiInfo, FiUser } from 'react-icons/fi';
-import { FaMountain, FaSnowflake, FaSun, FaLeaf, FaCloudRain, FaRoute, 
-  FaMedal, FaRegHeart, FaHeart } from 'react-icons/fa';
-import { BiSort } from 'react-icons/bi';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import styled, { keyframes, createGlobalStyle } from 'styled-components';
+import { FiSearch, FiMapPin, FiClock, FiUsers, FiHeart, 
+  FiStar, FiArrowLeft, FiGrid, FiList, FiCheckCircle, FiUser, 
+  FiShield, FiAward, FiTrendingUp, FiLock, FiX } from 'react-icons/fi';
+import { FaSnowflake, FaSun, FaLeaf, FaCloudRain } from 'react-icons/fa';
 import { db } from '../firebase';
-import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { getValidImageUrl } from '../utils/images';
 import { useSearch } from '../context/SearchContext';
 import Footer from '../components/Footer';
-import { OrganizerRow, OrganizerIcon, OrganizerText, OrganizerName } from '../components/TagComponents';
 
-// Global font import for Inter font
+import SearchBg from '../assets/images/SearchBackground.png';
+
 const GlobalFonts = createGlobalStyle`
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 `;
 
-// Modern animations
 const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(30px); }
+  from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 `;
 
 const slideIn = keyframes`
-  from { opacity: 0; transform: translateX(-30px); }
+  from { opacity: 0; transform: translateX(-20px); }
   to { opacity: 1; transform: translateX(0); }
 `;
 
-const shimmer = keyframes`
-  0% { background-position: -200px 0; }
-  100% { background-position: 200px 0; }
-`;
+/* ========================================================================
+   STYLED COMPONENTS - MOBILE OPTIMIZED & TRUST-FOCUSED
+   ======================================================================== */
 
-const bounce = keyframes`
-  0%, 20%, 53%, 80%, 100% { transform: translate3d(0,0,0); }
-  40%, 43% { transform: translate3d(0, -30px, 0); }
-  70% { transform: translate3d(0, -15px, 0); }
-  90% { transform: translate3d(0, -4px, 0); }
-`;
-
-const float = keyframes`
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-`;
-
-// Main container with dark theme background to match website
 const PageContainer = styled.div`
   min-height: 100vh;
-  background-color: #080808;
+  background-image: url(${props => props.bgImage});
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
   position: relative;
   overflow-x: hidden;
-  
+
   &::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: 
-      radial-gradient(circle at 20% 80%, rgba(124, 58, 237, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 80% 20%, rgba(83, 144, 217, 0.08) 0%, transparent 50%);
+    inset: 0;
+    background: linear-gradient(
+      to bottom, 
+      rgba(13, 15, 20, 0.4) 0%,     
+      rgba(13, 15, 20, 0.85) 40%,   
+      rgba(13, 15, 20, 0.98) 100%   
+    );
+    z-index: 0;
     pointer-events: none;
+  }
+  
+  > * { position: relative; z-index: 10; }
+`;
+const TrekRating = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #e4e4e7;
+  font-size: 13px;
+  font-weight: 600;
+  
+  svg { color: #fbbf24; font-size: 14px; }
+  .reviews { color: #a1a1aa; font-weight: 400; font-size: 12px; margin-left: 2px; }
+`;
+
+const HeroTitleArea = styled.div`
+  text-align: center;
+  padding-top: 60px;
+  margin-bottom: 30px;
+  padding-left: 20px;
+  padding-right: 20px;
+
+  h1 {
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 12px;
+    text-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    
+    @media (max-width: 768px) { font-size: 2.2rem; }
+  }
+
+  p {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.9);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    @media (max-width: 768px) { font-size: 1rem; }
   }
 `;
 
-// Header with search and filters - Updated for dark theme
 const SearchHeader = styled.div`
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: rgba(13, 15, 20, 0.95);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 20px 0;
-  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  padding: 0 20px;
+  margin-bottom: 30px;
+  
+  /* 📱 MOBILE FIX: Nice edge margins so it doesn't touch the screen sides */
+  @media (max-width: 768px) {
+    padding: 0 15px; 
+  }
 `;
 
 const HeaderContent = styled.div`
-  max-width: 1200px;
+  max-width: 1400px; 
+  width: 100%;
   margin: 0 auto;
-  padding: 0 20px;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 24px; /* More rounded like iOS */
+  padding: 12px 20px;
   display: flex;
-  gap: 20px;
+  gap: 15px;
   align-items: center;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
   
   @media (max-width: 768px) {
     flex-direction: column;
+    align-items: stretch;
+    padding: 15px;
     gap: 15px;
-    align-items: stretch; /* CHANGE: Ensures children take full width */
-  }
-`;
-
-const BackButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: none;
-  border: none;
-  color: #8b5cf6;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 8px 16px;
-  border-radius: 12px;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: rgba(139, 92, 246, 0.1);
-    transform: translateX(-2px);
-  }
-  
-  svg {
-    transition: transform 0.3s ease;
-  }
-  
-  &:hover svg {
-    transform: translateX(-2px);
+    border-radius: 20px;
   }
 `;
 
 const SearchInputContainer = styled.div`
   flex: 1;
   position: relative;
-  /* CHANGE: Removed max-width restriction on mobile so it fills space */
-  width: 100%; 
+  width: 100%;
 `;
 
 const SearchInput = styled.input`
   width: 100%;
-  padding: 16px 20px 16px 50px;
-  border: 2px solid rgba(139, 92, 246, 0.2);
-  border-radius: 50px;
-  background: rgba(255, 255, 255, 0.05);
+  padding: 14px 20px 14px 45px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2); 
+  border-radius: 16px;
   font-size: 16px;
   color: white;
   outline: none;
@@ -144,156 +147,191 @@ const SearchInput = styled.input`
   
   &:focus {
     border-color: #8b5cf6;
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.4);
   }
   
-  &::placeholder {
-    color: rgba(255, 255, 255, 0.5);
-  }
+  &::placeholder { color: rgba(255, 255, 255, 0.5); }
 `;
 
 const SearchIcon = styled(FiSearch)`
   position: absolute;
-  left: 18px;
+  left: 16px;
   top: 50%;
   transform: translateY(-50%);
   color: #8b5cf6;
-  font-size: 18px;
+  font-size: 20px;
 `;
 
+const BackButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 10px 16px;
+  border-radius: 14px;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  
+  &:hover { background: rgba(139, 92, 246, 0.2); border-color: #8b5cf6; }
+
+  @media (max-width: 768px) { align-self: flex-start; }
+`;
+
+/* Trust-Based Filters */
 const FiltersContainer = styled.div`
   display: flex;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
   
   @media (max-width: 768px) {
     width: 100%;
-    /* CHANGE: Switch from wrapping to horizontal scrolling */
-    justify-content: flex-start;
     overflow-x: auto;
-    padding-bottom: 5px; /* Space for scrollbar */
-    -webkit-overflow-scrolling: touch;
-    
-    /* Hide scrollbar for cleaner look */
-    &::-webkit-scrollbar {
-      display: none;
-    }
+    padding-bottom: 5px;
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
   }
 `;
 
 const FilterButton = styled.button`
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border: 2px solid ${props => props.active ? '#8b5cf6' : 'rgba(139, 92, 246, 0.2)'};
-  border-radius: 25px;
-  background: ${props => props.active ? '#8b5cf6' : 'rgba(255, 255, 255, 0.05)'};
-  color: ${props => props.active ? 'white' : '#8b5cf6'};
+  gap: 6px;
+  padding: 10px 16px;
+  border: 1px solid ${props => props.active ? '#8b5cf6' : 'rgba(255, 255, 255, 0.15)'};
+  border-radius: 14px;
+  background: ${props => props.active ? 'rgba(139, 92, 246, 0.15)' : 'rgba(255, 255, 255, 0.03)'};
+  color: ${props => props.active ? '#a78bfa' : '#e2e8f0'};
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   white-space: nowrap;
+  flex-shrink: 0;
   
   &:hover {
-    background: ${props => props.active ? '#7c3aed' : 'rgba(139, 92, 246, 0.1)'};
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2);
+    background: rgba(139, 92, 246, 0.1);
+    border-color: rgba(139, 92, 246, 0.5);
   }
+  
+  svg { font-size: 16px; color: ${props => props.active ? '#a78bfa' : '#94a3b8'}; }
 `;
 
 const ViewToggle = styled.div`
   display: flex;
-  background: rgba(255, 255, 255, 0.05);
-  border: 2px solid rgba(139, 92, 246, 0.2);
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   overflow: hidden;
+  margin-left: auto;
+  flex-shrink: 0;
+  
+  @media (max-width: 768px) { margin-left: 0; }
 `;
 
 const ViewButton = styled.button`
-  padding: 12px 16px;
+  padding: 10px 14px;
   border: none;
-  background: ${props => props.active ? '#8b5cf6' : 'transparent'};
-  color: ${props => props.active ? 'white' : '#8b5cf6'};
+  background: ${props => props.active ? 'rgba(139, 92, 246, 0.2)' : 'transparent'};
+  color: ${props => props.active ? '#a78bfa' : '#94a3b8'};
   cursor: pointer;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: ${props => props.active ? '#7c3aed' : 'rgba(139, 92, 246, 0.1)'};
-  }
+  transition: all 0.2s ease;
 `;
 
-// Main content area
 const ContentContainer = styled.div`
-  max-width: 1200px;
+  max-width: 1400px;
+  width: 100%;
   margin: 0 auto;
-  padding: 40px 20px;
+  /* 📱 MOBILE FIX: Side padding added so cards don't touch edges */
+  padding: 20px 20px 80px 20px; 
   min-height: calc(100vh - 200px);
+  
+  @media (max-width: 768px) { padding: 10px 15px 80px 15px; }
 `;
 
 const ResultsHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: 25px;
+  gap: 15px;
   
-  @media (max-width: 768px) {
+  @media (max-width: 900px) {
     flex-direction: column;
-    gap: 20px;
     align-items: flex-start;
   }
 `;
 
 const ResultsInfo = styled.div`
   color: white;
-  font-size: 18px;
-  font-weight: 500;
+  font-size: 1.2rem;
+  font-weight: 600;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const QuickFilters = styled.div`
+  display: flex;
+  gap: 10px;
+  flex: 1;
+  justify-content: center;
+  overflow-x: auto;
+  padding: 5px 0;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
   
-  span {
-    color: rgba(255, 255, 255, 0.8);
-    font-weight: 400;
-  }
+  @media (max-width: 900px) { width: 100%; justify-content: flex-start; }
+`;
+
+const QuickFilter = styled.button`
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  background: ${props => props.active ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.03)'};
+  color: #e2e8f0;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  backdrop-filter: blur(10px);
+  flex-shrink: 0; 
+  
+  &:hover { background: rgba(255, 255, 255, 0.1); }
 `;
 
 const SortDropdown = styled.select`
-  padding: 12px 16px;
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(15, 23, 42, 0.6);
   color: white;
   font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   backdrop-filter: blur(10px);
+  flex-shrink: 0;
   
-  &:focus {
-    outline: none;
-    border-color: rgba(139, 92, 246, 0.4);
-  }
+  &:focus { outline: none; border-color: #8b5cf6; }
+  option { background: #0f172a; color: white; }
   
-  option {
-    background: #0d0f14;
-    color: white;
-  }
+  @media (max-width: 768px) { width: 100%; }
 `;
 
-// Grid and List layouts
 const TreksGrid = styled.div`
   display: grid;
-  /* CHANGE 1: Reduced min-width from 350px to 280px to fit mobile screens */
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 30px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 25px;
   margin-bottom: 40px;
   
-  @media (max-width: 768px) {
-    gap: 20px;
-  }
-
-  /* CHANGE 2: Force single column on very small devices */
-  @media (max-width: 480px) {
-    grid-template-columns: 1fr;
-  }
+  @media (max-width: 768px) { gap: 20px; }
+  @media (max-width: 600px) { grid-template-columns: 1fr; }
 `;
 
 const TreksList = styled.div`
@@ -303,474 +341,398 @@ const TreksList = styled.div`
   margin-bottom: 40px;
 `;
 
-// Trek card components - Updated to match FeaturedTreks design
 const TrekCard = styled.div`
-  background: #0d0f14;
-  border-radius: 16px;
+  background: rgba(15, 20, 30, 0.6);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 28px; /* Gen Z squircle */
   overflow: hidden;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
-  transition: all 0.3s ease;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   cursor: pointer;
-  animation: ${fadeIn} 0.6s ease forwards;
-  animation-delay: ${props => props.index * 0.1}s;
+  animation: ${fadeIn} 0.5s ease forwards;
+  animation-delay: ${props => props.index * 0.05}s;
   opacity: 0;
-  position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.05);
   color: white;
-  font-family: 'Inter', sans-serif;
+  display: flex;
+  flex-direction: column;
+  position: relative;
   
   &:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+    transform: translateY(-8px);
+    border-color: rgba(139, 92, 246, 0.4);
+    box-shadow: 0 20px 40px rgba(124, 58, 237, 0.25);
   }
 `;
 
 const TrekImage = styled.div`
   width: 100%;
-  height: 220px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  background-image: url(${props => props.src});
-  background-size: cover;
-  background-position: center;
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.6s ease;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(180deg,
-      rgba(0, 0, 0, 0.2) 0%,
-      rgba(0, 0, 0, 0.6) 100%
-    );
-    z-index: 1;
-  }
-  
-  ${TrekCard}:hover & {
-    transform: scale(1.05);
-  }
-`;
-
-const TrekBadge = styled.div`
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  background-color: rgba(124, 58, 237, 0.9);
-  color: white;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 4px 12px;
-  border-radius: 999px;
-  z-index: 10;
-  backdrop-filter: blur(4px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-`;
-
-const TrekContent = styled.div`
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-`;
-
-const TrekTitle = styled.h3`
-  font-size: 20px;
-  font-weight: 700;
-  color: #ffffff;
-  margin: 0 0 8px 0;
-  line-height: 1.2;
-`;
-
-const TrekLocation = styled.p`
-  color: #a1a1aa;
-  margin: 0 0 12px 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 400;
-`;
-
-const TrekOrganizer = styled.div`
-  color: #94a3b8;
-  margin: 0 0 12px 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  font-weight: 400;
-  
-  .organizer-label {
-    color: #64748b;
-    font-weight: 500;
-  }
-  
-  .organizer-name {
-    color: #e2e8f0;
-    font-weight: 500;
-  }
-  
-  .verified-badge {
-    color: #4ade80;
-    font-size: 14px;
-    margin-left: 2px;
-  }
-  
-  svg {
-    color: #7c3aed;
-    font-size: 14px;
-  }
-`;
-
-const TrekMeta = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  gap: 15px;
-  
-  @media (max-width: 480px) {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-`;
-
-const TrekDetails = styled.div`
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  font-size: 13px;
-  color: #a1a1aa;
-  flex-wrap: wrap;
-`;
-
-const TrekDetail = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(255, 255, 255, 0.08);
-  padding: 6px 12px;
-  border-radius: 20px;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: rgba(255, 255, 255, 0.12);
-    transform: translateY(-2px);
-  }
-  
-  svg {
-    color: #64B5F6;
-    font-size: 1.1rem;
-  }
-`;
-
-const TrekRating = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: #e4e4e7;
-  font-size: 13px;
-  font-weight: 500;
-  
-  svg {
-    color: #fbbf24;
-    font-size: 14px;
-  }
-  
-  .reviews {
-    color: #a1a1aa;
-    font-weight: 400;
-    font-size: 12px;
-    margin-left: 2px;
-  }
-`;
-
-const TrekPrice = styled.div`
-  font-size: 18px;
-  font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 16px;
-  
-  .currency {
-    font-size: 14px;
-    font-weight: 400;
-    margin-right: 1px;
-  }
-  
-  .unit {
-    font-size: 12px;
-    color: #a1a1aa;
-    margin-left: 2px;
-    font-weight: 400;
-  }
-`;
-
-const TrekDescription = styled.p`
-  color: #a1a1aa;
-  font-size: 14px;
-  line-height: 1.5;
-  margin-bottom: 20px;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-`;
-
-const TrekFooter = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 15px;
-`;
-
-const ViewTrekButton = styled.button`
-  flex: 1;
-  height: 38px;
-  padding: 0 18px;
-  background: #7c3aed;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: #8b5cf6;
-    transform: translateY(-2px);
-  }
-`;
-
-const FavoriteButton = styled.button`
-  padding: 10px;
-  background: rgba(255, 255, 255, 0.08);
-  border: none;
-  border-radius: 10px;
-  color: #ffffff;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: rgba(255, 255, 255, 0.12);
-    transform: scale(1.1);
-  }
-  
-  svg {
-    font-size: 16px;
-  }
-`;
-
-// List view components - Updated to match FeaturedTreks design
-const TrekListItem = styled.div`
-  background: #0d0f14;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
-  display: flex;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  animation: ${slideIn} 0.6s ease forwards;
-  animation-delay: ${props => props.index * 0.1}s;
-  opacity: 0;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  color: white;
-  font-family: 'Inter', sans-serif;
-  
-  &:hover {
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
-    transform: translateY(-2px);
-  }
-  
-  @media (max-width: 768px) {
-    flex-direction: column;
-  }
-`;
-
-// Replace ListTrekImage with this:
-const ListTrekImage = styled.div`
-  width: 200px;
-  height: 100%; /* CHANGE: Fill height in desktop view */
-  min-height: 200px; /* Ensure height */
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  height: 220px; 
+  background-color: #1e293b;
   background-image: url(${props => props.src});
   background-size: cover;
   background-position: center;
   position: relative;
   flex-shrink: 0;
-  transition: transform 0.6s ease;
   
   &::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.6) 100%);
+    inset: 0;
+    /* Soft gradient pulling the dark theme into the image */
+    background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(15, 20, 30, 0.95) 100%);
     z-index: 1;
   }
+`;
+
+const TrustBadge = styled.div`
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 20px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   
-  ${TrekListItem}:hover & {
+  svg { color: #facc15; }
+`;
+
+const TrekContent = styled.div`
+  padding: 0 20px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  position: relative;
+  z-index: 2;
+  margin-top: -30px; /* Pulls content up into the image gradient */
+`;
+
+const TrekTitle = styled.h3`
+  padding-top: 6px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 12px 0;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+`;
+
+const TrekLocation = styled.p`
+  color: #94a3b8;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 500;
+
+  .loc-text {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #e2e8f0;
+  }
+
+  .dynamic-tag {
+    background: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+  }
+`;
+
+const FavoriteButton = styled.button`
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
     transform: scale(1.05);
   }
   
-  @media (max-width: 768px) {
-    width: 100%; /* CHANGE: Full width on mobile */
-    height: 200px; /* Fixed height on mobile */
+  svg { font-size: 18px; }
+`;
+
+/* 🛡️ Trust Signal: Verified Organizer */
+const TrekOrganizer = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 6px 14px 6px 6px;
+  border-radius: 50px;
+  margin-bottom: 16px;
+  align-self: flex-start; /* Keeps pill tight */
+  
+  .avatar-circle {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #a855f7, #6366f1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: white;
+  }
+
+  .organizer-name { font-size: 13px; font-weight: 600; color: #e2e8f0; }
+  .verified-badge { color: #10b981; font-size: 14px; }
+`;
+
+const TrekDetails = styled.div`
+  display: flex; 
+  /* Ensures they sit side-by-side */
+  flex-direction: row; 
+  gap: 8px;
+  margin-bottom: 16px;
+  width: 100%;
+`;
+
+const TrekDetail = styled.div`
+  /* flex: 1 ensures all three take equal width in the row */
+  flex: 1; 
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 8px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0; /* Prevents overflow */
+  
+  svg { 
+    color: #a855f7; 
+    font-size: 1rem; 
+  }
+  
+  span { 
+    font-size: 11px; 
+    font-weight: 600; 
+    color: #cbd5e1; 
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  @media (max-width: 480px) {
+    padding: 6px 2px;
+    span { font-size: 10px; }
   }
 `;
 
+const TrekListItem = styled.div`
+  background: rgba(15, 20, 30, 0.6);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+  animation: ${fadeIn} 0.5s ease forwards;
+  opacity: 0;
+  color: white;
+  display: flex;
+  flex-direction: row; /* Horizontal layout for list */
+  align-items: stretch;
+  
+  &:hover {
+    transform: translateY(-6px);
+    border-color: rgba(139, 92, 246, 0.4);
+    box-shadow: 0 20px 40px rgba(124, 58, 237, 0.25);
+  }
+  
+  @media (max-width: 768px) {
+    flex-direction: column; /* Stacks on mobile */
+  }
+`;
+
+
+const ListTrekImage = styled.div`
+  width: 340px; /* Perfect width for desktop */
+  background-color: #1e293b;
+  /* 👈 THE FIX: Added quotes around the URL so it loads properly */
+  background-image: linear-gradient(135deg, rgba(30, 41, 59, 0.2), rgba(15, 23, 42, 0.8)), url("${props => props.src}");
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  flex-shrink: 0;
+  
+  @media (max-width: 768px) { 
+    width: 100%; 
+    height: 240px; 
+  }
+`;
+
+/* --- 4. Fix the Title Height and Spacing --- */
 const ListTrekContent = styled.div`
-  padding: 20px;
+  padding: 24px 30px; /* More breathing room */
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center; /* Centers content beautifully next to the image */
 `;
 
-const ListTrekHeader = styled.div`
-  margin-bottom: 15px;
-`;
 
-const ListTrekFooter = styled.div`
+const SecureBookingTag = styled.div`
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 15px;
-  margin-top: 15px;
+  gap: 6px;
+  color: #10b981;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 12px;
   
-  @media (max-width: 480px) {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
+  svg { font-size: 14px; }
 `;
 
-// Loading and empty states
-const LoadingContainer = styled.div`
+const TrekPrice = styled.div`
   display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 400px;
   flex-direction: column;
-  gap: 20px;
-`;
+  line-height: 1;
 
-const LoadingSpinner = styled.div`
-  width: 60px;
-  height: 60px;
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  border-top: 4px solid white;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+  .label { 
+    font-size: 10px; 
+    color: #94a3b8; 
+    text-transform: uppercase; 
+    letter-spacing: 0.05em; 
+    font-weight: 700; 
+    margin-bottom: 6px;
+  }
   
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+  .amount-wrapper { 
+    display: flex; 
+    align-items: baseline; 
+  }
+  
+  .currency { 
+    font-size: 16px; 
+    color: #a855f7; /* The bright purple from your screenshot */
+    font-weight: 700; 
+    margin-right: 2px;
+  }
+  
+  .amount { 
+    font-size: 24px; 
+    font-weight: 800; 
+    color: white; 
+  }
+  
+  .slash {
+    font-size: 16px;
+    color: #64748b;
+    margin: 0 2px 0 4px;
+    font-weight: 400;
+  }
+  
+  .unit { 
+    font-size: 13px; 
+    color: #64748b; 
+    font-weight: 500; 
   }
 `;
 
-const LoadingText = styled.p`
-  color: white;
-  font-size: 18px;
-  font-weight: 500;
+const TrekFooter = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: auto;
+  padding-top: 15px;
 `;
 
+const ViewTrekButton = styled.button`
+  padding: 0 16px;
+  height: 44px;
+  background: #8b5cf6; /* Solid purple match */
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  white-space: pre-line; /* Allows text to stack neatly if needed */
+  text-align: center;
+  line-height: 1.2;
+  
+  &:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+  }
+`;
+
+const ActionGroup = styled.div`
+  display: flex;
+  gap: 10px;
+  align-items: center;
+`;
+
+const TrustRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: rgba(16, 185, 129, 0.05);
+  border-radius: 14px;
+  margin-bottom: 16px;
+  border: 1px dashed rgba(16, 185, 129, 0.2);
+
+  .secure {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #10b981;
+    font-size: 13px;
+    font-weight: 700;
+  }
+`;
+
+// Loading / Empty States
 const EmptyState = styled.div`
   text-align: center;
   padding: 80px 20px;
   color: white;
+  background: rgba(15, 23, 42, 0.4);
+  border-radius: 24px;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
   
-  h2 {
-    font-size: 32px;
-    margin-bottom: 16px;
-    font-weight: 700;
-  }
-  
-  p {
-    font-size: 18px;
-    margin-bottom: 30px;
-    opacity: 0.8;
-    max-width: 500px;
-    margin-left: auto;
-    margin-right: auto;
-    line-height: 1.6;
-  }
+  h2 { font-size: 24px; margin-bottom: 12px; font-weight: 700; }
+  p { font-size: 15px; color: #94a3b8; max-width: 400px; margin: 0 auto 24px; line-height: 1.5; }
 `;
 
-const EmptyStateIcon = styled.div`
-  font-size: 80px;
-  margin-bottom: 30px;
-  opacity: 0.6;
-  animation: ${float} 3s ease-in-out infinite;
-`;
 
-const RetryButton = styled.button`
-  padding: 15px 30px;
-  background: #8b5cf6;
-  color: white;
-  border: none;
-  border-radius: 50px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: #7c3aed;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
-  }
-`;
+/* ========================================================================
+   MAIN COMPONENT LOGIC
+   ======================================================================== */
 
-// Quick filters
-const QuickFilters = styled.div`
-  display: flex;
-  gap: 12px;
-  margin-bottom: 30px;
-  overflow-x: auto;
-  padding: 5px 0;
-  -webkit-overflow-scrolling: touch; /* CHANGE: Smooth scroll on iOS */
-  
-  /* CHANGE: Hide scrollbar on Firefox/IE */
-  scrollbar-width: none; 
-  -ms-overflow-style: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-  
-  @media (max-width: 768px) {
-    gap: 8px;
-    padding-bottom: 15px; /* Give space for touch interaction */
-  }
-`;
-
-const QuickFilter = styled.button`
-  padding: 8px 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 20px;
-  background: ${props => props.active ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)'};
-  color: white;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-  backdrop-filter: blur(10px);
-  
-  &:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateY(-2px);
-  }
-`;
-
-// Main component
 const SearchResultsPage = () => {
   const { searchQuery, searchTreks } = useSearch();
   const navigate = useNavigate();
@@ -778,57 +740,64 @@ const SearchResultsPage = () => {
   const [allTreks, setAllTreks] = useState([]);
   const [filteredTreks, setFilteredTreks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchInput, setSearchInput] = useState(searchQuery || '');
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [viewMode, setViewMode] = useState('grid');
   const [sortBy, setSortBy] = useState('relevance');
+  
+  // 🛡️ Updated Filter State to match Trust Filters
   const [filters, setFilters] = useState({
-    difficulty: '',
-    priceRange: '',
+    trustLevel: '', // 'top-rated', 'beginner', 'expert'
     duration: '',
     season: ''
   });
+
+  const [favorites, setFavorites] = useState(() => {
+    const saved = localStorage.getItem('trovia_favorites');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const toggleFavorite = (e, trekId) => {
+    e.stopPropagation(); // Prevents clicking the heart from opening the Trek Details page
+    setFavorites(prev => {
+      const isFavorited = prev.includes(trekId);
+      const newFavs = isFavorited 
+        ? prev.filter(id => id !== trekId) // Remove it
+        : [...prev, trekId];               // Add it
+      
+      localStorage.setItem('trovia_favorites', JSON.stringify(newFavs));
+      return newFavs;
+    });
+  };
   
-  // Fetch all treks on component mount
   useEffect(() => {
     const fetchTreks = async () => {
       try {
         setLoading(true);
-        const treksCollection = collection(db, 'treks');
-        const snapshot = await getDocs(treksCollection);
-        
-        const treksData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        
+        const snapshot = await getDocs(collection(db, 'treks'));
+        const treksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setAllTreks(treksData);
         setLoading(false);
       } catch (err) {
-        console.error('Error fetching treks:', err);
-        setError('Failed to load treks. Please try again.');
         setLoading(false);
       }
     };
-    
     fetchTreks();
   }, []);
   
-  // Filter and search treks
   useEffect(() => {
     let results = allTreks;
     
-    // Apply search query
-    if (searchInput.trim()) {
-      results = searchTreks(results, searchInput);
-    }
+    if (searchInput.trim()) results = searchTreks(results, searchInput);
     
-    // Apply filters
-    if (filters.difficulty) {
-      results = results.filter(trek => 
-        trek.difficulty?.toLowerCase() === filters.difficulty.toLowerCase()
-      );
+    // 🛡️ Apply Trust/Quality Filters instead of generic difficulty
+    if (filters.trustLevel === 'top-rated') {
+      results = results.filter(trek => Number(trek.rating) >= 4.5);
+    } else if (filters.trustLevel === 'beginner') {
+      results = results.filter(trek => trek.difficulty?.toLowerCase() === 'easy');
+    } else if (filters.trustLevel === 'expert') {
+      results = results.filter(trek => ['hard', 'moderate'].includes(trek.difficulty?.toLowerCase()));
     }
+
     
     if (filters.duration) {
       const [min, max] = filters.duration.split('-').map(Number);
@@ -839,34 +808,27 @@ const SearchResultsPage = () => {
     }
     
     if (filters.season) {
-      results = results.filter(trek => 
-        trek.season?.toLowerCase().includes(filters.season.toLowerCase())
-      );
+      results = results.filter(trek => trek.season?.toLowerCase().includes(filters.season.toLowerCase()));
     }
     
-    // Apply sorting
+    const parsePrice = (price) => {
+      if (!price) return 0;
+      const num = Number(String(price).replace(/[^0-9.-]+/g, ""));
+      return isNaN(num) ? 0 : num;
+    };
+
     results.sort((a, b) => {
       switch (sortBy) {
-        case 'price-low':
-          return (Number(a.price) || 0) - (Number(b.price) || 0);
-        case 'price-high':
-          return (Number(b.price) || 0) - (Number(a.price) || 0);
-        case 'rating':
-          return (Number(b.rating) || 0) - (Number(a.rating) || 0);
-        case 'duration':
-          return (Number(a.days) || 0) - (Number(b.days) || 0);
-        default:
-          return 0;
+        case 'price-low': return parsePrice(a.price) - parsePrice(b.price);
+        case 'price-high': return parsePrice(b.price) - parsePrice(a.price);
+        case 'rating': return (Number(b.rating) || 0) - (Number(a.rating) || 0);
+        case 'duration': return (Number(a.days) || 0) - (Number(b.days) || 0);
+        default: return 0;
       }
     });
     
     setFilteredTreks(results);
   }, [allTreks, searchInput, filters, sortBy, searchTreks]);
-  
-  const handleSearch = (e) => {
-    e.preventDefault();
-    // Search happens automatically via useEffect
-  };
   
   const handleFilterChange = (filterType, value) => {
     setFilters(prev => ({
@@ -875,348 +837,288 @@ const SearchResultsPage = () => {
     }));
   };
   
-  const handleTrekClick = (trek) => {
-    navigate(`/trek/${trek.id}`);
-  };
-  
   const getSeasonIcon = (season) => {
     if (!season) return <FaLeaf />;
     const s = season.toLowerCase();
-    if (s.includes('winter') || s.includes('dec') || s.includes('jan') || s.includes('feb')) return <FaSnowflake />;
-    if (s.includes('summer') || s.includes('jun') || s.includes('jul') || s.includes('aug')) return <FaSun />;
+    if (s.includes('winter') || s.includes('dec')) return <FaSnowflake />;
+    if (s.includes('summer') || s.includes('jun')) return <FaSun />;
     if (s.includes('monsoon') || s.includes('rain')) return <FaCloudRain />;
     return <FaLeaf />;
   };
 
-  if (loading) {
-    return (
-      <PageContainer>
-        <LoadingContainer>
-          <LoadingSpinner />
-          <LoadingText>Searching for amazing treks...</LoadingText>
-        </LoadingContainer>
-      </PageContainer>
-    );
-  }
-
-  if (error) {
-    return (
-      <PageContainer>
-        <EmptyState>
-          <EmptyStateIcon>⚠️</EmptyStateIcon>
-          <h2>Something went wrong</h2>
-          <p>{error}</p>
-          <RetryButton onClick={() => window.location.reload()}>
-            Try Again
-          </RetryButton>
-        </EmptyState>
-      </PageContainer>
-    );
-  }
-
   return (
     <>
       <GlobalFonts />
-      <PageContainer>
-      <SearchHeader>
-        <HeaderContent>
-          <BackButton onClick={() => navigate(-1)}>
-            <FiArrowLeft />
-            Back
-          </BackButton>
-          
-          <SearchInputContainer>
-            <SearchIcon />
-            <SearchInput
-              type="text"
-              placeholder="Search treks, locations, difficulty..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-            />
-          </SearchInputContainer>
-          
-          <FiltersContainer>
-            <FilterButton
-              active={filters.difficulty === 'easy'}
-              onClick={() => handleFilterChange('difficulty', 'easy')}
-            >
-              Easy
-            </FilterButton>
-            <FilterButton
-              active={filters.difficulty === 'moderate'}
-              onClick={() => handleFilterChange('difficulty', 'moderate')}
-            >
-              Moderate
-            </FilterButton>
-            <FilterButton
-              active={filters.difficulty === 'hard'}
-              onClick={() => handleFilterChange('difficulty', 'hard')}
-            >
-              Hard
-            </FilterButton>
+      <PageContainer bgImage={SearchBg}>
+        
+        <HeroTitleArea>
+          <h1>Find Your Next Adventure</h1>
+          <p>Book secure, verified treks with expert organizers.</p>
+        </HeroTitleArea>
+
+        <SearchHeader>
+          <HeaderContent>
+            <BackButton onClick={() => navigate(-1)}>
+              <FiArrowLeft /> Back
+            </BackButton>
             
-            <ViewToggle>
-              <ViewButton
-                active={viewMode === 'grid'}
-                onClick={() => setViewMode('grid')}
+            <SearchInputContainer>
+              <SearchIcon />
+              <SearchInput
+                type="text"
+                placeholder="Where do you want to go?"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+              />
+            </SearchInputContainer>
+            
+            <FiltersContainer>
+              {/* 🛡️ New Trust Filters */}
+              <FilterButton active={filters.trustLevel === 'top-rated'} onClick={() => handleFilterChange('trustLevel', 'top-rated')}>
+                <FiStar /> Top Rated
+              </FilterButton>
+              <FilterButton active={filters.trustLevel === 'beginner'} onClick={() => handleFilterChange('trustLevel', 'beginner')}>
+                <FiShield /> Beginner Friendly
+              </FilterButton>
+              <FilterButton active={filters.trustLevel === 'expert'} onClick={() => handleFilterChange('trustLevel', 'expert')}>
+                <FiAward /> Expert Led
+              </FilterButton>
+              
+              <ViewToggle>
+                <ViewButton active={viewMode === 'grid'} onClick={() => setViewMode('grid')}><FiGrid /></ViewButton>
+                <ViewButton active={viewMode === 'list'} onClick={() => setViewMode('list')}><FiList /></ViewButton>
+              </ViewToggle>
+            </FiltersContainer>
+          </HeaderContent>
+        </SearchHeader>
+        
+        <ContentContainer>
+          <ResultsHeader>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
+            <ResultsInfo>
+              <FiTrendingUp style={{ color: '#10b981' }}/> {filteredTreks.length} premium treks found
+            </ResultsInfo>
+            
+            {/* NEW FUNCTIONALITY: Only show if filters or search are active */}
+            {(searchInput || filters.trustLevel || filters.duration || filters.season) && (
+              <button 
+                onClick={() => {
+                  setSearchInput('');
+                  setFilters({ trustLevel: '', duration: '', season: '' });
+                }}
+                style={{
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  color: '#ef4444',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  padding: '4px 12px',
+                  borderRadius: '12px',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
               >
-                <FiGrid />
-              </ViewButton>
-              <ViewButton
-                active={viewMode === 'list'}
-                onClick={() => setViewMode('list')}
-              >
-                <FiList />
-              </ViewButton>
-            </ViewToggle>
-          </FiltersContainer>
-        </HeaderContent>
-      </SearchHeader>
-      
-      <ContentContainer>
-        <ResultsHeader>
-          <ResultsInfo>
-            {filteredTreks.length} trek{filteredTreks.length !== 1 ? 's' : ''} found
-            {searchInput && <span> for "{searchInput}"</span>}
-          </ResultsInfo>
+                <FiX /> Clear Filters
+              </button>
+            )}
+          </div>
+            
+            <QuickFilters>
+              <QuickFilter active={filters.duration === '1-3'} onClick={() => handleFilterChange('duration', '1-3')}>Weekend (1-3 Days)</QuickFilter>
+              <QuickFilter active={filters.duration === '4-7'} onClick={() => handleFilterChange('duration', '4-7')}>One Week (4-7 Days)</QuickFilter>
+              <QuickFilter active={filters.season === 'summer'} onClick={() => handleFilterChange('season', 'summer')}>Summer Escapes</QuickFilter>
+              <QuickFilter active={filters.season === 'winter'} onClick={() => handleFilterChange('season', 'winter')}>Winter Treks</QuickFilter>
+            </QuickFilters>
+
+            <SortDropdown value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+              <option value="relevance">Recommended</option>
+              <option value="rating">Highest Rated</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="duration">Duration</option>
+            </SortDropdown>
+          </ResultsHeader>
           
-          <SortDropdown value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-            <option value="relevance">Sort by Relevance</option>
-            <option value="price-low">Price: Low to High</option>
-            <option value="price-high">Price: High to Low</option>
-            <option value="rating">Highest Rated</option>
-            <option value="duration">Duration</option>
-          </SortDropdown>
-        </ResultsHeader>
-        
-        <QuickFilters>
-          <QuickFilter
-            active={filters.duration === '1-3'}
-            onClick={() => handleFilterChange('duration', '1-3')}
-          >
-            1-3 Days
-          </QuickFilter>
-          <QuickFilter
-            active={filters.duration === '4-7'}
-            onClick={() => handleFilterChange('duration', '4-7')}
-          >
-            4-7 Days
-          </QuickFilter>
-          <QuickFilter
-            active={filters.duration === '8-14'}
-            onClick={() => handleFilterChange('duration', '8-14')}
-          >
-            8-14 Days
-          </QuickFilter>
-          <QuickFilter
-            active={filters.season === 'summer'}
-            onClick={() => handleFilterChange('season', 'summer')}
-          >
-            Summer
-          </QuickFilter>
-          <QuickFilter
-            active={filters.season === 'winter'}
-            onClick={() => handleFilterChange('season', 'winter')}
-          >
-            Winter
-          </QuickFilter>
-        </QuickFilters>
-        
-        {filteredTreks.length === 0 ? (
-          <EmptyState>
-            <EmptyStateIcon>🏔️</EmptyStateIcon>
-            <h2>No treks found</h2>
-            <p>
-              {searchInput 
-                ? `We couldn't find any treks matching "${searchInput}". Try adjusting your search terms or filters.`
-                : 'No treks match your current filters. Try removing some filters to see more results.'
-              }
-            </p>
-            <RetryButton onClick={() => {
-              setSearchInput('');
-              setFilters({
-                difficulty: '',
-                priceRange: '',
-                duration: '',
-                season: ''
-              });
-            }}>
-              Clear Filters
-            </RetryButton>
-          </EmptyState>
-        ) : (
-          <>
-            {viewMode === 'grid' ? (
-              <TreksGrid>
-                {filteredTreks.map((trek, index) => (
-                  <TrekCard
-                    key={trek.id}
-                    index={index}
-                    onClick={() => handleTrekClick(trek)}
-                  >
-                    <TrekImage src={getValidImageUrl(trek.image)}>
-                      <TrekBadge>
-                        {trek.difficulty || 'Moderate'}
-                      </TrekBadge>
+          {filteredTreks.length === 0 && !loading ? (
+            <EmptyState>
+              <h2>No treks found</h2>
+              <p>We couldn't find any treks matching your current filters. Try adjusting them to see more verified adventures.</p>
+              <button onClick={() => setFilters({ trustLevel: '', duration: '', season: '' })} style={{ padding: '10px 20px', background: '#8b5cf6', color: 'white', borderRadius: '10px', border: 'none' }}>
+                Clear Filters
+              </button>
+            </EmptyState>
+          ) : (
+            <>
+              {viewMode === 'grid' ? (
+                /* --- GRID VIEW --- */
+                <TreksGrid>
+                  {filteredTreks.map((trek, index) => (
+                    <TrekCard key={trek.id} index={index} onClick={() => navigate(`/trek/${trek.id}`)}>
                       
-                      {/* Add organizer info overlay */}
-                      {trek.organizerName && (
-                        <OrganizerRow>
-                          <OrganizerIcon>
-                            <FiUser />
-                          </OrganizerIcon>
-                          <OrganizerText>
-                            By <OrganizerName>{trek.organizerName}</OrganizerName>
-                            {trek.organizerVerified && <span style={{ color: '#4ade80', marginLeft: '4px' }}>✓</span>}
-                          </OrganizerText>
-                        </OrganizerRow>
-                      )}
-                    </TrekImage>
-                    
-                    <TrekContent>
-                      <TrekTitle>{trek.title}</TrekTitle>
-                      <TrekLocation>
-                        <FiMapPin />
-                        {trek.location}, {trek.country || 'India'}
-                      </TrekLocation>
-                      
-                      {/* Organized By Field */}
-                      {trek.organizerName && (
-                        <TrekOrganizer>
-                          <FiUser />
-                          <span className="organizer-label">Organized by</span>
-                          <span className="organizer-name">{trek.organizerName}</span>
-                          {trek.organizerVerified && <span className="verified-badge">✓</span>}
-                        </TrekOrganizer>
-                      )}
-                      
-                      <TrekMeta>
-                        <TrekDetails>
-                          <TrekDetail>
-                            <FiClock />
-                            {trek.days || 1} days
-                          </TrekDetail>
-                          <TrekDetail>
-                            <FiUsers />
-                            {trek.capacity || '8-12'}
-                          </TrekDetail>
-                          <TrekDetail>
-                            {getSeasonIcon(trek.season)}
-                            {trek.season || 'All seasons'}
-                          </TrekDetail>
-                        </TrekDetails>
-                        
-                        {trek.rating && (
-                          <TrekRating>
-                            <FiStar />
-                            {trek.rating}
-                            <span className="reviews">({trek.reviews || 0})</span>
-                          </TrekRating>
+                      <TrekImage src={getValidImageUrl(trek.image)}>
+                        {trek.rating >= 4.5 && (
+                          <TrustBadge><FiStar fill="#facc15" /> Guest Favorite</TrustBadge>
                         )}
-                      </TrekMeta>
+                      </TrekImage>
                       
-                      <TrekPrice>
-                        <span className="currency">₹</span>
-                        {typeof trek.price === 'string' ? trek.price.replace('₹', '') : trek.price || '0'}
-                        <span className="unit">/person</span>
-                      </TrekPrice>
-                      
-                      <TrekDescription>
-                        {trek.description || 'Experience this amazing trek with breathtaking views and unforgettable memories.'}
-                      </TrekDescription>
-                      
-                      <TrekFooter>
-                        <ViewTrekButton>
-                          View Details
-                        </ViewTrekButton>
-                        <FavoriteButton>
-                          <FiHeart />
-                        </FavoriteButton>
-                      </TrekFooter>
-                    </TrekContent>
-                  </TrekCard>
-                ))}
-              </TreksGrid>
-            ) : (
-              <TreksList>
-                {filteredTreks.map((trek, index) => (
-                  <TrekListItem
-                    key={trek.id}
-                    index={index}
-                    onClick={() => handleTrekClick(trek)}
-                  >
-                    <ListTrekImage src={getValidImageUrl(trek.image)}>
-                      <TrekBadge>
-                        {trek.difficulty || 'Moderate'}
-                      </TrekBadge>
-                    </ListTrekImage>
-                    
-                    <ListTrekContent>
-                      <ListTrekHeader>
-                        <TrekTitle>{trek.title}</TrekTitle>
+                      <TrekContent>
                         <TrekLocation>
-                          <FiMapPin />
-                          {trek.location}, {trek.country || 'India'}
+                          <div className="loc-text"><FiMapPin /> {trek.location}, {trek.country || 'India'}</div>
+                          <div className="dynamic-tag">Trending</div>
                         </TrekLocation>
+
+                        <TrekTitle>{trek.title}</TrekTitle>
                         
-                        {/* Organized By Field for List View */}
                         {trek.organizerName && (
                           <TrekOrganizer>
-                            <FiUser />
-                            <span className="organizer-label">Organized by</span>
+                            <div className="avatar-circle"><FiUser /></div>
                             <span className="organizer-name">{trek.organizerName}</span>
-                            {trek.organizerVerified && <span className="verified-badge">✓</span>}
+                            {trek.organizerVerified && <FiCheckCircle className="verified-badge" />}
                           </TrekOrganizer>
                         )}
-                      </ListTrekHeader>
-                      
-                      <TrekDescription>
-                        {trek.description || 'Experience this amazing trek with breathtaking views and unforgettable memories.'}
-                      </TrekDescription>
-                      
-                      <ListTrekFooter>
+                        
                         <TrekDetails>
                           <TrekDetail>
                             <FiClock />
-                            {trek.days || 1} days
+                            <span>{trek.days || 1} Days</span>
                           </TrekDetail>
                           <TrekDetail>
-                            <FiUsers />
-                            {trek.capacity || '8-12'}
+                            <FiAward />
+                            <span>{trek.difficulty || 'Medium'}</span>
                           </TrekDetail>
                           <TrekDetail>
                             {getSeasonIcon(trek.season)}
-                            {trek.season || 'All seasons'}
+                            <span>{trek.season || 'All seasons'}</span>
                           </TrekDetail>
-                          {trek.rating && (
-                            <TrekRating>
-                              <FiStar />
-                              {trek.rating}
-                              <span className="reviews">({trek.reviews || 0})</span>
-                            </TrekRating>
-                          )}
                         </TrekDetails>
                         
-                        <TrekPrice>
-                          <span className="currency">₹</span>
-                          {typeof trek.price === 'string' ? trek.price.replace('₹', '') : trek.price || '0'}
-                          <span className="unit">/person</span>
-                        </TrekPrice>
-                      </ListTrekFooter>
-                    </ListTrekContent>
-                  </TrekListItem>
-                ))}
-              </TreksList>
-            )}
-          </>
-        )}
-      </ContentContainer>
-      
-      <Footer />
-    </PageContainer>
+                        <TrustRow>
+                          <div className="secure">
+                            <FiShield /> Secure Booking
+                          </div>
+                          {trek.rating && (
+                            <TrekRating>
+                              <FiStar fill="#facc15" /> {trek.rating} <span className="reviews">({trek.reviews || 0})</span>
+                            </TrekRating>
+                          )}
+                        </TrustRow>
+                        
+                        <TrekFooter>
+                          <TrekPrice>
+                            <span className="label">TOTAL PRICE</span>
+                            <div className="amount-wrapper">
+                              <span className="currency">₹</span>
+                              <span className="amount">
+                                {typeof trek.price === 'string' ? trek.price.replace('₹', '') : trek.price || '0'}
+                              </span>
+                              <span className="slash">/</span>
+                              <span className="unit">pax</span>
+                            </div>
+                          </TrekPrice>
+                          
+                          <ActionGroup>
+                            <FavoriteButton 
+                              onClick={(e) => toggleFavorite(e, trek.id)}
+                              style={{ color: favorites.includes(trek.id) ? '#ef4444' : '#ffffff' }}
+                            >
+                              <FiHeart style={{ fill: favorites.includes(trek.id) ? '#ef4444' : 'transparent' }} />
+                            </FavoriteButton>
+                            <ViewTrekButton>View<br/>Details</ViewTrekButton>
+                          </ActionGroup>
+                        </TrekFooter>
+                      </TrekContent>
+                    </TrekCard>
+                  ))}
+                </TreksGrid>
+              ) : (
+                /* --- LIST VIEW --- */
+                <TreksList>
+                  {filteredTreks.map((trek, index) => (
+                    <TrekListItem key={trek.id} index={index} onClick={() => navigate(`/trek/${trek.id}`)}>
+                      
+                      <ListTrekImage src={getValidImageUrl(trek.image)}>
+                        {trek.rating >= 4.5 && (
+                          <TrustBadge><FiStar fill="#facc15" /> Guest Favorite</TrustBadge>
+                        )}
+                      </ListTrekImage>
+                      
+                      <ListTrekContent>
+                        <TrekLocation>
+                          <div className="loc-text"><FiMapPin /> {trek.location}, {trek.country || 'India'}</div>
+                          <div className="dynamic-tag">Trending</div>
+                        </TrekLocation>
+                        
+                        <TrekTitle>{trek.title}</TrekTitle>
+                        
+                        {trek.organizerName && (
+                          <TrekOrganizer>
+                            <div className="avatar-circle"><FiUser /></div>
+                            <span className="organizer-name">{trek.organizerName}</span>
+                            {trek.organizerVerified && <FiCheckCircle className="verified-badge" />}
+                          </TrekOrganizer>
+                        )}
+                        
+                        <TrekDetails>
+                          <TrekDetail>
+                            <FiClock />
+                            <span>{trek.days || 1} Days</span>
+                          </TrekDetail>
+                          <TrekDetail>
+                            <FiAward />
+                            <span>{trek.difficulty || 'Moderate'}</span>
+                          </TrekDetail>
+                          <TrekDetail>
+                            {getSeasonIcon(trek.season)}
+                            <span>{trek.season || 'All seasons'}</span>
+                          </TrekDetail>
+                        </TrekDetails>
+                        
+                        <TrustRow>
+                          <div className="secure">
+                            <FiShield /> Secure Booking
+                          </div>
+                          {trek.rating && (
+                            <TrekRating>
+                              <FiStar fill="#facc15" /> {trek.rating} <span className="reviews">({trek.reviews || 0})</span>
+                            </TrekRating>
+                          )}
+                        </TrustRow>
+                        
+                        <TrekFooter>
+                          <TrekPrice>
+                            <span className="label">TOTAL PRICE</span>
+                            <div className="amount-wrapper">
+                              <span className="currency">₹</span>
+                              <span className="amount">
+                                {typeof trek.price === 'string' ? trek.price.replace('₹', '') : trek.price || '0'}
+                              </span>
+                              <span className="slash">/</span>
+                              <span className="unit">pax</span>
+                            </div>
+                          </TrekPrice>
+                          
+                          <ActionGroup>
+                            <FavoriteButton 
+                              onClick={(e) => toggleFavorite(e, trek.id)}
+                              style={{ color: favorites.includes(trek.id) ? '#ef4444' : '#ffffff' }}
+                            >
+                              <FiHeart style={{ fill: favorites.includes(trek.id) ? '#ef4444' : 'transparent' }} />
+                            </FavoriteButton>
+                            <ViewTrekButton>View<br/>Details</ViewTrekButton>
+                          </ActionGroup>
+                        </TrekFooter>
+                      </ListTrekContent>
+                    </TrekListItem>
+                  ))}
+                </TreksList>
+              )}
+            </>
+          )}
+        </ContentContainer>
+        <Footer />
+      </PageContainer>
     </>
   );
 };
 
 export default SearchResultsPage;
-

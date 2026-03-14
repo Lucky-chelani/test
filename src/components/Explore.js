@@ -280,6 +280,10 @@ const SliderWrapper = styled.div`
 const TreksSlider = styled.div`
   display: flex;
   gap: 30px;
+  
+  /* 🎯 THE FIX: Center the cards if there are a limited number */
+  justify-content: ${props => props.$itemCount < 4 ? 'center' : 'flex-start'};
+  
   overflow-x: auto;
   overflow-y: hidden;
   padding: 30px 10px;
@@ -294,9 +298,16 @@ const TreksSlider = styled.div`
     display: none;
   }
   
+  /* Responsive centering logic */
+  @media (max-width: 1024px) {
+    justify-content: ${props => props.$itemCount < 3 ? 'center' : 'flex-start'};
+  }
+  
   @media (max-width: 768px) {
     gap: 20px;
     padding: 25px 5px;
+    /* On mobile, only center if there is exactly 1 card */
+    justify-content: ${props => props.$itemCount === 1 ? 'center' : 'flex-start'};
   }
   
   @media (max-width: 480px) {
@@ -307,10 +318,10 @@ const TreksSlider = styled.div`
 
 const ArrowButton = styled.button`
   position: absolute;
-  top: 50%;
+  top: 40%; /* Move up slightly to sit over the images */
   transform: translateY(-50%);
-  z-index: 5;
-  background: rgba(255, 255, 255, 0.1);
+  z-index: 20; /* CRITICAL FIX: Increased from 5 to 20 so it sits above the cards */
+  background: rgba(15, 20, 30, 0.8); /* Darker background so it's visible */
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 50%;
@@ -791,6 +802,109 @@ const EmptyState = styled.div`
   }
 `;
 
+/* ==========================================
+   NEW UI: VIBE PILLS & DESTINATION GRID
+   ========================================== */
+
+const VibePillsContainer = styled.div`
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 5px 0 20px 0;
+  margin-top: -40px; /* Pulls it up tight against the search bar */
+  margin-bottom: 30px;
+  justify-content: center;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+
+  @media (max-width: 768px) {
+    justify-content: flex-start;
+    padding: 10px 5px 20px 5px;
+  }
+`;
+
+const VibePill = styled.button`
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 18px;
+  border-radius: 24px;
+  color: #e2e8f0;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &:hover {
+    background: rgba(139, 92, 246, 0.2);
+    border-color: #8b5cf6;
+    color: white;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(139, 92, 246, 0.2);
+  }
+`;
+
+const DestinationsContainer = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 60px;
+
+  @media (max-width: 900px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 480px) { gap: 12px; margin-bottom: 40px; }
+`;
+
+const DestinationTile = styled.div`
+  height: 160px;
+  border-radius: 24px;
+  background-image: url(${props => props.bg});
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: flex-end;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(15,20,30,0.9) 100%);
+    transition: opacity 0.3s ease;
+  }
+
+  &:hover { 
+    transform: translateY(-5px); 
+    border-color: rgba(139, 92, 246, 0.5);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  }
+
+  @media (max-width: 480px) { 
+    height: 120px; 
+    border-radius: 18px; 
+    padding: 15px; 
+  }
+`;
+
+const DestinationName = styled.span`
+  position: relative;
+  z-index: 2;
+  color: white;
+  font-weight: 800;
+  font-size: 1.2rem;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+
+  @media (max-width: 480px) { font-size: 1.05rem; }
+`;
+
 // Sample data for active groups and events (would come from backend in full app)
 
 
@@ -823,30 +937,36 @@ const Explore = () => {
             id: doc.id,
             ...doc.data(),
             featured: doc.data().featured || false,
-            image: doc.data().image || trek1, // Default image if none provided
+            image: doc.data().image || trek1, 
           }));
 
-        // Filter treks by categories
-        setRecommendedTreks(
-          treksData.filter(trek => trek.recommended || trek.rating >= 4.8)
-        );
+        // --- REPLACE THE FILTERING LOGIC WITH THIS FALLBACK LOGIC ---
         
-        setPopularTreks(
-          treksData.filter(trek => trek.popular || trek.reviews >= 100)
-        );
+        // Recommended: Try to find highly rated, otherwise just grab the first 6
+        const rec = treksData.filter(trek => trek.recommended || trek.rating >= 4.5);
+        const finalRec = rec.length > 0 ? rec : treksData.slice(0, 6);
+        setRecommendedTreks(finalRec);
+        setFilteredRecommendedTreks(finalRec);
         
-        setUpcomingTreks(
-          treksData.filter(trek => trek.upcoming || trek.season === "Upcoming")
-        );
-          setTrendingTreks(
-          treksData.filter(trek => trek.trending || trek.rating >= 4.5)
-        );
+        // Popular: Try to find high reviews, otherwise grab a different slice
+        const pop = treksData.filter(trek => trek.popular || trek.reviews >= 50);
+        const finalPop = pop.length > 0 ? pop : treksData.slice(0, 6).reverse();
+        setPopularTreks(finalPop);
+        setFilteredPopularTreks(finalPop);
         
-        // Set filtered treks to be the same as all treks initially
-        setFilteredRecommendedTreks(treksData.filter(trek => trek.recommended || trek.rating >= 4.8));
-        setFilteredPopularTreks(treksData.filter(trek => trek.popular || trek.reviews >= 100));
-        setFilteredUpcomingTreks(treksData.filter(trek => trek.upcoming || trek.season === "Upcoming"));
-        setFilteredTrendingTreks(treksData.filter(trek => trek.trending || trek.rating >= 4.5));
+        // Upcoming: Try to find upcoming season, otherwise grab the middle slice
+        const upc = treksData.filter(trek => trek.upcoming || trek.season === "Upcoming");
+        const finalUpc = upc.length > 0 ? upc : treksData.slice(Math.max(0, treksData.length - 6));
+        setUpcomingTreks(finalUpc);
+        setFilteredUpcomingTreks(finalUpc);
+
+        // Trending: Grab top rated, or shuffle
+        const trend = treksData.filter(trek => trek.trending || trek.rating >= 4.2);
+        const finalTrend = trend.length > 0 ? trend : treksData.slice(0, 6);
+        setTrendingTreks(finalTrend);
+        setFilteredTrendingTreks(finalTrend);
+        
+        // -----------------------------------------------------------
         
         setLoading(false);
       } catch (err) {
@@ -1061,23 +1181,27 @@ const Explore = () => {
     const handleScroll = (direction) => {
       if (sliderRef.current && !isScrolling) {
         setIsScrolling(true);
-        const { scrollLeft, clientWidth } = sliderRef.current;
-        const scrollTo = direction === 'left' 
-          ? scrollLeft - clientWidth / 1.5
-          : scrollLeft + clientWidth / 1.5;
+        
+        // Calculate exact width of one card + gap
+        const scrollAmount = 350; 
+        
+        const newScrollLeft = direction === 'left' 
+          ? sliderRef.current.scrollLeft - scrollAmount
+          : sliderRef.current.scrollLeft + scrollAmount;
         
         sliderRef.current.scrollTo({
-          left: scrollTo,
+          left: newScrollLeft,
           behavior: 'smooth'
         });
 
         setTimeout(() => {
+          setIsScrolling(false);
+          // Update active index after scroll finishes
           if (sliderRef.current) {
-            const newIndex = Math.round(sliderRef.current.scrollLeft / (sliderRef.current.scrollWidth / safeData.length));
-            setActiveIndex(Math.min(Math.max(newIndex, 0), safeData.length - 1));
-            setIsScrolling(false);
+            const index = Math.round(sliderRef.current.scrollLeft / scrollAmount);
+            setActiveIndex(Math.min(Math.max(index, 0), safeData.length - 1));
           }
-        }, 500);
+        }, 400);
       }
     };
 
@@ -1133,7 +1257,8 @@ const Explore = () => {
           <FiChevronLeft />
         </LeftArrowButton>
         
-        <TreksSlider ref={sliderRef} id={sectionId}>
+        {/* Update this specific line 👇 */}
+        <TreksSlider ref={sliderRef} id={sectionId} $itemCount={safeData.length}>
           {children}
         </TreksSlider>
         
@@ -1161,8 +1286,10 @@ const Explore = () => {
     <ExploreSection>
       <GlobalFonts />
       <MapPatternBackground />
-      <Overlay /><Container>
-        {/* Search Bar */}
+      <Overlay />
+      
+      <Container>
+        {/* === 1. SEARCH BAR === */}
         <SearchBarContainer>
           <form onSubmit={handleSearchSubmit}>
             <SearchInputWrapper>
@@ -1173,7 +1300,7 @@ const Explore = () => {
                 onChange={handleSearch}
               />
               {(localSearchQuery || searchQuery) && (
-                <ClearButton onClick={clearSearch} aria-label="Clear search">
+                <ClearButton onClick={clearSearch} aria-label="Clear search" type="button">
                   <FiX />
                 </ClearButton>
               )}
@@ -1183,7 +1310,56 @@ const Explore = () => {
             </SearchInputWrapper>
           </form>
         </SearchBarContainer>
-        
+
+        {/* === 2. QUICK ACTION VIBE PILLS === */}
+        <VibePillsContainer>
+          <VibePill onClick={() => setLocalSearchQuery('Snow')}>❄️ Snow Treks</VibePill>
+          <VibePill onClick={() => setLocalSearchQuery('Easy')}>🎒 Beginners</VibePill>
+          <VibePill onClick={() => setLocalSearchQuery('Weekend')}>⏱️ Weekend Escapes</VibePill>
+          <VibePill onClick={() => setLocalSearchQuery('Hard')}>🏔️ Hardcore</VibePill>
+        </VibePillsContainer>
+
+        {/* === 3. EXPLORE BY DESTINATION GRID === */}
+        {!localSearchQuery && !searchQuery && (
+          <>
+            <SectionTitleContainer style={{ marginTop: 0 }}>
+              <SectionTitle>Explore by Region</SectionTitle>
+              <SectionUnderline />
+            </SectionTitleContainer>
+            
+            <DestinationsContainer>
+              <DestinationTile 
+                onClick={() => setLocalSearchQuery('Uttarakhand')}
+                bg="https://images.unsplash.com/photo-1626643590239-4d5051bafbcc?q=80&w=800&auto=format&fit=crop"
+              >
+                <DestinationName>Uttarakhand</DestinationName>
+              </DestinationTile>
+              
+              <DestinationTile 
+                onClick={() => setLocalSearchQuery('Himachal')}
+                bg="https://images.unsplash.com/photo-1605649487212-4d43e2182062?q=80&w=800&auto=format&fit=crop"
+              >
+                <DestinationName>Himachal</DestinationName>
+              </DestinationTile>
+              
+              <DestinationTile 
+                onClick={() => setLocalSearchQuery('Ladakh')}
+                bg="https://images.unsplash.com/photo-1581793746485-04698e79a4e8?q=80&w=800&auto=format&fit=crop"
+              >
+                <DestinationName>Ladakh</DestinationName>
+              </DestinationTile>
+              
+              <DestinationTile 
+                onClick={() => setLocalSearchQuery('Kashmir')}
+                bg="https://images.unsplash.com/photo-1595815771614-ade9d652a65d?q=80&w=800&auto=format&fit=crop"
+              >
+                <DestinationName>Kashmir</DestinationName>
+              </DestinationTile>
+            </DestinationsContainer>
+          </>
+        )}
+
+        {/* === 4. SEARCH RESULTS HEADER === */}
         {(localSearchQuery || searchQuery) && (
           <SearchResultsHeader>
             {filteredRecommendedTreks.length + filteredPopularTreks.length + 
@@ -1192,117 +1368,15 @@ const Explore = () => {
               : `Found treks matching "${localSearchQuery || searchQuery}"`}
           </SearchResultsHeader>
         )}
-        
-        {/* Render Trek Sections with filtered treks */}
+
+        {/* === 5. TREK SLIDERS === */}
         {renderTrekSection("Recommended Treks", filteredRecommendedTreks, "recommended-treks")}
         {renderTrekSection("Popular Treks", filteredPopularTreks, "popular-treks")}
         {renderTrekSection("Upcoming Treks", filteredUpcomingTreks, "upcoming-treks")}
         {renderTrekSection("Trending Treks", filteredTrendingTreks, "trending-treks")}
         
+        {/* Active Groups & Upcoming Events remain commented out below for your future use */}
 
-        
-        {/* Active Groups Section */}
-        {/* <SectionTitleContainer>
-          <SectionTitle>Active Groups</SectionTitle>
-          <SectionUnderline />
-        </SectionTitleContainer> */}
-          {/* {/* <SliderWithArrows data={activeGroups} sectionId="active-groups">
-          {activeGroups.map((group, idx) => (            <TrekCard key={idx} style={{
-              background: 'linear-gradient(135deg, rgba(103, 58, 183, 0.2), rgba(81, 45, 168, 0.4))',
-              border: '1px solid rgba(103, 58, 183, 0.3)',
-              boxShadow: '0 15px 35px rgba(76, 111, 255, 0.3)'
-            }}>
-              <TrekImageWrapper style={{ height: '250px', borderBottom: '1px solid rgba(103, 58, 183, 0.2)' }}>
-                <TrekImage style={{ backgroundImage: `url(${groupImg})` }} />
-                <TrekTags>
-                  <GroupTag><RiCommunityFill /> Community</GroupTag>
-                </TrekTags>
-                <BadgeTag style={{
-                  background: 'linear-gradient(135deg, #9575CD, #673AB7)',
-                  boxShadow: '0 6px 15px rgba(103, 58, 183, 0.4)'
-                }}>80 XP</BadgeTag>
-              </TrekImageWrapper>
-              
-              <TrekInfo>
-                <TrekTitle>{group.name}</TrekTitle>
-                <TrekLocation>
-                  <FiUsers />
-                  {group.members} active members
-                </TrekLocation>
-                <MetaRow>
-                  <MetaItem>
-                    <FiCalendar />
-                    Weekly Meetups
-                  </MetaItem>
-                  <Difficulty>
-                    <FiInfo />
-                    Open to Join
-                  </Difficulty>
-                </MetaRow>
-                <TrekRating>
-                  <FaStar />
-                  <span>4.9</span>
-                  <span className="reviews">(32 reviews)</span>
-                </TrekRating>
-                <ActionButton as={Link} to="/signup">
-                  Join Group <FiArrowRight />
-                </ActionButton>
-              </TrekInfo>
-            </TrekCard>
-          ))}
-        </SliderWithArrows> */}
-
-        
-
-        {/* <SectionTitleContainer>
-          <SectionTitle>Upcoming Events</SectionTitle>
-          <SectionUnderline />
-        </SectionTitleContainer> */}
-          {/* <SliderWithArrows data={upcomingEvents} sectionId="upcoming-events">
-          {upcomingEvents.map((event, idx) => (            <TrekCard key={idx} style={{
-              background: 'linear-gradient(135deg, rgba(255, 152, 0, 0.2), rgba(245, 124, 0, 0.4))',
-              border: '1px solid rgba(255, 152, 0, 0.3)',
-              boxShadow: '0 15px 35px rgba(76, 111, 255, 0.3)'
-            }}>
-              <TrekImageWrapper style={{ height: '250px', borderBottom: '1px solid rgba(255, 152, 0, 0.2)' }}>
-                <TrekImage style={{ backgroundImage: `url(${eventImg})` }} />
-                <TrekTags>
-                  <EventTag><MdEventAvailable /> Event</EventTag>
-                </TrekTags>
-                <BadgeTag style={{
-                  background: 'linear-gradient(135deg, #FFB74D, #FF9800)',
-                  boxShadow: '0 6px 15px rgba(255, 152, 0, 0.4)'
-                }}>{event.date}</BadgeTag>
-              </TrekImageWrapper>
-              
-              <TrekInfo>
-                <TrekTitle>{event.name}</TrekTitle>
-                <TrekLocation>
-                  <FiMapPin />
-                  Online & In-person
-                </TrekLocation>
-                <MetaRow>
-                  <MetaItem>
-                    <FiClock />
-                    Registration Open
-                  </MetaItem>
-                  <Difficulty>
-                    <FiInfo />
-                    Limited Spots
-                  </Difficulty>
-                </MetaRow>
-                <TrekRating>
-                  <FiUsers />
-                  <span>58</span>
-                  <span className="reviews">people attending</span>
-                </TrekRating>
-                <EventButton as={Link} to="/signup">
-                  Register Now <FiArrowRight />
-                </EventButton>
-              </TrekInfo>
-            </TrekCard>
-          ))}
-        </SliderWithArrows> */}
       </Container>
       <Footer />
     </ExploreSection>
