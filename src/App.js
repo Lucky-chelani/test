@@ -50,6 +50,9 @@ import BookingConfirmation from './components/BookingConfirmation';
 // ✅ ADDED: Import OrganizerBookings
 import OrganizerBookings from './components/OrganizerBookings'; 
 import OrganizerSettings from './components/OrganizerSettings';
+import VerifyCertificate from './Interns/VerifyCertificate';
+import CertificateAdmin from './Interns/CertificateAdmin'; // Adjust path if needed
+
 const PageTransition = ({ children }) => {
   return (
     <motion.div
@@ -337,6 +340,14 @@ function App() {
               <Route path="/booking-confirmation/:bookingId" element={
                 <PageTransition>
                   <BookingConfirmation />
+                </PageTransition>
+              } />
+              <Route path="/verify/:certificateId" element={<VerifyCertificate />} />
+              <Route path="/admin/certificates" element={
+                <PageTransition>
+                  <AccessControl requiredRole="admin">
+                    <CertificateAdmin />
+                  </AccessControl>
                 </PageTransition>
               } />
             </Routes>
