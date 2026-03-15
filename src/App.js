@@ -52,6 +52,7 @@ import OrganizerBookings from './components/OrganizerBookings';
 import OrganizerSettings from './components/OrganizerSettings';
 import VerifyCertificate from './Interns/VerifyCertificate';
 import CertificateAdmin from './Interns/CertificateAdmin'; // Adjust path if needed
+import InternshipJoin from './intern_join'; 
 
 const PageTransition = ({ children }) => {
   return (
@@ -350,6 +351,7 @@ function App() {
                   </AccessControl>
                 </PageTransition>
               } />
+              <Route path="/intern" element={<InternshipJoin />} />
             </Routes>
             </div>
         </div>
