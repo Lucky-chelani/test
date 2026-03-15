@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import styled, { keyframes } from 'styled-components';
+import React, { useEffect, useState } from 'react';
+import styled, { keyframes, css } from 'styled-components';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FaCheckCircle, FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaMoneyBillWave, FaFileAlt, FaPhone } from 'react-icons/fa';
 import BookingService from '../services/BookingService';
@@ -1003,16 +1003,30 @@ const BookingConfirmation = () => {
                 </DetailValue>
               </DetailItem>
               
+              {/* --- THIS IS THE FIX --- */}
               <DetailItem>
                 <DetailLabel>Participants</DetailLabel>
                 <DetailValue>
-                  {booking.participants || 
-                   booking.numberOfParticipants || 
-                   booking.participantCount || 
-                   booking.people || 
-                   1} person(s)
+                  {(() => {
+                    let count = 1;
+                    if (Array.isArray(booking.participants)) {
+                      count = booking.participants.length;
+                    } else if (typeof booking.participants === 'object' && booking.participants !== null) {
+                      count = 1;
+                    } else if (booking.participants) {
+                      count = Number(booking.participants);
+                    } else if (booking.numberOfParticipants) {
+                      count = Number(booking.numberOfParticipants);
+                    } else if (booking.participantCount) {
+                      count = Number(booking.participantCount);
+                    } else if (booking.people) {
+                      count = Number(booking.people);
+                    }
+                    return `${count} person(s)`;
+                  })()}
                 </DetailValue>
               </DetailItem>
+              {/* ----------------------- */}
               
               <DetailItem>
                 <DetailLabel>Booking Date</DetailLabel>

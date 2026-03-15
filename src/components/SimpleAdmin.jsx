@@ -1,206 +1,210 @@
 import React from 'react';
-import styled from 'styled-components';
-import { Link } from 'react-router-dom';
+import styled, { keyframes, createGlobalStyle } from 'styled-components';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { signOut } from "firebase/auth";
+import { auth } from "../firebase";
+import { 
+  FiUsers, FiMap, FiUserCheck, FiTag, FiShield, 
+  FiLogOut, FiActivity, FiChevronRight, FiBriefcase 
+} from 'react-icons/fi';
 
-// Icons/Assets (Conceptualizing modern UI iconography)
-const IconWrapper = styled.div`
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  margin-bottom: 1.25rem;
-  background: ${(props) => props.bgColor || '#f3f4f6'};
-  color: ${(props) => props.iconColor || '#374151'};
-  transition: all 0.3s ease;
+/* ==========================================================================
+   GLOBAL STYLES - PREMIUM SLATE THEME
+   ========================================================================== */
+const GlobalStyle = createGlobalStyle`
+  body { 
+    background-color: #f8fafc; /* Very light slate */
+    color: #0f172a; /* Deep slate text */
+    font-family: 'Inter', -apple-system, sans-serif; 
+    -webkit-font-smoothing: antialiased; 
+    margin: 0;
+  }
 `;
 
-const AdminContainer = styled.div`
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 3rem 1.5rem;
-  min-height: 100vh;
-  background-color: #f9fafb;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+const fadeInUp = keyframes`from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); }`;
 
-  @media (max-width: 640px) {
-    padding: 2rem 1rem;
-  }
+/* ==========================================================================
+   STYLED COMPONENTS
+   ========================================================================== */
+const AdminLayout = styled.div`
+  max-width: 1200px; margin: 0 auto; padding: 80px 24px; min-height: 100vh;
+  /* Subtle mesh gradient background for premium feel */
+  background-image: radial-gradient(at 0% 0%, rgba(224, 231, 255, 0.3) 0, transparent 50%), 
+                    radial-gradient(at 50% 0%, rgba(245, 243, 255, 0.3) 0, transparent 50%);
 `;
 
 const HeaderSection = styled.header`
-  margin-bottom: 3.5rem;
-  text-align: left;
-
-  @media (max-width: 768px) {
-    text-align: center;
-  }
+  margin-bottom: 64px; display: flex; justify-content: space-between; align-items: flex-end;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08); padding-bottom: 32px;
+  @media (max-width: 768px) { flex-direction: column; align-items: flex-start; gap: 24px; }
 `;
 
-const Badge = styled.span`
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  background: #e0e7ff;
-  color: #4338ca;
-  font-size: 0.875rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
+const TitleGroup = styled.div`
+  h1 { font-size: 2.75rem; font-weight: 800; margin: 8px 0; color: #0f172a; letter-spacing: -0.04em; }
+  p { color: #64748b; font-size: 1.1rem; font-weight: 400; margin: 0; }
 `;
 
-const Header = styled.h1`
-  color: #111827;
-  font-size: 2.25rem;
-  font-weight: 800;
-  letter-spacing: -0.025em;
-  margin: 0;
+const StatusBadge = styled.div`
+  display: inline-flex; align-items: center; gap: 8px; background: #ffffff; color: #10b981;
+  padding: 8px 16px; border-radius: 50px; font-size: 0.75rem; font-weight: 700; 
+  text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid rgba(16, 185, 129, 0.2);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.02);
 `;
 
-const Subtitle = styled.p`
-  color: #6b7280;
-  font-size: 1.125rem;
-  margin-top: 0.5rem;
+const LogoutBtn = styled.button`
+  background: #ffffff; color: #64748b; border: 1px solid rgba(15, 23, 42, 0.1);
+  padding: 12px 24px; border-radius: 12px; font-weight: 600; display: flex; align-items: center; 
+  gap: 8px; cursor: pointer; transition: all 0.2s ease;
+  &:hover { color: #ef4444; border-color: #fecaca; background: #fef2f2; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.08); }
 `;
 
-const AdminGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
-
-  @media (max-width: 640px) {
-    grid-template-columns: 1fr;
-  }
+const DashboardGrid = styled.div`
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;
 `;
 
-const AdminCard = styled(Link)`
-  display: flex;
-  flex-direction: column;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 2rem;
-  text-decoration: none;
-  color: inherit;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
+const IconBox = styled.div`
+  width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center;
+  background: ${props => props.$bgColor}; color: ${props => props.$themeColor}; 
+  font-size: 1.4rem; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border: 1px solid rgba(0,0,0,0.03);
+`;
+
+const MenuCard = styled(Link)`
+  position: relative; padding: 32px; background: #ffffff; 
+  border: 1px solid rgba(15, 23, 42, 0.06); border-radius: 24px; 
+  text-decoration: none; overflow: hidden; transition: all 0.3s ease;
+  display: flex; flex-direction: column; align-items: flex-start;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
 
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.1);
-    border-color: #6366f1;
+    transform: translateY(-6px);
+    border-color: ${props => props.$themeColor}40;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 
-    ${IconWrapper} {
-      background: #6366f1;
-      color: #ffffff;
+    ${IconBox} {
+      background: ${props => props.$themeColor}; color: white;
+      transform: scale(1.1) rotate(-8deg);
+      box-shadow: 0 8px 20px ${props => props.$themeColor}40;
     }
+    
+    .arrow { transform: translateX(4px); color: ${props => props.$themeColor}; }
+    h2 { color: ${props => props.$themeColor}; }
   }
 
-  &:active {
-    transform: translateY(-1px);
+  h2 { color: #1e293b; font-size: 1.4rem; font-weight: 700; margin: 24px 0 12px 0; transition: color 0.2s; }
+  p { color: #64748b; line-height: 1.6; font-size: 0.95rem; margin-bottom: 24px; flex-grow: 1; }
+`;
+
+const CardLinkText = styled.div`
+  display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 0.85rem;
+  text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; transition: all 0.2s;
+`;
+
+/* ==========================================================================
+   MENU DATA
+   ========================================================================== */
+const MENU_ITEMS = [
+  {
+    path: '/admin/communities',
+    title: 'Communities',
+    desc: 'Moderate community deployments, toggle featured status, and oversee social hubs.',
+    icon: <FiUsers />,
+    color: '#10b981', // Emerald
+    bg: '#ecfdf5'
+  },
+  {
+    path: '/admin/treks',
+    title: 'Trek Assets',
+    desc: 'Curate experience protocols, update itinerary mapping, and manage gallery assets.',
+    icon: <FiMap />,
+    color: '#f59e0b', // Amber
+    bg: '#fffbeb'
+  },
+  {
+    path: '/admin/certificates',
+    title: 'Internships',
+    desc: 'Manage role deployments, track applicant status, and update career listings.',
+    icon: <FiBriefcase />,
+    color: '#ec4899', // Pink
+    bg: '#fdf2f8'
+  },
+  {
+    path: '/admin/users',
+    title: 'User Management',
+    desc: 'Assign administrative roles, control system permissions, and verify accounts.',
+    icon: <FiUserCheck />,
+    color: '#3b82f6', // Blue
+    bg: '#eff6ff'
+  },
+  {
+    path: '/admin/coupons',
+    title: 'Pricing Logic',
+    desc: 'Deploy discount strategies, track usage metrics, and manage promotional codes.',
+    icon: <FiTag />,
+    color: '#8b5cf6', // Violet
+    bg: '#f5f3ff'
   }
-`;
+];
 
-const Title = styled.h2`
-  color: #1f2937;
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin-bottom: 0.75rem;
-`;
-
-const Description = styled.p`
-  color: #4b5563;
-  font-size: 0.95rem;
-  line-height: 1.6;
-  margin: 0;
-`;
-
-const CardFooter = styled.div`
-  margin-top: 1.5rem;
-  display: flex;
-  align-items: center;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #6366f1;
-
-  &::after {
-    content: '→';
-    margin-left: 0.5rem;
-    transition: transform 0.2s;
-  }
-
-  ${AdminCard}:hover &::after {
-    transform: translateX(4px);
-  }
-`;
-
+/* ==========================================================================
+   COMPONENT
+   ========================================================================== */
 const SimpleAdmin = () => {
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate('/login');
+    } catch (error) { console.error("Logout failed", error); }
+  };
+
   return (
-    <AdminContainer>
+    <AdminLayout>
+      <GlobalStyle />
+      
       <HeaderSection>
-        <Badge>Administration</Badge>
-        <Header>System Dashboard</Header>
-        <Subtitle>Manage your platform's core entities and permissions.</Subtitle>
+        <TitleGroup>
+          <StatusBadge><FiActivity /> System Operational</StatusBadge>
+          <h1>Command Center</h1>
+          <p>Global oversight and institutional management terminal.</p>
+        </TitleGroup>
+        
+        <LogoutBtn onClick={handleLogout}>
+          <FiLogOut /> Disconnect
+        </LogoutBtn>
       </HeaderSection>
 
-      <AdminGrid>
-        <AdminCard to="/admin/communities">
-          <IconWrapper bgColor="#dcfce7" iconColor="#15803d">
-            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
-            </svg>
-          </IconWrapper>
-          <Title>Community Admin</Title>
-          <Description>
-            Manage communities, toggle featured status, and moderate listings.
-          </Description>
-          <CardFooter>Manage Communities</CardFooter>
-        </AdminCard>
+      <DashboardGrid>
+        {MENU_ITEMS.map((item, index) => (
+          <motion.div
+            key={item.path}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1, duration: 0.5, ease: "easeOut" }}
+          >
+            <MenuCard to={item.path} $themeColor={item.color}>
+              <IconBox $themeColor={item.color} $bgColor={item.bg}>
+                {item.icon}
+              </IconBox>
+              <h2>{item.title}</h2>
+              <p>{item.desc}</p>
+              <CardLinkText>
+                Access Terminal <FiChevronRight className="arrow" size={16} />
+              </CardLinkText>
+            </MenuCard>
+          </motion.div>
+        ))}
+      </DashboardGrid>
 
-        <AdminCard to="/admin/treks">
-          <IconWrapper bgColor="#fef3c7" iconColor="#b45309">
-            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M3 20l1.3-1.3M18.5 4.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-            </svg>
-          </IconWrapper>
-          <Title>Trek Admin</Title>
-          <Description>
-            Curate trek experiences, set featured status, and update routes.
-          </Description>
-          <CardFooter>Manage Treks</CardFooter>
-        </AdminCard>
-
-        <AdminCard to="/admin/users">
-          <IconWrapper bgColor="#e0e7ff" iconColor="#4338ca">
-            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M12 11c0 3.866-3.582 7-8 7s-8-3.134-8-7 3.582-7 8-7 8 3.134 8 7z" />
-              <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-            </svg>
-          </IconWrapper>
-          <Title>User Management</Title>
-          <Description>
-            Assign organizer roles, control permissions, and manage accounts.
-          </Description>
-          <CardFooter>Manage Users</CardFooter>
-        </AdminCard>
-
-        <AdminCard to="/admin/coupons">
-          <IconWrapper bgColor="#fce7f3" iconColor="#be185d">
-            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-            </svg>
-          </IconWrapper>
-          <Title>Coupon Management</Title>
-          <Description>
-            Create discount strategies, track usage, and set validity periods.
-          </Description>
-          <CardFooter>Manage Coupons</CardFooter>
-        </AdminCard>
-      </AdminGrid>
-    </AdminContainer>
+      <footer style={{ marginTop: '100px', textAlign: 'center', borderTop: '1px solid rgba(0,0,0,0.05)', paddingTop: '40px' }}>
+        <FiShield size={20} style={{ color: '#94a3b8', marginBottom: '12px' }} />
+        <p style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.2em' }}>
+          Secure Administrative Layer v4.1.0
+        </p>
+      </footer>
+    </AdminLayout>
   );
 };
 
