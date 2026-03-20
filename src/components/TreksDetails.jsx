@@ -708,6 +708,10 @@ export default function TrekDetails() {
                 trekSeason={trekSeason}
                 trekAltitude={trekAltitude}
                 onBookClick={handleBookButtonClick}
+                
+                // ADD THESE TWO EXACT LINES RIGHT HERE:
+                trekTitle={trekTitle}           
+                organizerName={organizerName}   
               />
 
               <OrganizerSection 
@@ -737,7 +741,7 @@ export default function TrekDetails() {
         images={trek?.imageUrls}
         initialIndex={currentImageIndex}
       />
-      <WhatsAppButton trekTitle={trekTitle} />
+      <WhatsAppButton trekTitle={trekTitle} organizerName={organizerName} />
     </PageWrapper>
   );
 }

@@ -70,7 +70,7 @@ const Header = styled.div`
   align-items: center;
 `;
 
-const SectionTitle = styled.h2`
+const SectionTitle = styled.h1`
   font-size: 3.5rem;
   font-weight: 800;
   margin-bottom: 16px;
@@ -219,7 +219,7 @@ const BlogContent = styled.div`
   flex-direction: column;
 `;
 
-const BlogTitle = styled.h3`
+const BlogTitle = styled.h2`
   font-size: 1.4rem;
   font-weight: 700;
   margin-bottom: 12px;
@@ -240,7 +240,8 @@ const BlogSummary = styled.p`
   overflow: hidden;
 `;
 
-const ReadButton = styled.button`
+/* FIX: Now styled as a Link, not a button, so Google can crawl it! */
+const ReadButton = styled(Link)`
   background: linear-gradient(135deg, #FF4B1F 0%, #FF8E53 100%);
   color: #fff;
   border: none;
@@ -248,7 +249,9 @@ const ReadButton = styled.button`
   padding: 14px 24px;
   font-weight: 600;
   font-size: 1rem;
-  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  display: block;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -301,9 +304,12 @@ const Blog = () => {
   const [blogToDelete, setBlogToDelete] = useState(null);
   const navigate = useNavigate();
 
-  const ADMIN_EMAILS = ['luckychelani950@gmail.com', 'ayushmaanpatel13@gmail.com'];
+  const ADMIN_EMAILS = ['luckychelani950@gmail.com', 'ayushmanpatel13@gmail.com' ];
 
   useEffect(() => {
+    // Dynamic SEO Meta tags
+    document.title = "Adventure Travel Blogs | Trovia";
+
     const unsubscribeAuth = auth.onAuthStateChanged(async (user) => {
       if (user) {
         setCurrentUser(user);
@@ -366,6 +372,17 @@ const Blog = () => {
         <BlogGrid>
           {blogs.map((blog, idx) => {
             const showDelete = (currentUser && blog.authorId === currentUser.uid) || isAdmin;
+            
+            // --- SMART SLUG GENERATOR (Max 6 words) ---
+            const cleanSlug = blog.slug || blog.title
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-') // replace spaces/symbols with hyphens
+              .replace(/(^-|-$)+/g, '')    // remove start/end hyphens
+              .split('-')                  // split into individual words
+              .slice(0, 6)                 // KEEP ONLY THE FIRST 6 WORDS
+              .join('-');                  // put them back together
+
+              
             return (
               <BlogCard key={blog.id} delay={`${idx * 0.1}s`}>
                 <ImageContainer>
@@ -379,7 +396,9 @@ const Blog = () => {
                 <BlogContent>
                   <BlogTitle>{blog.title}</BlogTitle>
                   <BlogSummary>{blog.summary}</BlogSummary>
-                  <ReadButton onClick={() => navigate(`/blogs/${blog.id}`)}>Read More</ReadButton>
+                  <ReadButton to={`/blogs/${cleanSlug}`}>
+                    Read Full Guide
+                  </ReadButton>
                 </BlogContent>
               </BlogCard>
             );

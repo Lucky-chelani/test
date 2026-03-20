@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import './App.css';
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { motion } from 'framer-motion'; 
 import Banner from './components/Banner/Banner';
 import FeaturedTreks from './components/FeaturedTreks';
