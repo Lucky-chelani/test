@@ -14,7 +14,7 @@ import Blog from './components/Blog';
 import CreateBlog from './components/CreateBlog'; // <--- ADD THIS CHECK PATH
 import BlogDetail from './components/BlogDetail';
 import { RewardsHero, RewardsSection } from './components/Rewards';
-import About from './components/about/About';
+import About from './components/About';
 import Profile from './components/Profile';
 import Login from './components/Login';
 import Signup from './components/Signup';

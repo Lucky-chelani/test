@@ -1,29 +1,15 @@
 import React from 'react';
-import { createRoot, hydrateRoot } from 'react-dom/client';
+import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
-const container = document.getElementById('root');
-
-// The Magic SEO Fix:
-// If react-snap has already built the HTML, "hydrate" it instead of drawing a blank page.
-if (container.hasChildNodes()) {
-  hydrateRoot(
-    container,
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
-  );
-} else {
-  // Fallback for normal browser rendering
-  const root = createRoot(container);
-  root.render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
-  );
-}
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
 
 // Service worker registration is disabled to avoid conflicts with Razorpay
 // Will be re-enabled after resolving integration issues

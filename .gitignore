@@ -11,17 +11,6 @@
 # production
 /build
 
-
-# Firebase specific
-functions/node_modules/
-functions/lib/
-.firebase/
-.firebaserc
-# -----------------------------
-
-# misc
-.DS_Store
-
 # misc
 .DS_Store
 .env
