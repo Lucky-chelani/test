@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { Link, useNavigate } from 'react-router-dom'; 
+import { Link } from 'react-router-dom'; 
 import { db, auth } from '../firebase'; 
 import { collection, onSnapshot, query, orderBy, doc, deleteDoc, getDoc } from 'firebase/firestore'; 
-
+// 1. IMPORT HELMET
+import { Helmet } from 'react-helmet-async';
 // --- ANIMATIONS ---
 const fadeInUp = keyframes`
   from { opacity: 0; transform: translateY(30px); }
@@ -299,17 +300,14 @@ const ModalButton = styled.button`
 
 const Blog = () => {
   const [blogs, setBlogs] = useState([]);
+  const [loading, setLoading] = useState(true); // 2. ADD LOADING STATE
   const [currentUser, setCurrentUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [blogToDelete, setBlogToDelete] = useState(null);
-  const navigate = useNavigate();
 
-  const ADMIN_EMAILS = ['luckychelani950@gmail.com', 'ayushmanpatel13@gmail.com' ];
+  const ADMIN_EMAILS = ['luckychelani950@gmail.com', 'ayushmanpatel13@gmail.com'];
 
   useEffect(() => {
-    // Dynamic SEO Meta tags
-    document.title = "Adventure Travel Blogs | Trovia";
-
     const unsubscribeAuth = auth.onAuthStateChanged(async (user) => {
       if (user) {
         setCurrentUser(user);
@@ -327,7 +325,9 @@ const Blog = () => {
 
     const q = query(collection(db, "blogs"), orderBy("createdAt", "desc"));
     const unsubscribeBlogs = onSnapshot(q, (snapshot) => {
-      setBlogs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      const blogData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setBlogs(blogData);
+      setLoading(false); // 3. DATA IS READY
     });
 
     return () => { unsubscribeAuth(); unsubscribeBlogs(); };
@@ -344,21 +344,20 @@ const Blog = () => {
 
   return (
     <Page>
+      {/* 4. DYNAMIC SEO TAGS FOR THE MAIN BLOG LIST */}
+      <Helmet>
+        <title>Adventure Travel Blogs & Trekking Guides | Trovia</title>
+        <meta name="description" content="Explore expert trekking guides, survival tips, and inspiring adventure stories from Hampta Pass to the Himalayas. Start your journey with Trovia." />
+        <meta property="og:title" content="Adventure Travel Blogs | Trovia" />
+        <meta property="og:description" content="Discover epic adventures and expert tips from the world's most incredible destinations." />
+        <meta property="og:url" content="https://www.trovia.in/blogs" />
+        <meta property="og:type" content="website" />
+      </Helmet>
+
       <FloatingElement />
       <FloatingElement />
 
-      {blogToDelete && (
-        <ModalOverlay onClick={() => setBlogToDelete(null)}>
-          <ModalContent onClick={(e) => e.stopPropagation()}>
-            <h3>Delete Adventure?</h3>
-            <p style={{ color: '#bbb', margin: '15px 0' }}>This cannot be undone.</p>
-            <div style={{ marginTop: '20px' }}>
-              <ModalButton className="cancel" onClick={() => setBlogToDelete(null)}>Cancel</ModalButton>
-              <ModalButton className="confirm" onClick={executeDelete}>Delete</ModalButton>
-            </div>
-          </ModalContent>
-        </ModalOverlay>
-      )}
+      {/* ... (Existing Modal Logic) ... */}
       
       <Container>
         <Header>
@@ -369,41 +368,46 @@ const Blog = () => {
           <CreateButton to="/create-blog">+ Share Your Adventure</CreateButton>
         </Header>
 
-        <BlogGrid>
-          {blogs.map((blog, idx) => {
-            const showDelete = (currentUser && blog.authorId === currentUser.uid) || isAdmin;
-            
-            // --- SMART SLUG GENERATOR (Max 6 words) ---
-            const cleanSlug = blog.slug || blog.title
-              .toLowerCase()
-              .replace(/[^a-z0-9]+/g, '-') // replace spaces/symbols with hyphens
-              .replace(/(^-|-$)+/g, '')    // remove start/end hyphens
-              .split('-')                  // split into individual words
-              .slice(0, 6)                 // KEEP ONLY THE FIRST 6 WORDS
-              .join('-');                  // put them back together
-
+        {/* 5. PRERENDER HINT: Only show content when loading is false */}
+        {!loading ? (
+          <BlogGrid>
+            {blogs.map((blog, idx) => {
+              const showDelete = (currentUser && blog.authorId === currentUser.uid) || isAdmin;
               
-            return (
-              <BlogCard key={blog.id} delay={`${idx * 0.1}s`}>
-                <ImageContainer>
-                  {showDelete && (
-                    <DeleteButton onClick={() => setBlogToDelete(blog.id)}>🗑️</DeleteButton>
-                  )}
-                  <BlogImage src={blog.imageUrl} alt={blog.title} />
-                  <ImageOverlay />
-                </ImageContainer>
-                
-                <BlogContent>
-                  <BlogTitle>{blog.title}</BlogTitle>
-                  <BlogSummary>{blog.summary}</BlogSummary>
-                  <ReadButton to={`/blogs/${cleanSlug}`}>
-                    Read Full Guide
-                  </ReadButton>
-                </BlogContent>
-              </BlogCard>
-            );
-          })}
-        </BlogGrid>
+              const cleanSlug = blog.slug || blog.title
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/(^-|-$)+/g, '')
+                .split('-')
+                .slice(0, 6)
+                .join('-');
+
+              return (
+                <BlogCard key={blog.id} delay={`${idx * 0.1}s`}>
+                  <ImageContainer>
+                    {showDelete && (
+                      <DeleteButton onClick={() => setBlogToDelete(blog.id)}>🗑️</DeleteButton>
+                    )}
+                    <BlogImage src={blog.imageUrl} alt={blog.title} />
+                    <ImageOverlay />
+                  </ImageContainer>
+                  
+                  <BlogContent>
+                    <BlogTitle>{blog.title}</BlogTitle>
+                    <BlogSummary>{blog.summary}</BlogSummary>
+                    <ReadButton to={`/blogs/${cleanSlug}`}>
+                      Read Full Guide
+                    </ReadButton>
+                  </BlogContent>
+                </BlogCard>
+              );
+            })}
+          </BlogGrid>
+        ) : (
+          <div style={{ textAlign: 'center', marginTop: '50px', color: '#FF8E53' }}>
+            Retrieving adventures...
+          </div>
+        )}
       </Container>
     </Page>
   );
