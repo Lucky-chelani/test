@@ -272,6 +272,7 @@ const TeamCard = styled(Card)`
   
   &:nth-child(1) { animation-delay: 0.1s; }
   &:nth-child(2) { animation-delay: 0.2s; }
+  &:nth-child(3) { animation-delay: 0.3s; }
 `;
 
 const TeamMemberAvatar = styled.div`
@@ -373,6 +374,7 @@ const FloatingCircle = styled.div`
 
 const About = () => {
 
+  // Added Ayushman Patel to the team array here
   const team = [
     {
       name: 'Harsh Gupta',
@@ -385,6 +387,12 @@ const About = () => {
       role: 'Co-founder & CTO',
       quote: 'Technology should enhance the trekking experience, not complicate it. We bring smart solutions that bring people together.',
       initial: 'LC'
+    },
+    { 
+      name: 'Ayushman Patel',
+      role: 'Co-founder & Co-CTO',
+      quote: 'Engineering the future of adventure travel, one line of code at a time, to ensure your journey is as flawless as the destination.',
+      initial: 'AP'
     }
   ];
 

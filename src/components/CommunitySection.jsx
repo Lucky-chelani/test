@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import styled, { keyframes } from "styled-components";
 import birdsImg from "../assets/images/birds.png";
 import mapPattern from "../assets/images/map-pattren.png";
@@ -24,8 +24,8 @@ const float = keyframes`
 `;
 
 const shimmer = keyframes`
-  0% { background-position: -300px 0; }
-  100% { background-position: 300px 0; }
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 `;
 
 const pulse = keyframes`
@@ -87,7 +87,10 @@ const BirdsImage = styled.img`
   height: auto;
   z-index: 1;
   animation: ${float} 6s ease-in-out infinite;
-  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.1));
+  /* Removed heavy drop-shadow, added GPU acceleration */
+  will-change: transform;
+  transform: translateZ(0);
+  pointer-events: none;
   
   @media (max-width: 768px) {
     width: 90px;
@@ -409,11 +412,19 @@ const CommunityCard = styled.div`
   border-radius: 24px;
   overflow: hidden;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  /* Replaced 'all' with specific transitions to save CPU */
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+              box-shadow 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+              border-color 0.4s ease;
   border: 1px solid rgba(0, 0, 0, 0.04);
   animation: ${fadeIn} 0.6s ease-out ${props => 0.4 + props.index * 0.1}s backwards;
   position: relative;
   
+  /* Force GPU rendering for the whole card */
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+
   &:hover {
     transform: translateY(-12px) scale(1.02);
     box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
@@ -1485,7 +1496,7 @@ export default function CommunitySection() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [likedMessages, setLikedMessages] = useState({});
   const [communities, setCommunities] = useState(communityRooms);
-  const [lastVisible, setLastVisible] = useState(null);
+  const lastVisibleRef = useRef(null);
   const [hasMore, setHasMore] = useState(true);
   const navigate = useNavigate();
 
@@ -1509,12 +1520,12 @@ export default function CommunitySection() {
       }
       
       // If loading more, start after the last item
-      if (isLoadMore && lastVisible) {
+      if (isLoadMore && lastVisibleRef.current) {
         communitiesQuery = query(communitiesRef, 
           activeTab === "Popular" ? orderBy("members", "desc") : 
           activeTab === "New" ? orderBy("createdAt", "desc") : 
           orderBy("lastActivity", "desc"),
-          startAfter(lastVisible),
+          startAfter(lastVisibleRef.current),
           limit(3)
         );
       }
@@ -1530,8 +1541,8 @@ export default function CommunitySection() {
         }
       } else {
         console.log(`Found ${querySnapshot.docs.length} communities in Firestore.`);
-        // Get the last visible document
-        setLastVisible(querySnapshot.docs[querySnapshot.docs.length - 1]);
+        // Get the last visible document and save it to the REF
+        lastVisibleRef.current = querySnapshot.docs[querySnapshot.docs.length - 1];
         
         // Map the data to our expected format
         const loadedCommunities = querySnapshot.docs.map((doc, index) => {
@@ -1605,7 +1616,7 @@ export default function CommunitySection() {
     } finally {
       setLoading(false);
     }
-  }, [activeTab, lastVisible]);
+  }, [activeTab]);
 
   // Load communities from Firebase when tab changes
   useEffect(() => {
@@ -1791,7 +1802,7 @@ export default function CommunitySection() {
             active={activeTab === "Popular"} 
             onClick={() => {
               setActiveTab("Popular");
-              setLastVisible(null);
+              lastVisibleRef.current = null; // Clear the ref
               setHasMore(true);
             }}
           >
@@ -1801,7 +1812,7 @@ export default function CommunitySection() {
             active={activeTab === "New"} 
             onClick={() => {
               setActiveTab("New");
-              setLastVisible(null);
+              lastVisibleRef.current = null; // Clear the ref
               setHasMore(true);
             }}
           >
@@ -1811,7 +1822,7 @@ export default function CommunitySection() {
             active={activeTab === "Active"} 
             onClick={() => {
               setActiveTab("Active");
-              setLastVisible(null);
+              lastVisibleRef.current = null; // Clear the ref
               setHasMore(true);
             }}
           >

@@ -15,7 +15,6 @@ const getSeasonIcon = (season) => {
   return <FaSun />;
 };
 
-
 const WhatsAppOutlineBtn = styled.button`
   width: 100%;
   margin-top: 1rem;
@@ -40,7 +39,6 @@ const WhatsAppOutlineBtn = styled.button`
 `;
 
 // --- STYLED COMPONENTS ---
-
 const CardWrapper = styled.div`
   /* Modern Dark Glass Aesthetic */
   background: rgba(30, 41, 59, 0.75); 
@@ -68,11 +66,7 @@ const CardWrapper = styled.div`
     background: linear-gradient(90deg, #6366F1, #A855F7);
   }
 
-  /* --- RESPONSIVE ADJUSTMENTS --- */
-  @media (max-width: 1024px) {
-    max-width: 100%; /* Full width on tablets/mobile if needed */
-  }
-
+  @media (max-width: 1024px) { max-width: 100%; }
   @media (max-width: 768px) {
     border-radius: 20px;
     box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.4);
@@ -82,216 +76,91 @@ const CardWrapper = styled.div`
 const BookingHeader = styled.div`
   padding: 2rem 2rem 1.5rem;
   background: linear-gradient(to bottom, rgba(255,255,255,0.03), transparent);
-
-  @media (max-width: 480px) {
-    padding: 1.5rem 1.25rem 1.25rem;
-  }
+  @media (max-width: 480px) { padding: 1.5rem 1.25rem 1.25rem; }
 `;
 
-const PriceTag = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-`;
-
-const PriceRow = styled.div`
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  flex-wrap: wrap; /* Allows wrapping on very small screens */
-`;
+const PriceTag = styled.div` display: flex; flex-direction: column; gap: 0.5rem; `;
+const PriceRow = styled.div` display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; `;
 
 const Price = styled.div`
-  /* Fluid Typography: Scales between 1.75rem and 2.25rem */
   font-size: clamp(1.75rem, 5vw, 2.25rem);
-  font-weight: 800;
-  color: #fff;
-  letter-spacing: -0.02em;
+  font-weight: 800; color: #fff; letter-spacing: -0.02em;
   text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-  
   background: linear-gradient(to right, #fff, #e2e8f0);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
 `;
 
 const PricePerPerson = styled.span`
-  font-size: 1rem;
-  font-weight: 500;
-  color: #94a3b8;
-  
-  @media (max-width: 480px) {
-    font-size: 0.9rem;
-  }
+  font-size: 1rem; font-weight: 500; color: #94a3b8;
+  @media (max-width: 480px) { font-size: 0.9rem; }
 `;
 
 const PriceCaption = styled.div`
-  font-size: 0.9rem;
-  color: #cbd5e1;
-  font-weight: 400;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  
+  font-size: 0.9rem; color: #cbd5e1; font-weight: 400;
+  display: flex; align-items: center; gap: 6px;
   &::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    min-width: 6px; /* Prevents shrinking */
-    background: #4ADE80; 
-    border-radius: 50%;
-    box-shadow: 0 0 8px rgba(74, 222, 128, 0.4);
+    content: ''; width: 6px; height: 6px; min-width: 6px; 
+    background: #4ADE80; border-radius: 50%; box-shadow: 0 0 8px rgba(74, 222, 128, 0.4);
   }
-
-  @media (max-width: 480px) {
-    font-size: 0.8rem;
-  }
+  @media (max-width: 480px) { font-size: 0.8rem; }
 `;
 
 const BookingDivider = styled.div`
-  height: 1px;
-  background: rgba(255, 255, 255, 0.1);
-  margin: 0 2rem;
-
-  @media (max-width: 480px) {
-    margin: 0 1.25rem;
-  }
+  height: 1px; background: rgba(255, 255, 255, 0.1); margin: 0 2rem;
+  @media (max-width: 480px) { margin: 0 1.25rem; }
 `;
 
 const BookingBody = styled.div`
   padding: 2rem;
-
-  @media (max-width: 480px) {
-    padding: 1.5rem 1.25rem;
-  }
+  @media (max-width: 480px) { padding: 1.5rem 1.25rem; }
 `;
 
 const BookingDetailsGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem 1rem;
-  margin-bottom: 2rem;
-
-  @media (max-width: 480px) {
-    gap: 1.25rem 0.75rem; /* Tighter gap on mobile */
-    margin-bottom: 1.5rem;
-  }
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem 1rem; margin-bottom: 2rem;
+  @media (max-width: 480px) { gap: 1.25rem 0.75rem; margin-bottom: 1.5rem; }
 `;
 
-const DetailItem = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0; /* Critical for text-overflow to work in grid */
-`;
+const DetailItem = styled.div` display: flex; flex-direction: column; gap: 6px; min-width: 0; `;
 
 const DetailLabel = styled.div`
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #94a3b8;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 600;
-
-  svg {
-    font-size: 0.9rem;
-    color: #6366F1;
-    flex-shrink: 0; /* Prevents icon from squishing */
-  }
+  font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8;
+  display: flex; align-items: center; gap: 6px; font-weight: 600;
+  svg { font-size: 0.9rem; color: #6366F1; flex-shrink: 0; }
 `;
 
 const DetailValue = styled.div`
-  font-size: 1rem;
-  font-weight: 600;
-  color: #f1f5f9;
-  
-  /* Robust text truncation */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-
-  @media (max-width: 480px) {
-    font-size: 0.95rem; /* Slightly smaller on mobile */
-  }
+  font-size: 1rem; font-weight: 600; color: #f1f5f9;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  @media (max-width: 480px) { font-size: 0.95rem; }
 `;
 
 const BookNowBtn = styled.button`
-  width: 100%;
-  padding: 1.1rem;
-  
-  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
-  color: #ffffff;
-  
-  border: none;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: 700;
-  cursor: pointer;
-  
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  
-  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
-  position: relative;
-  overflow: hidden;
+  width: 100%; padding: 1.1rem;
+  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); color: #ffffff;
+  border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 0.75rem;
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+  position: relative; overflow: hidden;
   
   &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: 0.5s;
+    content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); transition: 0.5s;
   }
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 25px rgba(79, 70, 229, 0.4);
-    
-    &::after {
-      left: 100%;
-    }
-
-    svg {
-      transform: translateX(4px);
-    }
+    transform: translateY(-2px); box-shadow: 0 12px 25px rgba(79, 70, 229, 0.4);
+    &::after { left: 100%; }
+    svg { transform: translateX(4px); }
   }
-
-  &:active {
-    transform: translateY(0);
-  }
-
-  @media (max-width: 480px) {
-    padding: 1rem;
-    font-size: 1rem;
-  }
+  &:active { transform: translateY(0); }
+  @media (max-width: 480px) { padding: 1rem; font-size: 1rem; }
 `;
 
 const SecureText = styled.div`
-  text-align: center;
-  font-size: 0.85rem;
-  color: #94a3b8;
-  margin-top: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  
-  svg {
-    color: #10B981;
-    flex-shrink: 0;
-  }
-
-  @media (max-width: 480px) {
-    font-size: 0.75rem;
-    margin-top: 0.75rem;
-  }
+  text-align: center; font-size: 0.85rem; color: #94a3b8; margin-top: 1rem;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  svg { color: #10B981; flex-shrink: 0; }
+  @media (max-width: 480px) { font-size: 0.75rem; margin-top: 0.75rem; }
 `;
 
 // --- COMPONENT ---
@@ -304,8 +173,32 @@ const BookingCard = ({
   trekCapacity, 
   trekSeason, 
   trekAltitude, 
-  onBookClick 
+  onBookClick,
+  trekTitle,      // Make sure this is here!
+  organizerName   // Make sure this is here!
 }) => {
+
+  // ADD THIS SMART FUNCTION RIGHT HERE:
+  const handleWhatsAppClick = () => {
+    const phoneNumber = "919479747915"; 
+    const currentUrl = window.location.href;
+    
+    let message = `Hi Trovia! `;
+    
+    if (trekTitle) {
+      message += `I have a question about the *${trekTitle}* trek`;
+      if (organizerName) {
+        message += ` organized by *${organizerName}*`;
+      }
+      message += `.\n\nHere is the link I am looking at: ${currentUrl}`;
+    } else {
+      message += `I have a question about booking a trek.`;
+    }
+      
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
+  };
+
   return (
     <CardWrapper>
       <BookingHeader>
@@ -377,10 +270,12 @@ const BookingCard = ({
           <FiShield /> No payment required today
         </SecureText>
 
-        <WhatsAppOutlineBtn onClick={() => window.open('https://wa.me/919876543210', '_blank')}>
+        {/* --- UPDATED BUTTON CALLS THE NEW FUNCTION --- */}
+        <WhatsAppOutlineBtn onClick={handleWhatsAppClick}>
           <FaWhatsapp size={20} />
           Ask a Question
         </WhatsAppOutlineBtn>
+
       </BookingBody>
     </CardWrapper>
   );
