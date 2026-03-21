@@ -52,35 +52,30 @@ app.get(/.*/, async (req, res) => {
   const isBot = BOTS.some(bot => userAgent.toLowerCase().includes(bot));
 
   if (isBot) {
-    // 🤖 IT'S A BOT! Ask Prerender.io to render the JavaScript and give us pure HTML
-    
-    // NOTE: Change this to your live domain!
+    // 🤖 IT'S A BOT! Ask Prerender.io to render the JavaScript
     const targetUrl = `https://www.trovia.in${req.originalUrl}`; 
     const prerenderUrl = `https://service.prerender.io/${targetUrl}`;
 
     try {
-      // Node 18+ supports native fetch
       const response = await fetch(prerenderUrl, {
         headers: {
-          'X-Prerender-Token': '5Fj2z5SJ4fKDwFx05r6E' // <--- PASTE TOKEN HERE
+          // 🔒 SECURE: Pulls the token from the hidden .env file
+          'X-Prerender-Token': process.env.PRERENDER_TOKEN 
         }
       });
       const html = await response.text();
 
-      // IMPORTANT: Cache this response in Firebase CDN for 24 hours. 
-      // This makes subsequent bot visits instant and saves your Prerender free tier quota!
+      // Cache this response in Firebase CDN for 24 hours
       res.set('Cache-Control', 'public, max-age=86400, s-maxage=86400');
       return res.status(200).send(html);
 
     } catch (error) {
       console.error("Prerender error:", error);
-      // If Prerender fails for some reason, just fall through to the human response below
     }
   }
 
   // 👨‍💻 IT'S A HUMAN! Serve the normal React App.
   try {
-    // We read the physical index.html file that we will copy into this folder later
     const indexPath = path.resolve(__dirname, 'index.html');
     const html = fs.readFileSync(indexPath, 'utf8');
     return res.status(200).send(html);
@@ -90,5 +85,4 @@ app.get(/.*/, async (req, res) => {
   }
 });
 
-// Export the Express app as a Firebase Function
 exports.seoRender = onRequest({ maxInstances: 10, memory: "256MiB" }, app);
