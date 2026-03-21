@@ -4,8 +4,8 @@ import styled, { keyframes, createGlobalStyle } from 'styled-components';
 import { db } from '../firebase'; 
 import { doc, getDoc } from 'firebase/firestore';
 import { 
-  FiCheckCircle, FiAward, FiArrowLeft, 
-  FiShield
+  FiCheckCircle, FiXCircle, FiAward, FiCalendar, FiArrowLeft, 
+  FiShield, FiLock, FiDownload 
 } from 'react-icons/fi';
 import { QRCodeCanvas } from 'qrcode.react';
 import { jsPDF } from 'jspdf';

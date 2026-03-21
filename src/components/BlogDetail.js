@@ -3,9 +3,6 @@ import styled, { keyframes } from 'styled-components';
 import { useParams, Link } from 'react-router-dom';
 import { db } from '../firebase';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
-// 1. IMPORT HELMET
-import { Helmet } from 'react-helmet-async';
-
 
 // --- ANIMATIONS ---
 const fadeIn = keyframes`from { opacity: 0; } to { opacity: 1; }`;
@@ -56,7 +53,7 @@ const CTABanner = styled.div`
 `;
 
 const BlogDetail = () => {
-  const { id } = useParams();
+  const { id } = useParams(); // This will now capture "hampta-pass-trek"
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -64,43 +61,69 @@ const BlogDetail = () => {
     const fetchBlog = async () => {
       try {
         setLoading(true);
-        // ... (Your existing fetch logic: ID -> Slug -> Fallback Title) ...
+        
+        // 1. Try fetching by exact Database ID first (backwards compatibility for old links)
         const docRef = doc(db, "blogs", id);
         const docSnap = await getDoc(docRef);
         
         if (docSnap.exists()) {
-          setBlog({ id: docSnap.id, ...docSnap.data() });
+          setBlog(docSnap.data());
           return;
         }
 
+        // 2. If not found, try searching the DB for a matching "slug" field
         const q = query(collection(db, "blogs"), where("slug", "==", id));
         const querySnapshot = await getDocs(q);
         
         if (!querySnapshot.empty) {
-          setBlog({ id: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() });
+          setBlog(querySnapshot.docs[0].data());
           return;
         }
 
+        // 3. FALLBACK: If your DB doesn't have slugs yet, format all titles into slugs and find the match!
         const allBlogsSnap = await getDocs(collection(db, "blogs"));
         let foundBlog = null;
         
         allBlogsSnap.forEach(doc => {
           const data = doc.data();
           if (data.title) {
-            const generatedSlug = data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '').split('-').slice(0, 6).join('-');
-            if (generatedSlug === id) foundBlog = { id: doc.id, ...data };
+            // Apply the exact same 6-word limit to the database titles
+            const generatedSlug = data.title
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/(^-|-$)+/g, '')
+              .split('-')
+              .slice(0, 6)
+              .join('-');
+              
+            if (generatedSlug === id) {
+              foundBlog = data;
+            }
           }
         });
         
-        setBlog(foundBlog);
+        if (foundBlog) {
+          setBlog(foundBlog);
+        } else {
+          setBlog(null); // Truly not found
+        }
+
       } catch (error) {
         console.error("Error fetching blog:", error);
       } finally {
         setLoading(false);
       }
     };
+
     fetchBlog();
   }, [id]);
+
+  // Set SEO Meta Tags once blog is loaded
+  useEffect(() => {
+    if (blog) {
+      document.title = `${blog.title} | Trovia`;
+    }
+  }, [blog]);
 
   if (loading) return (
     <div style={{ background: '#0c0c0c', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'white' }}>
@@ -114,30 +137,8 @@ const BlogDetail = () => {
     day: 'numeric', month: 'long', year: 'numeric'
   }) : "Recently";
 
-  // Create a clean description (first 160 characters of content)
-  const seoDescription = blog.summary || (blog.content ? blog.content.substring(0, 157) + "..." : "Explore this epic adventure on Trovia.");
-
   return (
     <Page>
-      {/* 2. DYNAMIC SEO TAGS FOR INDIVIDUAL BLOGS */}
-      <Helmet>
-        <title>{`${blog.title} | Trovia Adventure Blog`}</title>
-        <meta name="description" content={seoDescription} />
-        
-        {/* Open Graph / Facebook / WhatsApp */}
-        <meta property="og:type" content="article" />
-        <meta property="og:title" content={blog.title} />
-        <meta property="og:description" content={seoDescription} />
-        <meta property="og:image" content={blog.imageUrl} />
-        <meta property="og:url" content={`https://www.trovia.in/blogs/${id}`} />
-        
-        {/* Twitter */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={blog.title} />
-        <meta name="twitter:description" content={seoDescription} />
-        <meta name="twitter:image" content={blog.imageUrl} />
-      </Helmet>
-
       <HeroSection>
         <HeroImage src={blog.imageUrl} alt={blog.title} />
       </HeroSection>
@@ -163,11 +164,13 @@ const BlogDetail = () => {
           {blog.content}
         </BlogBody>
 
+        {/* CTA FOR CONVERSIONS AND INTERNAL LINKING */}
         <CTABanner>
           <h3>Ready for the real thing?</h3>
           <p>Don't just read about it. Explore our verified trek packages and book your next adventure.</p>
           <BackButton to="/explore" style={{ marginTop: '0' }}>Explore Treks on Trovia</BackButton>
         </CTABanner>
+
       </ContentContainer>
     </Page>
   );
