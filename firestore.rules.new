@@ -2,149 +2,94 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper function to check if user is an admin
+    
+    // --- HELPERS ---
     function isAdmin(userId) {
       return exists(/databases/$(database)/documents/users/$(userId)) && 
              get(/databases/$(database)/documents/users/$(userId)).data.role == 'admin';
     }
-    
-    // Helper function to check if user is a member of a chatroom
-    function isChatroomMember(chatroomId, userId) {
-      let chatroom = get(/databases/$(database)/documents/chatrooms/$(chatroomId));
-      return chatroom != null && 
-             'members' in chatroom.data && 
-             chatroom.data.members.hasAny([userId]);
-    }
-    
-    // Chatrooms collection
+
+    // --- CHATROOMS ---
     match /chatrooms/{chatroomId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null;
+      // Only admins can manage chatroom settings
+      allow create, delete: if request.auth != null && (
+        request.auth.token.email in ['luckychelani950@gmail.com', 'ayushmanpatel13@gmail.com'] || isAdmin(request.auth.uid)
+      );
+      // Allow joining logic
+      allow update: if request.auth != null && (
+        isAdmin(request.auth.uid) ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members', 'memberCount'])
+      );
       
-      // Messages subcollection
       match /messages/{messageId} {
-        // Anyone authenticated can read messages
         allow read: if request.auth != null;
-          // Allow any authenticated user to send messages (no membership check)
-        allow create: if request.auth != null
-          && request.resource.data.userId == request.auth.uid
-          && request.resource.data.text is string
-          && request.resource.data.text.size() <= 1000
-          && request.resource.data.expiresAt is timestamp;
-        
-        // Allow users to delete their own messages
-        allow update, delete: if request.auth != null
-          && resource.data.userId == request.auth.uid;
-          
-        // Allow automatic deletion of expired messages
-        allow delete: if request.auth != null
-          && resource.data.expiresAt < request.time;
+        allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+        allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin(request.auth.uid));
       }
     }
-    
-    // Trek collection with role-based permissions
+
+    // --- TREKS ---
     match /treks/{trekId} {
-      // Allow anyone to read treks
       allow read: if true;
-      // Allow write access to admins or organizers
-      allow create: if request.auth != null && (
-        // Admin access check
-        (request.auth.token.email in ['luckychelani950@gmail.com', 'test@example.com', 'youremail@example.com']) ||
-        // Organizer check - get user document to check role
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'organizer' ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
-      );
-      // Allow update/delete for admins or the organizer who created the trek
-      allow update, delete: if request.auth != null && (
-        // Admin access
-        (request.auth.token.email in ['luckychelani950@gmail.com', 'test@example.com', 'youremail@example.com']) ||
-        // Is the user an admin?
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-        // Is this the organizer who created the trek?
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'organizer' && 
-         resource.data.organizerId == request.auth.uid)
-      );
-    }
-    
-    // Newsletter subscribers collection
-    match /newsletter_subscribers/{subscriberId} {
-      // Anyone can create a newsletter subscription
-      allow create: if true;
-      // Only authenticated admin users can read all subscriptions
-      allow read: if request.auth != null && 
-        (request.auth.token.email in ['luckychelani950@gmail.com', 'test@example.com', 'youremail@example.com']);
-      // No one can update/delete subscribers except admins
-      allow update, delete: if request.auth != null && 
-        (request.auth.token.email in ['luckychelani950@gmail.com', 'test@example.com', 'youremail@example.com']);
-    }
-    
-    // Bookings collection
-    match /bookings/{bookingId} {
-      // Allow authenticated users to create bookings
-      allow create: if request.auth != null;
-      // Users can read their own bookings
-      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
-      // Allow updates for payment processing
-      allow update: if request.auth != null && resource.data.userId == request.auth.uid;
-      // Only admin can read all bookings or delete bookings
-      allow read, delete: if request.auth != null && 
-        (request.auth.token.email in ['luckychelani950@gmail.com', 'test@example.com', 'youremail@example.com']);
-    }
-    
-    // Payments collection
-    match /payments/{paymentId} {
-      // Allow authenticated users to create payment records
-      allow create: if request.auth != null;
-      // Users can read their own payment records
-      allow read: if request.auth != null && 
-        (request.resource.data.userId == request.auth.uid || resource.data.userId == request.auth.uid);
-      // Only admin can read all payments or delete/update payments
-      allow read, update, delete: if request.auth != null && 
-        (request.auth.token.email in ['luckychelani950@gmail.com', 'test@example.com', 'youremail@example.com']);
-    }
-    
-    // Categories collection - used for trek categories
-    match /categories/{categoryId} {
-      // Everyone can read categories
-      allow read: if true;
-      // Only admins and organizers can create categories
       allow create, update, delete: if request.auth != null && (
-        (request.auth.token.email in ['luckychelani950@gmail.com', 'test@example.com', 'youremail@example.com']) ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'organizer'
+        isAdmin(request.auth.uid) || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'organizer'
       );
     }
-    
-    // Organizations collection with role-based permissions
-    match /organizations/{orgId} {
-      // Allow read access to all organization profiles
-      allow read: if true;
-      // Organization owners can create/update their own organization profile
-      allow create, update: if request.auth != null && request.auth.uid == orgId;
-      // Only admins can delete organization profiles
-      allow delete: if request.auth != null && 
-        (request.auth.token.email in ['luckychelani950@gmail.com', 'test@example.com', 'youremail@example.com'] ||
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+
+    // --- BLOGS (The Missing Link) ---
+    match /blogs/{document=**} {
+      allow read: if true; 
+      allow write: if request.auth != null && (isAdmin(request.auth.uid) || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'organizer');
     }
-    
-    // Users collection with role-based permissions
+
+    // --- USERS ---
     match /users/{userId} {
-      // Users can create/read/update their own profiles
-      allow create, read, update: if request.auth != null && request.auth.uid == userId;
-      // Only admins can read all user profiles or delete profiles
-      allow read, delete: if request.auth != null && 
-        (request.auth.token.email in ['luckychelani950@gmail.com', 'test@example.com', 'youremail@example.com'] ||
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
-      // Prevent users from changing their own role - only admins can change roles
-      allow update: if request.auth != null && request.auth.uid == userId && 
-         !("role" in request.resource.data) || 
-         request.resource.data.role == resource.data.role || 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow read: if true; // Open read for profile display
+      allow create, update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if request.auth != null && isAdmin(request.auth.uid);
     }
-    
-    // Default rule - deny all other access
+
+    // --- BOOKINGS & PAYMENTS ---
+    match /bookings/{bookingId} {
+      allow create: if request.auth != null;
+      allow read, update: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin(request.auth.uid));
+      allow delete: if request.auth != null && isAdmin(request.auth.uid);
+    }
+
+    match /payments/{paymentId} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin(request.auth.uid));
+    }
+
+    // --- SYSTEM & MARKETING ---
+    match /newsletter_subscribers/{subscriberId} {
+      allow create: if true;
+      allow read, write: if request.auth != null && isAdmin(request.auth.uid);
+    }
+
+    match /coupons/{couponId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && isAdmin(request.auth.uid);
+      // Allow checkout to increment usage count
+      allow update: if request.auth != null && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usageCount', 'updatedAt']);
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    match /system_status/{docId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && isAdmin(request.auth.uid);
+    }
+
+    // --- CATCH ALL ---
     match /{document=**} {
-      allow read, write: if false;
+      allow read: if true;
+      allow write: if request.auth != null;
     }
   }
 }
