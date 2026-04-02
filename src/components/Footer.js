@@ -969,10 +969,12 @@ const Footer = () => {
         <Copyright>
           © {new Date().getFullYear()} Trovia. All rights reserved.
         </Copyright>
-        <BottomLinks>          <BottomLink to="/terms">Terms of Service</BottomLink>
+        <BottomLinks>          
+          <BottomLink to="/terms">Terms of Service</BottomLink>
           <BottomLink to="/privacy">Privacy Policy</BottomLink>
           <BottomLink to="/cookies">Cookie Policy</BottomLink>
           <BottomLink to="/accessibility">Accessibility</BottomLink>
+          <BottomLink to="/support">Support</BottomLink>
           <BottomLink to="/admin/simple" style={{ opacity: 0.4 }}>Admin</BottomLink>
         </BottomLinks>
       </FooterBottom>

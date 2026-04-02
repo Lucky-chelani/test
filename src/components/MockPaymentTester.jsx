@@ -14,7 +14,7 @@ const Container = styled.div`
   /* Responsive Tweak: Ensure gap on sides of mobile screens */
   @media (max-width: 768px) {
     margin: 20px 16px; /* Reduced vertical margin, added side margins */
-    padding: 15px;     /* Slightly less padding to save space */
+    padding: 15px;    
   }
 `;
 

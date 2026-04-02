@@ -73,8 +73,9 @@ const ContentBackground = styled.div`
   background: linear-gradient(to bottom, #0a0a0a 0%, #111827 100%);
   position: relative;
   z-index: 2;
-  padding-top: 1rem;
-  box-shadow: 0 -40px 100px rgba(0,0,0,0.8);
+  padding-top: 2rem; /* Increased padding for better separation */
+  /* Remove or reduce the large negative box-shadow that creates a dark blur over the Hero */
+  box-shadow: 0 -10px 40px rgba(0,0,0,0.3); 
   min-height: 60vh;
   padding-bottom: 6rem;
 
@@ -85,6 +86,7 @@ const ContentBackground = styled.div`
     left: 0;
     right: 0;
     height: 1px;
+    /* This adds a subtle "border" line at the very top of the content area */
     background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
   }
 `;
@@ -103,7 +105,9 @@ const ContentGrid = styled.div`
   grid-template-columns: 1fr 380px;
   gap: 3rem;
   position: relative;
-  top: -60px; 
+  /* CHANGED: Set top to 0 to stop the overlap */
+  top: 0; 
+  
   @media (max-width: 1024px) {
     grid-template-columns: 1fr 340px;
     gap: 2rem;
@@ -113,10 +117,9 @@ const ContentGrid = styled.div`
     grid-template-columns: 1fr;
     top: 0;
     gap: 3rem;
-    padding-top: 3rem;
+    padding-top: 1rem;
   }
 `;
-
 const MainColumn = styled.main`
   display: flex;
   flex-direction: column;
@@ -130,6 +133,7 @@ const SidebarColumn = styled.aside`
   @media (min-width: 901px) {
     height: fit-content;
     position: sticky;
+    /* Adjusted top to account for the lack of overlap */
     top: 100px;
     z-index: 10;
   }
@@ -678,7 +682,7 @@ export default function TrekDetails() {
                 organizerDescription={trek?.organizerDescription}
                 organizerExperience={trek?.organizerExperience}
               />
-
+              
               <Highlights highlights={highlights} />
               
               <Description description={trek.detailedDescription} />

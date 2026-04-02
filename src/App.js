@@ -14,7 +14,7 @@ import Blog from './components/Blog';
 import CreateBlog from './components/CreateBlog'; // <--- ADD THIS CHECK PATH
 import BlogDetail from './components/BlogDetail';
 import { RewardsHero, RewardsSection } from './components/Rewards';
-import About from './components/About';
+import About from './components/about/About';
 import Profile from './components/Profile';
 import Login from './components/Login';
 import Signup from './components/Signup';
@@ -53,6 +53,7 @@ import OrganizerSettings from './components/OrganizerSettings';
 import VerifyCertificate from './Interns/VerifyCertificate';
 import CertificateAdmin from './Interns/CertificateAdmin'; // Adjust path if needed
 import InternshipJoin from './intern_join'; 
+import Support from "./pages/SupportPage"; // <--- ADDED SUPPORT PAGE
 
 const PageTransition = ({ children }) => {
   return (
@@ -225,6 +226,11 @@ function App() {
               <Route path="/privacy" element={
                 <PageTransition>
                   <PrivacyPolicyPage />
+                </PageTransition>
+              } />
+              <Route path="/support" element={
+                <PageTransition>
+                  <Support />
                 </PageTransition>
               } />
               <Route path="/search-results" element={
