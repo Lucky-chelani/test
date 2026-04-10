@@ -1058,119 +1058,142 @@ const BookingConfirmation = () => {
             </DetailsGrid>
           </Section>
 
-          <Section>
-            <SectionTitle>
-              <FaUsers /> Your Information
-            </SectionTitle>
+          {/* ✅ NEW: Participant Details Section */}
+<Section>
+  <SectionTitle>
+    <FaUsers /> Participant Details
+  </SectionTitle>
+  
+  {/* Check if participants array exists */}
+  {booking.participants && Array.isArray(booking.participants) && booking.participants.length > 0 ? (
+    <div style={{
+      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      borderRadius: '16px',
+      padding: '20px',
+      marginBottom: '20px'
+    }}>
+      <div style={{
+        fontSize: '1rem',
+        fontWeight: '600',
+        color: 'rgba(255, 255, 255, 0.9)',
+        marginBottom: '15px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px'
+      }}>
+        <FaUsers />
+        Total: {booking.totalParticipants || booking.participants.length} Participant(s)
+      </div>
+      
+      {/* Participant Cards */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+        gap: '15px'
+      }}>
+        {booking.participants.map((participant, index) => (
+          <div key={participant.participantId || index} style={{
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%)',
+            border: participant.isPrimaryBooker ? '2px solid rgba(51, 153, 204, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '12px',
+            padding: '16px',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            {/* Primary Booker Badge */}
+            {participant.isPrimaryBooker && (
+              <div style={{
+                position: 'absolute',
+                top: '8px',
+                right: '8px',
+                background: 'linear-gradient(135deg, #3399cc, #00b4db)',
+                color: 'white',
+                padding: '4px 10px',
+                borderRadius: '12px',
+                fontSize: '0.75rem',
+                fontWeight: '600'
+              }}>
+                Primary Booker
+              </div>
+            )}
             
-            <DetailsGrid>
-              <DetailItem>
-                <DetailLabel>Name</DetailLabel>
-                <DetailValue>
-                  {/* Priority: booking data first, then user data */}
-                  {booking.name || 
-                   booking.userName || 
-                   booking.userInfo?.name || 
-                   booking.userInfo?.displayName || 
-                   booking.userInfo?.firstName ||
-                   userData?.name ||
-                   userData?.displayName ||
-                   userData?.firstName ||
-                   'Not provided'}
-                </DetailValue>
-              </DetailItem>
-              
-              <DetailItem>
-                <DetailLabel>Email</DetailLabel>
-                <DetailValue>
-                  {/* Priority: booking data first, then user data */}
-                  {booking.email || 
-                   booking.userEmail || 
-                   booking.userInfo?.email || 
-                   userData?.email ||
-                   'Not provided'}
-                </DetailValue>
-              </DetailItem>
-              
-              <DetailItem>
-                <DetailLabel>Contact Number</DetailLabel>
-                <DetailValue>
-                  {(() => {
-                    // First, check for phone number in booking data
-                    const bookingPhoneFields = [
-                      booking.contactNumber,
-                      booking.phoneNumber,
-                      booking.phone,
-                      booking.userPhone
-                    ];
-                    
-                    // Then check user profile data (Firebase user data)
-                    const userPhoneFields = [
-                      booking.userInfo?.phone,
-                      booking.userInfo?.phoneNumber,
-                      booking.userInfo?.contactNumber,
-                      userData?.phone,
-                      userData?.phoneNumber,
-                      userData?.contactNumber,
-                      userData?.mobile,
-                      userData?.cellphone,
-                      // Also check Firebase Auth phone number
-                      auth.currentUser?.phoneNumber
-                    ];
-                    
-                    // Check booking data first (highest priority)
-                    for (const phone of bookingPhoneFields) {
-                      if (phone && phone !== null && phone !== undefined && phone !== '') {
-                        const phoneStr = phone.toString().trim();
-                        if (phoneStr !== '' && phoneStr !== 'undefined' && phoneStr !== 'null' && phoneStr !== '0') {
-                          return phoneStr;
-                        }
-                      }
-                    }
-                    
-                    // If not found in booking, check user profile data
-                    for (const phone of userPhoneFields) {
-                      if (phone && phone !== null && phone !== undefined && phone !== '') {
-                        const phoneStr = phone.toString().trim();
-                        if (phoneStr !== '' && phoneStr !== 'undefined' && phoneStr !== 'null' && phoneStr !== '0') {
-                          return phoneStr;
-                        }
-                      }
-                    }
-                    
-                    return (
-                      <div style={{ color: '#f39c12' }}>
-                        <div>Not provided</div>
-                        <div style={{ fontSize: '0.8rem', marginTop: '4px', opacity: 0.8 }}>
-                          Please update your profile to add a phone number
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </DetailValue>
-              </DetailItem>
-              
-              {/* Age if available */}
-              {(booking.age || booking.userAge || booking.userInfo?.age || userData?.age) && (
-                <DetailItem>
-                  <DetailLabel>Age</DetailLabel>
-                  <DetailValue>
-                    {booking.age || booking.userAge || booking.userInfo?.age || userData?.age}
-                  </DetailValue>
-                </DetailItem>
-              )}
-              
-              {/* Gender if available */}
-              {(booking.gender || booking.userGender || booking.userInfo?.gender || userData?.gender) && (
-                <DetailItem>
-                  <DetailLabel>Gender</DetailLabel>
-                  <DetailValue>
-                    {booking.gender || booking.userGender || booking.userInfo?.gender || userData?.gender}
-                  </DetailValue>
-                </DetailItem>
-              )}
-            </DetailsGrid>
-          </Section>
+            {/* Participant Number */}
+            <div style={{
+              fontSize: '0.85rem',
+              color: 'rgba(255, 255, 255, 0.6)',
+              marginBottom: '8px',
+              fontWeight: '600'
+            }}>
+              Participant {index + 1}
+            </div>
+            
+            {/* Name */}
+            <div style={{
+              fontSize: '1.1rem',
+              fontWeight: '700',
+              color: 'rgba(255, 255, 255, 0.95)',
+              marginBottom: '12px'
+            }}>
+              {participant.name || `Participant ${index + 1}`}
+            </div>
+            
+            {/* Email */}
+            {participant.email && (
+              <div style={{
+                fontSize: '0.9rem',
+                color: 'rgba(255, 255, 255, 0.7)',
+                marginBottom: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                wordBreak: 'break-word'
+              }}>
+                <span style={{ opacity: 0.6 }}>✉️</span>
+                {participant.email}
+              </div>
+            )}
+            
+            {/* Age */}
+            {participant.age && (
+              <div style={{
+                fontSize: '0.9rem',
+                color: 'rgba(255, 255, 255, 0.7)',
+                marginBottom: '6px'
+              }}>
+                <span style={{ opacity: 0.6 }}>Age:</span> {participant.age}
+              </div>
+            )}
+            
+            {/* Emergency Contact */}
+            {participant.emergencyContact && (
+              <div style={{
+                fontSize: '0.9rem',
+                color: 'rgba(255, 255, 255, 0.7)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                <span style={{ opacity: 0.6 }}>🚨</span>
+                {participant.emergencyContact}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  ) : (
+    // Fallback if no participants array exists
+    <DetailsGrid>
+      <DetailItem>
+        <DetailLabel>Participants</DetailLabel>
+        <DetailValue>
+          {booking.totalParticipants || booking.participants || 1} person(s)
+        </DetailValue>
+      </DetailItem>
+    </DetailsGrid>
+  )}
+</Section>
 
           {(booking.emergencyName || booking.emergencyContact || booking.emergencyPhone) && (
             <Section>
