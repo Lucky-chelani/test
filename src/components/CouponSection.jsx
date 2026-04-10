@@ -9,15 +9,204 @@ const rotate = keyframes`
   to { transform: rotate(360deg); }
 `;
 
-const CouponContainer = styled.div`
-  margin: 20px 0;
-  padding: 20px;
-  background: ${props => props.theme.gradientLight || 'rgba(255, 255, 255, 0.05)'};
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  border: 2px solid ${props => props.theme.inputBorder || 'rgba(255, 255, 255, 0.2)'};
+
+const spin = keyframes`
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 `;
+
+const CouponContainer = styled.div`
+  background: ${({ theme }) => theme?.background || '#e8c1b030'};
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid ${({ theme }) => theme?.borderColor || '#e0e0e0'};
+  margin-bottom: 20px;
+`;
+
+const CouponInputSection = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+`;
+
+const IconWrapper = styled.div`
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: ${({ theme }) => theme?.mainColor || '#4CAF50'}15;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${({ theme }) => theme?.mainColor || '#4CAF50'};
+  flex-shrink: 0;
+`;
+
+const ContentWrapper = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+const CouponLabel = styled.span`
+  font-size: 16px;
+  font-weight: 600;
+  color: ${({ theme }) => theme?.textColor || '#333'};
+`;
+
+const CouponForm = styled.form`
+  display: flex;
+  gap: 10px;
+  width: 100%;
+`;
+
+const CouponInput = styled.input`
+  flex: 1;
+  padding: 10px 14px;
+  border: 2px solid ${({ theme }) => theme?.borderColor || '#e0e0e0'};
+  border-radius: 8px;
+  font-size: 14px;
+  letter-spacing: 1.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  outline: none;
+  transition: border-color 0.3s ease;
+  background: ${({ theme }) => theme?.inputBg || '#f9f9f9'};
+  color: ${({ theme }) => theme?.textColor || '#333'};
+
+  &:focus {
+    border-color: ${({ theme }) => theme?.mainColor || '#4CAF50'};
+  }
+
+  &::placeholder {
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    color: #aaa;
+  }
+`;
+
+const ApplyButton = styled.button`
+  padding: 10px 24px;
+  background: ${({ theme }) => theme?.mainColor || '#4CAF50'};
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+
+  &:hover {
+    background: ${({ theme }) => theme?.hoverColor || '#43A047'};
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .spin {
+    animation: ${spin} 1s linear infinite;
+  }
+`;
+
+const ErrorText = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #e74c3c;
+  font-size: 13px;
+  font-weight: 500;
+  margin-top: 4px;
+`;
+
+const AppliedCouponSection = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: ${({ theme }) => theme?.mainColor || '#4CAF50'}10;
+  border: 1px dashed ${({ theme }) => theme?.mainColor || '#4CAF50'};
+  border-radius: 10px;
+`;
+
+const SuccessIconWrapper = styled.div`
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: ${({ theme }) => theme?.mainColor || '#4CAF50'}20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${({ theme }) => theme?.mainColor || '#4CAF50'};
+  flex-shrink: 0;
+`;
+
+const CouponInfo = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+const CouponCodeTag = styled.span`
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: ${({ theme }) => theme?.mainColor || '#4CAF50'};
+  text-transform: uppercase;
+`;
+
+const SaveAmount = styled.span`
+  font-size: 14px;
+  font-weight: 600;
+  color: ${({ theme }) => theme?.mainColor || '#4CAF50'};
+`;
+
+const CouponMeta = styled.span`
+  font-size: 12px;
+  color: #888;
+  line-height: 1.4;
+`;
+
+const RemoveLink = styled.button`
+  background: none;
+  border: none;
+  color: #e74c3c;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+
+  &:hover {
+    background: #e74c3c15;
+    text-decoration: underline;
+  }
+`;
+
+const CouponMessage = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-top: 10px;
+  background: ${({ type }) => type === 'error' ? '#fde8e8' : '#e8f5e9'};
+  color: ${({ type }) => type === 'error' ? '#e74c3c' : '#2e7d32'};
+`;
+
+
 
 const CouponHeader = styled.div`
   display: flex;
@@ -28,96 +217,8 @@ const CouponHeader = styled.div`
   font-weight: 600;
 `;
 
-const CouponForm = styled.form`
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-  
-  @media (max-width: 480px) {
-    flex-direction: column;
-  }
-`;
 
-const CouponInput = styled.input`
-  flex: 1;
-  padding: 12px 15px;
-  border: 2px solid ${props => props.theme.inputBorder || 'rgba(255, 255, 255, 0.1)'};
-  background: ${props => props.theme.inputBackground || 'rgba(255, 255, 255, 0.07)'};
-  border-radius: 8px;
-  color: ${props => props.theme.inputText || '#111'};
-  font-size: 16px;
-  transition: all 0.3s ease;
-  
-  &:focus {
-    outline: none;
-    border-color: ${props => props.theme.mainColor || '#5390D9'};
-    box-shadow: 0 0 0 2px rgba(83, 144, 217, 0.2);
-    background: ${props => props.theme.inputBackground || '#ffffff'};
-  }
-  
-  &::placeholder {
-    color: ${props => props.theme.placeholderColor || 'rgba(255, 255, 255, 0.4)'};
-  }
-  
-  &:hover:not(:focus) {
-    border-color: ${props => props.theme.mainColor || '#5390D9'};
-    transform: translateY(-1px);
-  }
-`;
 
-const ApplyButton = styled.button`
-  padding: 0 20px;
-  background-color: ${props => props.theme.mainColor || '#5390D9'};
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-width: 100px;
-  
-  &:hover {
-    background-color: ${props => props.theme.hoverColor || '#3a7cc7'};
-    transform: translateY(-2px);
-  }
-  
-  &:disabled {
-    background-color: #555;
-    cursor: not-allowed;
-    transform: none;
-  }
-  
-  @media (max-width: 480px) {
-    width: 100%;
-    padding: 12px;
-  }
-
-  .spin {
-    animation: ${rotate} 1s linear infinite;
-  }
-`;
-
-const CouponMessage = styled.div`
-  margin-top: 10px;
-  padding: 12px 15px;
-  border-radius: 8px;
-  background-color: ${props => 
-    props.type === 'success' ? 'rgba(80, 200, 120, 0.2)' :
-    props.type === 'error' ? 'rgba(255, 100, 100, 0.2)' : 'transparent'};
-  border-left: 3px solid ${props => 
-    props.type === 'success' ? '#4CAF50' :
-    props.type === 'error' ? '#F44336' : 'transparent'};
-  color: ${props => 
-    props.type === 'success' ? '#A5D6A7' :
-    props.type === 'error' ? '#EF9A9A' : '#fff'};
-  display: ${props => props.message ? 'flex' : 'none'};
-  align-items: center;
-  gap: 10px;
-`;
 
 const DiscountInfo = styled.div`
   margin-top: 15px;
@@ -130,13 +231,13 @@ const DiscountInfo = styled.div`
 const DiscountValue = styled.div`
   font-size: 18px;
   font-weight: 600;
-  color: #fff;
+  color: #000000;
   margin-bottom: 5px;
 `;
 
 const DiscountDescription = styled.div`
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(0, 0, 0, 0.7);
 `;
 
 const CouponTag = styled.div`
@@ -146,14 +247,14 @@ const CouponTag = styled.div`
   padding: 4px 10px;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 20px;
-  color: #fff;
+  color: #000000;
   font-size: 13px;
   margin-top: 10px;
 `;
 
 const CouponValidity = styled.div`
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(6, 5, 5, 0.6);
   margin-top: 5px;
 `;
 
@@ -305,19 +406,21 @@ const CouponSection = ({ orderTotal, onApplyCoupon, theme }) => {
     return new Date(date).toLocaleDateString();
   };
 
-  return (
-    <CouponContainer theme={theme}>
-      <CouponHeader theme={theme}>
-        <FiTag size={20} />
-        <h3>Have a coupon?</h3>
-      </CouponHeader>
-      
-      {!activeCoupon ? (
-        <>
+ return (
+  <CouponContainer theme={theme}>
+    {!activeCoupon ? (
+      <CouponInputSection>
+        <IconWrapper>
+          <FiTag size={22} />
+        </IconWrapper>
+        
+        <ContentWrapper>
+          <CouponLabel>Apply Coupon</CouponLabel>
+          
           <CouponForm onSubmit={handleApplyCoupon}>
             <CouponInput
               type="text"
-              placeholder="Enter coupon code"
+              placeholder="Enter code"
               value={couponCode}
               onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
               theme={theme}
@@ -327,62 +430,47 @@ const CouponSection = ({ orderTotal, onApplyCoupon, theme }) => {
               disabled={loading || !couponCode.trim()} 
               theme={theme}
             >
-              {loading ? <FiLoader className="spin" /> : 'Apply'}
+              {loading ? <FiLoader className="spin" size={18} /> : 'Apply'}
             </ApplyButton>
           </CouponForm>
           
           {error && (
-            <CouponMessage type="error" message={error}>
-              <FiXCircle />
-              {error}
-            </CouponMessage>
+            <ErrorText>
+              <FiXCircle size={14} /> {error}
+            </ErrorText>
           )}
-        </>
-      ) : (
-        <DiscountInfo theme={theme}>
-          <DiscountValue>
-            {activeCoupon.discountType === 'percentage' 
-              ? `${activeCoupon.discountValue}% OFF` 
-              : `₹${activeCoupon.discountValue} OFF`}
-          </DiscountValue>
+        </ContentWrapper>
+      </CouponInputSection>
+    ) : (
+      <AppliedCouponSection theme={theme}>
+        <SuccessIconWrapper>
+          <FiCheckCircle size={24} />
+        </SuccessIconWrapper>
+        
+        <CouponInfo>
+          <CouponCodeTag>{activeCoupon.code}</CouponCodeTag>
           
-          <DiscountDescription>
-            {activeCoupon.description || `Coupon code ${activeCoupon.code} applied successfully.`}
-          </DiscountDescription>
+          <SaveAmount theme={theme}>
+            You save {activeCoupon.discountType === 'percentage' 
+              ? `${activeCoupon.discountValue}%` 
+              : `₹${activeCoupon.discountValue}`}
+          </SaveAmount>
           
-          <CouponValidity>
-            {activeCoupon.validUntil 
-              ? `Valid until ${formatDate(activeCoupon.validUntil)}` 
-              : 'No expiration date'}
-          </CouponValidity>
-          
-          <CouponTag>
-            <FiTag size={14} />
-            {activeCoupon.code}
-          </CouponTag>
-          
-          <ApplyButton 
-            onClick={handleRemoveCoupon} 
-            theme={{
-              mainColor: '#777',
-              hoverColor: '#555'
-            }}
-            style={{ marginTop: '15px' }}
-          >
-            <FiXCircle />
-            Remove
-          </ApplyButton>
-        </DiscountInfo>
-      )}
-      
-      {success && !error && !activeCoupon && (
-        <CouponMessage type="success" message={success}>
-          <FiCheckCircle />
-          {success}
-        </CouponMessage>
-      )}
-    </CouponContainer>
-  );
+          <CouponMeta>
+            {activeCoupon.description}
+            {activeCoupon.validUntil && (
+              <> • Expires {formatDate(activeCoupon.validUntil)}</>
+            )}
+          </CouponMeta>
+        </CouponInfo>
+        
+        <RemoveLink onClick={handleRemoveCoupon}>
+          Remove
+        </RemoveLink>
+      </AppliedCouponSection>
+    )}
+  </CouponContainer>
+);
 };
 
 export default CouponSection;
