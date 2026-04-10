@@ -1,292 +1,460 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import styled, { keyframes, css } from "styled-components";
-import { FiClock, FiUsers, FiStar, FiRefreshCw, FiInfo } from 'react-icons/fi';
-import { FaMountain } from 'react-icons/fa';
+import { FaClock, FaMountain, FaStar, FaUsers, FaCalendarAlt } from "react-icons/fa";
+import { FiTrendingUp } from "react-icons/fi";
 
-// --- ANIMATIONS ---
-const fadeInUp = keyframes`
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
-`;
+const tokens = {
+  colors: {
+    bg: "#0a0a0a",
+    bgCard: "#121212",
+    bgCardHover: "#1a1a1a",
+    border: "rgba(255,255,255,0.07)",
+    borderHover: "rgba(255,255,255,0.15)",
+    primary: "#f97316",
+    primaryGlow: "rgba(249, 115, 22, 0.3)",
+    textPrimary: "#F1F5F9",
+    textMuted: "#64748b",
+    success: "#22c55e",
+    warning: "#F59E0B",
+    danger: "#EF4444",
+    blue: "#3b82f6",
+    purple: "#8b5cf6",
+    gold: "#F59E0B",
+  },
+  radius: { md: "12px", lg: "16px", xl: "20px" },
+};
 
 const shimmer = keyframes`
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 `;
 
-// --- STYLED COMPONENTS ---
-
-const StatsContainer = styled.div`
-  width: 100%;
-  margin-bottom: 2rem;
+const glowPulse = keyframes`
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(249, 115, 22, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(249, 115, 22, 0.2);
+  }
 `;
 
-const Grid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.25rem;
-  width: 100%;
+const slideIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
 
-  @media (max-width: 992px) {
-    gap: 1rem;
+const scroll = keyframes`
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+`;
+
+const StatsBar = styled.div`
+  background: linear-gradient(
+    180deg,
+    ${tokens.colors.bgCard} 0%,
+    rgba(18, 18, 18, 0.95) 100%
+  );
+  border-top: 1px solid ${tokens.colors.border};
+  border-bottom: 1px solid ${tokens.colors.border};
+  position: sticky;
+  top: 72px;
+  z-index: 50;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  animation: ${slideIn} 0.6s ease-out, ${glowPulse} 4s ease-in-out infinite;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      ${tokens.colors.primary}40,
+      ${tokens.colors.primary}80,
+      ${tokens.colors.primary}40,
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: ${shimmer} 3s linear infinite;
+  }
+`;
+
+const Container = styled.div`
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+
+  @media (max-width: 768px) {
+    padding: 0;
+  }
+`;
+
+const StatsBarInner = styled.div`
+  display: flex;
+  align-items: stretch;
+  justify-content: space-evenly;
+
+  @media (min-width: 769px) {
+    overflow-x: auto;
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 
   @media (max-width: 768px) {
-    grid-template-columns: repeat(2, 1fr);
+    overflow: hidden;
+    position: relative;
   }
 `;
 
-/* Decorative Background Icon that moves on hover */
-const BgIcon = styled.div`
-  position: absolute;
-  right: -15px;
-  bottom: -25px;
-  font-size: 6.5rem;
-  color: #fff;
-  opacity: 0.03;
-  pointer-events: none;
-  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  z-index: 0;
-  transform: rotate(0deg);
+const MobileCarouselWrapper = styled.div`
+  display: none;
+
+  @media (max-width: 768px) {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+  }
 `;
 
-const BentoCard = styled.div`
-  /* Premium Holographic Glass */
-  background: rgba(30, 41, 59, 0.4);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 24px;
-  padding: 1.5rem;
-  height: 150px;
+const DesktopWrapper = styled.div`
+  display: flex;
+  justify-content: space-evenly;
+  width: 100%;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
+const CarouselTrack = styled.div`
+  display: flex;
+  width: fit-content;
+  animation: ${scroll} 20s linear infinite;
+`;
+
+const StatBarItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 1.25rem 1.75rem;
+  border-right: 1px solid ${tokens.colors.border};
+  flex-shrink: 0;
+  min-width: fit-content;
+  white-space: nowrap;
   position: relative;
-  overflow: hidden;
-  cursor: ${props => props.interactive ? 'pointer' : 'default'};
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  animation: ${fadeInUp} 0.6s ease-out forwards;
-  
-  /* Stagger animation delay based on index (passed via style in component) */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: default;
 
-  /* Inner Light Gradient */
-  background: linear-gradient(
-    145deg, 
-    rgba(255, 255, 255, 0.05) 0%, 
-    rgba(30, 41, 59, 0.4) 100%
-  );
+  &:last-child {
+    border-right: none;
+  }
 
-  /* Hover Effects */
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      ${tokens.colors.primary},
+      transparent
+    );
+    transition: width 0.3s ease;
+    border-radius: 2px;
+  }
+
   &:hover {
-    transform: translateY(-5px) scale(1.02);
-    border-color: ${props => props.glowColor ? props.glowColor : 'rgba(255,255,255,0.2)'};
-    /* Colored Shadow Bloom */
-    box-shadow: 0 15px 35px -10px ${props => props.glowColor ? `${props.glowColor}40` : 'rgba(0,0,0,0.3)'}; 
-    
-    /* Parallax Effect on BG Icon */
-    & ${BgIcon} {
-      transform: scale(1.1) rotate(-15deg) translate(-5px, -5px);
-      opacity: 0.08;
-      color: ${props => props.glowColor};
+    background: ${tokens.colors.bgCardHover};
+
+    &::after {
+      width: 80%;
     }
   }
 
-  /* Active/Click Effect */
-  &:active {
-    transform: ${props => props.interactive ? 'scale(0.96)' : 'translateY(-5px)'};
+  @media (max-width: 768px) {
+    padding: 1rem 1.25rem;
+    gap: 0.75rem;
+    border-right: 1px solid ${tokens.colors.border};
+
+    &:hover {
+      background: transparent;
+      &::after {
+        width: 0;
+      }
+    }
   }
 `;
 
-const CardContent = styled.div`
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 100%;
+const iconFloat = keyframes`
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-1px) rotate(1deg);
+  }
+  75% {
+    transform: translateY(1px) rotate(-1deg);
+  }
 `;
 
-const HeaderRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-`;
-
-const IconBox = styled.div`
+const StatBarIcon = styled.div`
   width: 44px;
   height: 44px;
-  border-radius: 14px;
+  border-radius: ${tokens.radius.lg};
+  background: ${({ $color }) =>
+    $color || `linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(249, 115, 22, 0.05))`};
+  border: 1px solid ${({ $borderColor }) => $borderColor || "rgba(249, 115, 22, 0.3)"};
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.3rem;
-  
-  /* Glassy Icon Container */
-  background: ${props => props.bg};
-  color: ${props => props.color};
-  box-shadow: 0 4px 15px ${props => props.shadow};
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: transform 0.3s ease;
+  flex-shrink: 0;
+  font-size: 1.125rem;
+  color: ${({ $iconColor }) => $iconColor || tokens.colors.primary};
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 
-  ${BentoCard}:hover & {
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      transparent 40%,
+      rgba(255, 255, 255, 0.1) 50%,
+      transparent 60%
+    );
+    background-size: 200% 200%;
+    animation: ${shimmer} 3s ease-in-out infinite;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  ${StatBarItem}:hover & {
     transform: scale(1.1);
+    animation: ${iconFloat} 2s ease-in-out infinite;
+    box-shadow: 0 0 20px ${({ $shadowColor }) => $shadowColor || tokens.colors.primaryGlow};
+
+    &::before {
+      opacity: 1;
+    }
+  }
+
+  @media (max-width: 768px) {
+    width: 38px;
+    height: 38px;
+    font-size: 1rem;
+    border-radius: ${tokens.radius.md};
   }
 `;
 
-const ActionIcon = styled.div`
-  font-size: 1rem;
-  color: #94a3b8;
-  opacity: 0;
-  transform: translateX(-10px);
-  transition: all 0.3s ease;
-  background: rgba(255,255,255,0.1);
-  padding: 6px;
-  border-radius: 50%;
-  display: flex;
-
-  ${BentoCard}:hover & {
-    opacity: 1;
-    transform: translateX(0);
-  }
-`;
-
-const StatTextWrapper = styled.div`
+const StatBarText = styled.div`
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0.25rem;
 `;
 
-const StatValue = styled.div`
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: -0.03em;
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+const StatBarLabel = styled.div`
+  font-size: 0.65rem;
+  color: ${tokens.colors.textMuted};
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  transition: color 0.3s ease;
 
-  small {
-    font-size: 0.85rem;
-    color: #94a3b8;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+  ${StatBarItem}:hover & {
+    color: ${tokens.colors.textPrimary};
+  }
+
+  @media (max-width: 768px) {
+    font-size: 0.6rem;
   }
 `;
 
-const StatLabel = styled.div`
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #cbd5e1;
+const StatBarValue = styled.div`
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: ${tokens.colors.textPrimary};
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  transition: all 0.3s ease;
+
+  ${StatBarItem}:hover & {
+    color: ${({ $hoverColor }) => $hoverColor || tokens.colors.primary};
+  }
+
+  @media (max-width: 768px) {
+    font-size: 0.8125rem;
+  }
 `;
 
-// --- COMPONENT ---
+function getDifficultyColor(difficulty) {
+  const d = difficulty?.toLowerCase() || "";
+  if (d.includes("easy"))
+    return {
+      bg: "linear-gradient(135deg, rgba(34,197,94,0.15), rgba(34,197,94,0.05))",
+      border: "rgba(34,197,94,0.3)",
+      color: "#22c55e",
+      shadow: "rgba(34, 197, 94, 0.3)",
+    };
+  if (d.includes("hard") || d.includes("difficult"))
+    return {
+      bg: "linear-gradient(135deg, rgba(239,68,68,0.15), rgba(239,68,68,0.05))",
+      border: "rgba(239,68,68,0.3)",
+      color: "#EF4444",
+      shadow: "rgba(239, 68, 68, 0.3)",
+    };
+  return {
+    bg: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.05))",
+    border: "rgba(245,158,11,0.3)",
+    color: "#F59E0B",
+    shadow: "rgba(245, 158, 11, 0.3)",
+  };
+}
 
-const Stats = ({ trekDays, trekAltitude, trekCapacity, trekRating }) => {
-  // State for Altitude Unit Toggle
-  const [useFeet, setUseFeet] = useState(true);
-  const [displayAltitude, setDisplayAltitude] = useState({ val: "0", unit: "ft" });
-
-  // Intelligent Altitude Conversion
-  useEffect(() => {
-    if (!trekAltitude) return;
-
-    // Normalize input (remove commas, handle strings)
-    const rawString = trekAltitude.toString().toLowerCase().replace(/,/g, '');
-    const numericPart = parseFloat(rawString.match(/\d+/)?.[0] || 0);
-    const isSourceMeters = rawString.includes('m') && !rawString.includes('ft');
-
-    if (useFeet) {
-      // If source is meters, convert to feet. If source is feet, keep it.
-      const val = isSourceMeters ? Math.round(numericPart * 3.28084) : numericPart;
-      setDisplayAltitude({ val: val.toLocaleString(), unit: "FT" });
-    } else {
-      // If source is meters, keep it. If source is feet, convert to meters.
-      const val = isSourceMeters ? numericPart : Math.round(numericPart / 3.28084);
-      setDisplayAltitude({ val: val.toLocaleString(), unit: "M" });
-    }
-  }, [trekAltitude, useFeet]);
-
-  return (
-    <StatsContainer>
-      <Grid>
-        {/* 1. DURATION - Blue Theme */}
-        <BentoCard glowColor="#38BDF8" style={{ animationDelay: '0ms' }}>
-          <BgIcon><FiClock /></BgIcon>
-          <CardContent>
-            <HeaderRow>
-              <IconBox bg="rgba(56, 189, 248, 0.15)" color="#38BDF8" shadow="rgba(56, 189, 248, 0.25)">
-                <FiClock />
-              </IconBox>
-            </HeaderRow>
-            <StatTextWrapper>
-              <StatValue>{trekDays} <small>{trekDays === 1 ? 'Day' : 'Days'}</small></StatValue>
-              <StatLabel>Duration</StatLabel>
-            </StatTextWrapper>
-          </CardContent>
-        </BentoCard>
-
-        {/* 2. ALTITUDE - Emerald Theme (Interactive) */}
-        <BentoCard 
-          glowColor="#34D399" 
-          interactive 
-          onClick={() => setUseFeet(!useFeet)}
-          title="Click to toggle Units"
-          style={{ animationDelay: '100ms' }}
-        >
-          <BgIcon><FaMountain /></BgIcon>
-          <CardContent>
-            <HeaderRow>
-              <IconBox bg="rgba(52, 211, 153, 0.15)" color="#34D399" shadow="rgba(52, 211, 153, 0.25)">
-                <FaMountain />
-              </IconBox>
-              <ActionIcon>
-                <FiRefreshCw />
-              </ActionIcon>
-            </HeaderRow>
-            <StatTextWrapper>
-              <StatValue>{displayAltitude.val} <small>{displayAltitude.unit}</small></StatValue>
-              <StatLabel>Max Altitude</StatLabel>
-            </StatTextWrapper>
-          </CardContent>
-        </BentoCard>
-
-        {/* 3. CAPACITY - Pink Theme */}
-        <BentoCard glowColor="#F472B6" style={{ animationDelay: '200ms' }}>
-          <BgIcon><FiUsers /></BgIcon>
-          <CardContent>
-            <HeaderRow>
-              <IconBox bg="rgba(244, 114, 182, 0.15)" color="#F472B6" shadow="rgba(244, 114, 182, 0.25)">
-                <FiUsers />
-              </IconBox>
-              <ActionIcon>
-                <FiInfo title="Small group sizes for better experience" />
-              </ActionIcon>
-            </HeaderRow>
-            <StatTextWrapper>
-              <StatValue>{trekCapacity} <small>PAX</small></StatValue>
-              <StatLabel>Group Size</StatLabel>
-            </StatTextWrapper>
-          </CardContent>
-        </BentoCard>
-
-        {/* 4. RATING - Gold Theme */}
-        <BentoCard glowColor="#FBBF24" style={{ animationDelay: '300ms' }}>
-          <BgIcon><FiStar /></BgIcon>
-          <CardContent>
-            <HeaderRow>
-              <IconBox bg="rgba(251, 191, 36, 0.15)" color="#FBBF24" shadow="rgba(251, 191, 36, 0.25)">
-                <FiStar />
-              </IconBox>
-            </HeaderRow>
-            <StatTextWrapper>
-              <StatValue>{trekRating} <small>/ 5.0</small></StatValue>
-              <StatLabel>Average Rating</StatLabel>
-            </StatTextWrapper>
-          </CardContent>
-        </BentoCard>
-      </Grid>
-    </StatsContainer>
-  );
+const statsConfig = {
+  duration: {
+    bg: `linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(249, 115, 22, 0.05))`,
+    border: "rgba(249, 115, 22, 0.3)",
+    color: tokens.colors.primary,
+    shadow: tokens.colors.primaryGlow,
+  },
+  altitude: {
+    bg: `linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05))`,
+    border: "rgba(59, 130, 246, 0.3)",
+    color: "#60A5FA",
+    shadow: "rgba(59, 130, 246, 0.3)",
+  },
+  capacity: {
+    bg: `linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.05))`,
+    border: "rgba(139, 92, 246, 0.3)",
+    color: "#A78BFA",
+    shadow: "rgba(139, 92, 246, 0.3)",
+  },
+  rating: {
+    bg: `linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05))`,
+    border: "rgba(245, 158, 11, 0.3)",
+    color: tokens.colors.gold,
+    shadow: "rgba(245, 158, 11, 0.3)",
+  },
+  season: {
+    bg: `linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.05))`,
+    border: "rgba(34, 197, 94, 0.3)",
+    color: "#22c55e",
+    shadow: "rgba(34, 197, 94, 0.3)",
+  },
 };
 
-export default Stats;
+export default function Stats({ days, altitude, difficulty, capacity, rating, season }) {
+  const diffColor = getDifficultyColor(difficulty);
+
+  const statItems = [
+    {
+      icon: <FaClock />,
+      label: "Duration",
+      value: `${days} Days`,
+      config: statsConfig.duration,
+    },
+    {
+      icon: <FaMountain />,
+      label: "Altitude",
+      value: altitude,
+      config: statsConfig.altitude,
+    },
+    {
+      icon: <FiTrendingUp />,
+      label: "Difficulty",
+      value: difficulty,
+      config: diffColor,
+    },
+    {
+      icon: <FaUsers />,
+      label: "Group Size",
+      value: `Max ${capacity}`,
+      config: statsConfig.capacity,
+    },
+    {
+      icon: <FaStar />,
+      label: "Rating",
+      value: `${rating} / 5`,
+      config: statsConfig.rating,
+    },
+    {
+      icon: <FaCalendarAlt />,
+      label: "Best Season",
+      value: season,
+      config: statsConfig.season,
+    },
+  ];
+
+  const StatItem = ({ item, index }) => (
+    <StatBarItem key={index}>
+      <StatBarIcon
+        $color={item.config.bg}
+        $borderColor={item.config.border}
+        $iconColor={item.config.color}
+        $shadowColor={item.config.shadow}
+      >
+        {item.icon}
+      </StatBarIcon>
+      <StatBarText>
+        <StatBarLabel>{item.label}</StatBarLabel>
+        <StatBarValue $hoverColor={item.config.color}>{item.value}</StatBarValue>
+      </StatBarText>
+    </StatBarItem>
+  );
+
+  return (
+    <StatsBar>
+      <Container>
+        {/* Desktop View */}
+        <DesktopWrapper>
+          <StatsBarInner>
+            {statItems.map((item, index) => (
+              <StatItem key={index} item={item} index={index} />
+            ))}
+          </StatsBarInner>
+        </DesktopWrapper>
+
+        {/* Mobile Carousel View - Always rotating */}
+        <MobileCarouselWrapper>
+          <CarouselTrack>
+            {/* Duplicate items for infinite scroll effect */}
+            {[...statItems, ...statItems].map((item, index) => (
+              <StatItem key={index} item={item} index={index} />
+            ))}
+          </CarouselTrack>
+        </MobileCarouselWrapper>
+      </Container>
+    </StatsBar>
+  );
+}
