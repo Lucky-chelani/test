@@ -122,7 +122,7 @@ const Nav = styled.nav`
   ${({ $scrolled }) =>
     $scrolled
       ? css`
-          background: rgba(10, 10, 10, 0.92);
+          background-color: transparent;
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
           border-bottom: 1px solid ${tokens.colors.border};

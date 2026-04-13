@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import './App.css';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion'; 
 import Banner from './components/Banner/Banner';
 import FeaturedTreks from './components/FeaturedTreks';
@@ -11,7 +11,7 @@ import Footer from './components/Footer';
 import Explore from './components/Explore';
 import Community from './components/Community';
 import Blog from './components/Blog';
-import CreateBlog from './components/CreateBlog'; // <--- ADD THIS CHECK PATH
+import CreateBlog from './components/CreateBlog';
 import BlogDetail from './components/BlogDetail';
 import { RewardsHero, RewardsSection } from './components/Rewards';
 import About from './components/about/About';
@@ -47,13 +47,12 @@ import OrganizerEditTrek from './components/OrganizerEditTrek';
 import OrganizerProfile from './components/OrganizerProfile';
 import EditProfile from './components/EditProfile';
 import BookingConfirmation from './components/BookingConfirmation';
-// ✅ ADDED: Import OrganizerBookings
 import OrganizerBookings from './components/OrganizerBookings'; 
 import OrganizerSettings from './components/OrganizerSettings';
 import VerifyCertificate from './Interns/VerifyCertificate';
-import CertificateAdmin from './Interns/CertificateAdmin'; // Adjust path if needed
+import CertificateAdmin from './Interns/CertificateAdmin';
 import InternshipJoin from './intern_join'; 
-import Support from "./pages/SupportPage"; // <--- ADDED SUPPORT PAGE
+import Support from "./pages/SupportPage";
 
 const PageTransition = ({ children }) => {
   return (
@@ -71,7 +70,25 @@ const PageTransition = ({ children }) => {
   );
 };
 
-function App() {
+// ✅ NEW: ScrollToTop Component (inline - no need for separate file)
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
+
+// ✅ UPDATED: AppContent with navbar control and scroll to top
+function AppContent() {
+  const location = useLocation();
+  
+  // ✅ Hide navbar ONLY on Trek Detail pages
+  const isTrekDetailPage = location.pathname.startsWith('/trek/');
+  const showNavbar = !isTrekDetailPage;
+
   useEffect(() => {
     const performCleanup = async () => {
       try {
@@ -90,277 +107,279 @@ function App() {
   }, []);
 
   return (
+    <div className="App">
+      {/* ✅ Scroll to top on route change */}
+      <ScrollToTop />
+      
+      {/* ✅ Show navbar on all pages except trek details */}
+      {showNavbar && <BottomNavbar />}
+      
+      <div className="main-content">
+        <Routes>
+          <Route path="/" element={
+            <PageTransition>
+              <>
+                <Banner />
+                <FeaturedTreks />
+                <CommunitySection />
+                <HowItWorks />
+                <MountainHero />
+                <Footer />
+              </>
+            </PageTransition>
+          } />
+          <Route path="/explore" element={
+            <PageTransition>
+              <Explore />
+            </PageTransition>
+          } />
+          <Route path="/community" element={
+            <PageTransition>
+              <Community />
+            </PageTransition>
+          } />
+          <Route path="/chat/:roomId" element={
+            <PageTransition>
+              <ChatRoom />
+            </PageTransition>
+          } />
+          <Route path="/blog" element={
+            <PageTransition>
+              <Blog />
+            </PageTransition>
+          } />
+          <Route path="/create-blog" element={
+            <PageTransition>
+              <CreateBlog />
+            </PageTransition>
+          } />
+          <Route path="/blogs/:id" element={
+            <PageTransition>
+              <BlogDetail />
+            </PageTransition>
+          } />
+          <Route path="/rewards" element={
+            <PageTransition>
+              <>
+                <RewardsHero />
+                <RewardsSection />
+              </>
+            </PageTransition>
+          } />
+          <Route path="/about" element={
+            <PageTransition>
+              <About />
+            </PageTransition>
+          } />
+          <Route path="/profile" element={
+            <PageTransition>
+              <Profile />
+            </PageTransition>
+          } />
+          <Route path="/edit-profile" element={
+            <PageTransition>
+              <EditProfile />
+            </PageTransition>
+          } />
+          <Route path="/login" element={
+            <PageTransition>
+              <Login />
+            </PageTransition>
+          } />
+          <Route path="/signup" element={
+            <PageTransition>
+              <Signup />
+            </PageTransition>
+          } />
+          <Route path="/organizer-signup" element={
+            <PageTransition>
+              <OrganizerSignup />
+            </PageTransition>
+          } />
+          <Route path="/trek/:id" element={
+            <PageTransition>
+              <TrekDetails />
+            </PageTransition>
+          } />
+          <Route path="/admin" element={
+            <PageTransition>
+              <AccessControl requiredRole="admin">
+                <SimpleAdmin />
+              </AccessControl>
+            </PageTransition>
+          } />
+          <Route path="/admin/treks" element={
+            <PageTransition>
+              <AccessControl requiredRole="admin">
+                <TrekAdmin />
+              </AccessControl>
+            </PageTransition>
+          } />
+          <Route path="/admin/communities" element={
+            <PageTransition>
+              <AccessControl requiredRole="admin">
+                <CommunityAdmin />
+              </AccessControl>
+            </PageTransition>
+          } />
+          <Route path="/admin/trek-categories" element={
+            <PageTransition>
+              <AccessControl requiredRole="admin">
+                <TrekCategoryAdmin />
+              </AccessControl>
+            </PageTransition>
+          } />
+          <Route path="/admin/coupons" element={
+            <PageTransition>
+              <AccessControl requiredRole="admin">
+                <CouponAdmin />
+              </AccessControl>
+            </PageTransition>
+          } />
+          <Route path="/terms" element={
+            <PageTransition>
+              <TermsPage />
+            </PageTransition>
+          } />
+          <Route path="/privacy" element={
+            <PageTransition>
+              <PrivacyPolicyPage />
+            </PageTransition>
+          } />
+          <Route path="/support" element={
+            <PageTransition>
+              <Support />
+            </PageTransition>
+          } />
+          <Route path="/search-results" element={
+            <PageTransition>
+              <SearchResultsPage />
+            </PageTransition>
+          } />
+          <Route path="/cookies" element={
+            <PageTransition>
+              <CookiesPolicyPage />
+            </PageTransition>
+          } />
+          <Route path="/accessibility" element={
+            <PageTransition>
+              <AccessibilityPage />
+            </PageTransition>
+          } />
+          <Route path="/payment-test" element={
+            <PageTransition>
+              <PaymentTester />
+            </PageTransition>
+          } />
+          <Route path="/mock-payment" element={
+            <PageTransition>
+              <MockPaymentTester />
+            </PageTransition>
+          } />
+          <Route path="/razorpay-debugger" element={
+            <PageTransition>
+              <RazorpayDebugger />
+            </PageTransition>
+          } />
+          <Route path="/admin/users" element={
+            <PageTransition>
+              <AccessControl requiredRole="admin">
+                <UserAdmin />
+              </AccessControl>
+            </PageTransition>
+          } />
+          
+          {/* --- ORGANIZER ROUTES --- */}
+          <Route path="/organizer/treks" element={
+            <PageTransition>
+              <AccessControl requiredRole="organizer">
+                <OrganizerTreks />
+              </AccessControl>
+            </PageTransition>
+          } />
+          <Route path="/organizer/dashboard" element={
+            <PageTransition>
+              <AccessControl requiredRole="organizer">
+                <OrganizerDashboard />
+              </AccessControl>
+            </PageTransition>
+          } />
+          <Route path="/organizer/bookings" element={
+            <PageTransition>
+              <AccessControl requiredRole="organizer">
+                <OrganizerBookings />
+              </AccessControl>
+            </PageTransition>
+          } />
+          <Route path="/organizer/settings" element={
+            <PageTransition>
+              <AccessControl requiredRole="organizer">
+                <OrganizerSettings />
+              </AccessControl>
+            </PageTransition>
+          } />
+          <Route path="/access-control" element={
+            <PageTransition>
+              <AccessControl />
+            </PageTransition>
+          } />
+          <Route path="/organizer-trek-login" element={
+            <PageTransition>
+              <OrganizerTrekLogin />
+            </PageTransition>
+          } />
+          <Route path="/organizer-dashboard" element={
+            <PageTransition>
+              <AccessControl requiredRole="organizer">
+                <OrganizerDashboard />
+              </AccessControl>
+            </PageTransition>
+          } />
+          <Route path="/organizer/add-trek" element={
+            <PageTransition>
+              <AccessControl requiredRole="organizer">
+                <OrganizerAddTrek />
+              </AccessControl>
+            </PageTransition>
+          } />
+          <Route path="/organizer/edit-trek/:id" element={
+            <PageTransition>
+              <AccessControl requiredRole="organizer">
+                <OrganizerEditTrek />
+              </AccessControl>
+            </PageTransition>
+          } />
+          <Route path="/organizer/:id" element={
+            <PageTransition>
+              <OrganizerProfile />
+            </PageTransition>
+          } />
+          <Route path="/booking-confirmation/:bookingId" element={
+            <PageTransition>
+              <BookingConfirmation />
+            </PageTransition>
+          } />
+          <Route path="/verify/:certificateId" element={<VerifyCertificate />} />
+          <Route path="/admin/certificates" element={
+            <PageTransition>
+              <AccessControl requiredRole="admin">
+                <CertificateAdmin />
+              </AccessControl>
+            </PageTransition>
+          } />
+          <Route path="/intern" element={<InternshipJoin />} />
+        </Routes>
+      </div>
+    </div>
+  );
+}
+
+
+function App() {
+  return (
     <Router>
       <SearchProvider>
-        <div className="App">
-          <BottomNavbar />
-          <div className="main-content">
-            <Routes>
-              <Route path="/" element={
-                <PageTransition>
-                  <>
-                    <Banner />
-                    <FeaturedTreks />
-                    <CommunitySection />
-                    <HowItWorks />
-                    <MountainHero />
-                    <Footer />
-                  </>
-                </PageTransition>
-              } />
-              <Route path="/explore" element={
-                <PageTransition>
-                  <Explore />
-                </PageTransition>
-              } />
-              <Route path="/community" element={
-                <PageTransition>
-                  <Community />
-                </PageTransition>
-              } />
-              <Route path="/chat/:roomId" element={
-                <PageTransition>
-                  <ChatRoom />
-                </PageTransition>
-              } />
-              <Route path="/blog" element={
-                <PageTransition>
-                  <Blog />
-                </PageTransition>
-              } />
-              <Route path="/create-blog" element={
-                <PageTransition>
-                  <CreateBlog />
-                </PageTransition>
-              } />
-
-              {/* ✅ ADD THIS: BLOG DETAIL ROUTE */}
-              <Route path="/blogs/:id" element={
-                <PageTransition>
-                  <BlogDetail />
-                </PageTransition>
-              } />
-              <Route path="/rewards" element={
-                <PageTransition>
-                  <>
-                    <RewardsHero />
-                    <RewardsSection />
-                  </>
-                </PageTransition>
-              } />
-              <Route path="/about" element={
-                <PageTransition>
-                  <About />
-                </PageTransition>
-              } />
-              <Route path="/profile" element={
-                <PageTransition>
-                  <Profile />
-                </PageTransition>
-              } />
-              <Route path="/edit-profile" element={
-                <PageTransition>
-                  <EditProfile />
-                </PageTransition>
-              } />
-              <Route path="/login" element={
-                <PageTransition>
-                  <Login />
-                </PageTransition>
-              } />
-              <Route path="/signup" element={
-                <PageTransition>
-                  <Signup />
-                </PageTransition>
-              } />
-              <Route path="/organizer-signup" element={
-                <PageTransition>
-                  <OrganizerSignup />
-                </PageTransition>
-              } />
-              <Route path="/trek/:id" element={
-                <PageTransition>
-                  <TrekDetails />
-                </PageTransition>
-              } />
-              <Route path="/admin" element={
-                <PageTransition>
-                  <AccessControl requiredRole="admin">
-                    <SimpleAdmin />
-                  </AccessControl>
-                </PageTransition>
-              } />
-              <Route path="/admin/treks" element={
-                <PageTransition>
-                  <AccessControl requiredRole="admin">
-                    <TrekAdmin />
-                  </AccessControl>
-                </PageTransition>
-              } />
-              <Route path="/admin/communities" element={
-                <PageTransition>
-                  <AccessControl requiredRole="admin">
-                    <CommunityAdmin />
-                  </AccessControl>
-                </PageTransition>
-              } />
-              <Route path="/admin/trek-categories" element={
-                <PageTransition>
-                  <AccessControl requiredRole="admin">
-                    <TrekCategoryAdmin />
-                  </AccessControl>
-                </PageTransition>
-              } />
-              <Route path="/admin/coupons" element={
-                <PageTransition>
-                  <AccessControl requiredRole="admin">
-                    <CouponAdmin />
-                  </AccessControl>
-                </PageTransition>
-              } />
-              <Route path="/terms" element={
-                <PageTransition>
-                  <TermsPage />
-                </PageTransition>
-              } />
-              <Route path="/privacy" element={
-                <PageTransition>
-                  <PrivacyPolicyPage />
-                </PageTransition>
-              } />
-              <Route path="/support" element={
-                <PageTransition>
-                  <Support />
-                </PageTransition>
-              } />
-              <Route path="/search-results" element={
-                <PageTransition>
-                  <SearchResultsPage />
-                </PageTransition>
-              } />
-              <Route path="/cookies" element={
-                <PageTransition>
-                  <CookiesPolicyPage />
-                </PageTransition>
-              } />
-              <Route path="/accessibility" element={
-                <PageTransition>
-                  <AccessibilityPage />
-                </PageTransition>
-              } />
-              <Route path="/payment-test" element={
-                <PageTransition>
-                  <PaymentTester />
-                </PageTransition>
-              } />
-              <Route path="/mock-payment" element={
-                <PageTransition>
-                  <MockPaymentTester />
-                </PageTransition>
-              } />
-              <Route path="/razorpay-debugger" element={
-                <PageTransition>
-                  <RazorpayDebugger />
-                </PageTransition>
-              } />
-              <Route path="/admin/users" element={
-                <PageTransition>
-                  <AccessControl requiredRole="admin">
-                    <UserAdmin />
-                  </AccessControl>
-                </PageTransition>
-              } />
-              
-              {/* --- ORGANIZER ROUTES --- */}
-              
-              <Route path="/organizer/treks" element={
-                <PageTransition>
-                  <AccessControl requiredRole="organizer">
-                    <OrganizerTreks />
-                  </AccessControl>
-                </PageTransition>
-              } />
-              <Route path="/organizer/dashboard" element={
-                <PageTransition>
-                  <AccessControl requiredRole="organizer">
-                    <OrganizerDashboard />
-                  </AccessControl>
-                </PageTransition>
-              } />
-              
-              {/* ✅ ADDED: Bookings Route (Must be BEFORE :id) */}
-              <Route path="/organizer/bookings" element={
-                <PageTransition>
-                  <AccessControl requiredRole="organizer">
-                    <OrganizerBookings />
-                  </AccessControl>
-                </PageTransition>
-              } />
-
-              <Route path="/organizer/settings" element={
-                <PageTransition>
-                  <AccessControl requiredRole="organizer">
-                    <OrganizerSettings />
-                  </AccessControl>
-                </PageTransition>
-              } />
-
-              <Route path="/access-control" element={
-                <PageTransition>
-                  <AccessControl />
-                </PageTransition>
-              } />
-              <Route path="/organizer-trek-login" element={
-                <PageTransition>
-                  <OrganizerTrekLogin />
-                </PageTransition>
-              } />
-              <Route path="/organizer-dashboard" element={
-                <PageTransition>
-                  <AccessControl requiredRole="organizer">
-                    <OrganizerDashboard />
-                  </AccessControl>
-                </PageTransition>
-              } />
-              <Route path="/organizer/add-trek" element={
-                <PageTransition>
-                  <AccessControl requiredRole="organizer">
-                    <OrganizerAddTrek />
-                  </AccessControl>
-                </PageTransition>
-              } />
-              <Route path="/organizer/edit-trek/:id" element={
-                <PageTransition>
-                  <AccessControl requiredRole="organizer">
-                    <OrganizerEditTrek />
-                  </AccessControl>
-                </PageTransition>
-              } />
-              
-              {/* ⚠️ DYNAMIC ROUTE LAST */}
-              <Route path="/organizer/:id" element={
-                <PageTransition>
-                  <OrganizerProfile />
-                </PageTransition>
-              } />
-              
-              <Route path="/booking-confirmation/:bookingId" element={
-                <PageTransition>
-                  <BookingConfirmation />
-                </PageTransition>
-              } />
-              <Route path="/verify/:certificateId" element={<VerifyCertificate />} />
-              <Route path="/admin/certificates" element={
-                <PageTransition>
-                  <AccessControl requiredRole="admin">
-                    <CertificateAdmin />
-                  </AccessControl>
-                </PageTransition>
-              } />
-              <Route path="/intern" element={<InternshipJoin />} />
-            </Routes>
-            </div>
-        </div>
+        <AppContent />
       </SearchProvider>
     </Router>
   );

@@ -669,38 +669,6 @@ export default function Description({ description, detailedDescription }) {
           )}
         </ReadMoreBtn>
       )}
-
-      <InfoCards>
-        <InfoCard $index={0}>
-          <InfoCardIcon>
-            <FaBookOpen />
-          </InfoCardIcon>
-          <InfoCardContent>
-            <InfoCardLabel>Reading Time</InfoCardLabel>
-            <InfoCardValue>{readingTime} min</InfoCardValue>
-          </InfoCardContent>
-        </InfoCard>
-
-        <InfoCard $index={1}>
-          <InfoCardIcon>
-            <FaInfoCircle />
-          </InfoCardIcon>
-          <InfoCardContent>
-            <InfoCardLabel>Content</InfoCardLabel>
-            <InfoCardValue>{wordCount} words</InfoCardValue>
-          </InfoCardContent>
-        </InfoCard>
-
-        <InfoCard $index={2}>
-          <InfoCardIcon>
-            <FaMapMarkedAlt />
-          </InfoCardIcon>
-          <InfoCardContent>
-            <InfoCardLabel>Type</InfoCardLabel>
-            <InfoCardValue>Full Overview</InfoCardValue>
-          </InfoCardContent>
-        </InfoCard>
-      </InfoCards>
     </SectionCard>
   );
 }

@@ -963,22 +963,6 @@ export default function Hero({
         </MHero>
       </MRoot>
 
-      {/* ── Floating CTA bar ── */}
-      <MStickyBar>
-        <MUrgencyLine>🔥 Only {spotsLeft} spots left</MUrgencyLine>
-        <MCtaRow>
-          <MPriceWrap>
-            <MPriceLabel>Per person</MPriceLabel>
-            <MPriceVal>
-              {price}
-              <span>/person</span>
-            </MPriceVal>
-          </MPriceWrap>
-          <MBookBtn onClick={onBookNow}>
-            Book Now <IcoArrow />
-          </MBookBtn>
-        </MCtaRow>
-      </MStickyBar>
     </>
   );
 }

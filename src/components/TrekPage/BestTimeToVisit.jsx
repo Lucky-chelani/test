@@ -419,15 +419,17 @@ const MonthName = styled.span`
   display: block;
 `;
 
-const MonthSeason = styled.span`
+const MonthWeatherIcon = styled.div`
   position: relative;
   z-index: 1;
-  display: block;
-  font-size: 0.625rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-top: 0.25rem;
-  opacity: 0.7;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: 0.875rem;
+  color: ${({ $color }) => $color || tokens.colors.textMuted};
+  opacity: ${({ $active }) => ($active ? 1 : 0.5)};
+  transition: ${tokens.transition.base};
 `;
 
 const CheckIcon = styled.div`
@@ -445,6 +447,7 @@ const CheckIcon = styled.div`
   font-size: 0.5rem;
   animation: ${checkPop} 0.3s ease-out;
   box-shadow: 0 2px 8px rgba(249, 115, 22, 0.4);
+  z-index: 2;
 `;
 
 const SeasonLegend = styled.div`
@@ -608,6 +611,22 @@ const getSeasonDescription = (season) => {
   return "Best conditions for this trek experience";
 };
 
+// Normalize month name for comparison
+const normalizeMonth = (monthStr) => {
+  if (!monthStr || typeof monthStr !== "string") return "";
+  return monthStr.trim().toLowerCase().slice(0, 3);
+};
+
+// Check if a month is active based on availableMonths array
+const isMonthActive = (monthName, availableMonths) => {
+  if (!availableMonths || !Array.isArray(availableMonths) || availableMonths.length === 0) {
+    return false;
+  }
+  
+  const normalizedMonth = normalizeMonth(monthName);
+  return availableMonths.some((am) => normalizeMonth(am) === normalizedMonth);
+};
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function BestTimeToVisit({ season, availableMonths = [] }) {
   const [hoveredMonth, setHoveredMonth] = useState(null);
@@ -618,15 +637,10 @@ export default function BestTimeToVisit({ season, availableMonths = [] }) {
   // Check if availableMonths has actual data
   const hasMonthsData = availableMonths && Array.isArray(availableMonths) && availableMonths.length > 0;
 
-  // Count active months
-  const activeMonths = hasMonthsData
-    ? MONTHS_DATA.filter((m) =>
-        availableMonths.some((am) => {
-          if (typeof am !== "string") return false;
-          return am.toLowerCase().startsWith(m.name.toLowerCase().slice(0, 3));
-        })
-      )
-    : [];
+  // Calculate active months count from database
+  const activeMonthsCount = hasMonthsData
+    ? MONTHS_DATA.filter((month) => isMonthActive(month.name, availableMonths)).length
+    : 0;
 
   const SeasonIconComponent = getSeasonIcon(season);
 
@@ -643,12 +657,6 @@ export default function BestTimeToVisit({ season, availableMonths = [] }) {
           </SectionTitleWrapper>
         </SectionHeaderLeft>
 
-        {season && (
-          <SeasonBadge>
-            <SeasonIconComponent />
-            {season}
-          </SeasonBadge>
-        )}
       </SectionHeader>
 
       {hasMonthsData ? (
@@ -673,16 +681,14 @@ export default function BestTimeToVisit({ season, availableMonths = [] }) {
               <MonthsTitle>Available Months</MonthsTitle>
               <ActiveCount>
                 <FaCheck />
-                {activeMonths.length} of 12 months
+                {activeMonthsCount} of 12 months
               </ActiveCount>
             </MonthsLabel>
 
             <MonthsGrid>
               {MONTHS_DATA.map((month, index) => {
-                const isActive = availableMonths.some((am) => {
-                  if (typeof am !== "string") return false;
-                  return am.toLowerCase().startsWith(month.name.toLowerCase().slice(0, 3));
-                });
+                const isActive = isMonthActive(month.name, availableMonths);
+                const WeatherIcon = month.icon;
 
                 return (
                   <MonthChip
@@ -698,7 +704,9 @@ export default function BestTimeToVisit({ season, availableMonths = [] }) {
                       </CheckIcon>
                     )}
                     <MonthName>{month.name}</MonthName>
-                    <MonthSeason>{month.season}</MonthSeason>
+                    <MonthWeatherIcon $color={month.color} $active={isActive}>
+                      <WeatherIcon />
+                    </MonthWeatherIcon>
                   </MonthChip>
                 );
               })}

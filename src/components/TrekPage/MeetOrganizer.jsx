@@ -27,76 +27,39 @@ const tokens = {
   transition: { base: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)", fast: "all 0.15s ease" },
 };
 
-// ============================================================
-// KEYFRAME ANIMATIONS
-// ============================================================
 const fadeUp = keyframes`
-  from { 
-    opacity: 0; 
-    transform: translateY(40px); 
-  }
-  to { 
-    opacity: 1; 
-    transform: translateY(0); 
-  }
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
 `;
 
 const slideInLeft = keyframes`
-  from { 
-    opacity: 0; 
-    transform: translateX(-30px); 
-  }
-  to { 
-    opacity: 1; 
-    transform: translateX(0); 
-  }
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
 `;
 
 const slideInRight = keyframes`
-  from { 
-    opacity: 0; 
-    transform: translateX(30px); 
-  }
-  to { 
-    opacity: 1; 
-    transform: translateX(0); 
-  }
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
 `;
 
 const shimmer = keyframes`
-  0% { 
-    background-position: -1000px 0; 
-  }
-  100% { 
-    background-position: 1000px 0; 
-  }
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
 `;
 
 const float = keyframes`
-  0%, 100% { 
-    transform: translateY(0px); 
-  }
-  50% { 
-    transform: translateY(-10px); 
-  }
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
 `;
 
 const glow = keyframes`
-  0%, 100% { 
-    box-shadow: 0 0 20px rgba(249, 115, 22, 0.3); 
-  }
-  50% { 
-    box-shadow: 0 0 40px rgba(249, 115, 22, 0.6); 
-  }
+  0%, 100% { box-shadow: 0 0 20px rgba(249, 115, 22, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(249, 115, 22, 0.6); }
 `;
 
 const pulse = keyframes`
-  0%, 100% { 
-    opacity: 1; 
-  }
-  50% { 
-    opacity: 0.7; 
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 `;
 
 // ============================================================
@@ -107,6 +70,10 @@ const SectionWrapper = styled.section`
   margin: 2rem 0;
   animation: ${fadeUp} 0.6s ease-out both;
   animation-delay: 0.2s;
+
+  @media (max-width: 768px) {
+    margin: 1rem 0;
+  }
 `;
 
 const SectionCard = styled.div`
@@ -140,7 +107,11 @@ const SectionCard = styled.div`
   }
 
   @media (max-width: 768px) {
-    border-radius: ${tokens.radius.lg};
+    border-radius: ${tokens.radius.md};
+
+    &::before {
+      height: 3px;
+    }
   }
 `;
 
@@ -156,7 +127,7 @@ const CardHeader = styled.div`
   animation-delay: 0.3s;
 
   @media (max-width: 768px) {
-    padding: 1.5rem 1.25rem 1rem;
+    padding: 1rem 1rem 0.75rem;
   }
 `;
 
@@ -167,9 +138,7 @@ const HeaderTop = styled.div`
   margin-bottom: 0.75rem;
 
   @media (max-width: 640px) {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
+    margin-bottom: 0;
   }
 `;
 
@@ -177,6 +146,10 @@ const TitleGroup = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
+
+  @media (max-width: 640px) {
+    gap: 0.625rem;
+  }
 `;
 
 const IconWrapper = styled.div`
@@ -193,9 +166,11 @@ const IconWrapper = styled.div`
   box-shadow: 0 8px 24px rgba(249, 115, 22, 0.3);
 
   @media (max-width: 640px) {
-    width: 40px;
-    height: 40px;
-    font-size: 1.125rem;
+    width: 32px;
+    height: 32px;
+    font-size: 0.875rem;
+    animation: none;
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
   }
 `;
 
@@ -208,7 +183,7 @@ const SectionTitle = styled.h2`
   margin: 0;
 
   @media (max-width: 640px) {
-    font-size: 1.25rem;
+    font-size: 1rem;
   }
 `;
 
@@ -217,6 +192,10 @@ const Subtitle = styled.p`
   color: ${tokens.colors.textMuted};
   margin: 0;
   animation: ${pulse} 2s ease-in-out infinite;
+
+  @media (max-width: 640px) {
+    display: none;
+  }
 `;
 
 const CardBody = styled.div`
@@ -225,7 +204,7 @@ const CardBody = styled.div`
   animation-delay: 0.4s;
 
   @media (max-width: 768px) {
-    padding: 1.5rem 1.25rem;
+    padding: 1rem;
   }
 `;
 
@@ -279,22 +258,36 @@ const OrganizerCard = styled(motion.div)`
     gap: 1.5rem;
   }
 
+  /* ── MOBILE: stack avatar+info row, then action row ── */
   @media (max-width: 640px) {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
-    padding: 1.5rem;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.875rem;
+    border-radius: ${tokens.radius.md};
+
+    &:hover {
+      transform: none;
+    }
+  }
+`;
+
+/* NEW: wraps avatar + info side-by-side on mobile */
+const MobileTopRow = styled.div`
+  display: contents; /* transparent on desktop – children go into grid normally */
+
+  @media (max-width: 640px) {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
   }
 `;
 
 const AvatarSection = styled.div`
   position: relative;
   flex-shrink: 0;
-
-  @media (max-width: 640px) {
-    display: flex;
-    justify-content: center;
-  }
 `;
 
 const AvatarWrapper = styled.div`
@@ -303,8 +296,8 @@ const AvatarWrapper = styled.div`
   height: 100px;
 
   @media (max-width: 640px) {
-    width: 80px;
-    height: 80px;
+    width: 56px;
+    height: 56px;
   }
 `;
 
@@ -330,7 +323,15 @@ const Avatar = styled.div`
   }
 
   @media (max-width: 640px) {
-    font-size: 2rem;
+    font-size: 1.5rem;
+    border-radius: ${tokens.radius.sm};
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+    animation: none;
+
+    ${OrganizerCard}:hover & {
+      transform: none;
+      box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+    }
   }
 `;
 
@@ -357,12 +358,16 @@ const VerifiedBadgeIcon = styled.div`
   }
 
   @media (max-width: 640px) {
-    width: 28px;
-    height: 28px;
-    
+    width: 20px;
+    height: 20px;
+    bottom: -2px;
+    right: -2px;
+    border-width: 2px;
+    animation: none;
+
     svg {
-      width: 12px;
-      height: 12px;
+      width: 10px;
+      height: 10px;
     }
   }
 `;
@@ -370,12 +375,6 @@ const VerifiedBadgeIcon = styled.div`
 const InfoSection = styled.div`
   flex: 1;
   min-width: 0;
-
-  @media (max-width: 640px) {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
 `;
 
 const NameRow = styled.div`
@@ -386,7 +385,9 @@ const NameRow = styled.div`
   flex-wrap: wrap;
 
   @media (max-width: 640px) {
-    justify-content: center;
+    gap: 0.375rem;
+    margin-bottom: 0.375rem;
+    flex-wrap: nowrap;
   }
 `;
 
@@ -399,7 +400,10 @@ const OrganizerName = styled.h3`
   letter-spacing: -0.01em;
 
   @media (max-width: 640px) {
-    font-size: 1.25rem;
+    font-size: 0.9375rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 `;
 
@@ -421,6 +425,18 @@ const VerifiedBadge = styled.span`
     width: 11px;
     height: 11px;
   }
+
+  @media (max-width: 640px) {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.5625rem;
+    gap: 0.2rem;
+    flex-shrink: 0;
+
+    svg {
+      width: 8px;
+      height: 8px;
+    }
+  }
 `;
 
 const StatsGrid = styled.div`
@@ -430,7 +446,11 @@ const StatsGrid = styled.div`
   margin-top: 1rem;
 
   @media (max-width: 640px) {
-    grid-template-columns: 1fr 1fr;
+    /* inline row of stats beneath the name */
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    margin-top: 0.375rem;
   }
 `;
 
@@ -450,13 +470,21 @@ const StatItem = styled.div`
   }
 
   @media (max-width: 640px) {
-    justify-content: center;
+    padding: 0.3rem 0.5rem;
+    gap: 0.3rem;
+    border-radius: 6px;
+    flex-shrink: 0;
   }
 `;
 
 const StatIcon = styled.div`
   font-size: 1.125rem;
   flex-shrink: 0;
+  line-height: 1; /* keeps emoji vertically centred */
+
+  @media (max-width: 640px) {
+    font-size: 0.8125rem;
+  }
 `;
 
 const StatContent = styled.div`
@@ -471,6 +499,10 @@ const StatValue = styled.span`
   font-weight: 700;
   color: ${tokens.colors.primary};
   white-space: nowrap;
+
+  @media (max-width: 640px) {
+    font-size: 0.75rem;
+  }
 `;
 
 const StatLabel = styled.span`
@@ -478,6 +510,10 @@ const StatLabel = styled.span`
   color: ${tokens.colors.textMuted};
   text-transform: uppercase;
   letter-spacing: 0.5px;
+
+  @media (max-width: 640px) {
+    font-size: 0.5rem;
+  }
 `;
 
 const ActionSection = styled.div`
@@ -488,7 +524,19 @@ const ActionSection = styled.div`
 
   @media (max-width: 900px) {
     grid-column: 1 / -1;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  @media (max-width: 640px) {
+    flex-direction: row;
+    gap: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid ${tokens.colors.border};
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
   }
 `;
 
@@ -550,9 +598,26 @@ const ViewProfileButton = styled(motion.button)`
     transition: transform 0.3s ease;
   }
 
+  @media (max-width: 900px) {
+    flex: 1;
+  }
+
   @media (max-width: 640px) {
-    width: 100%;
-    padding: 0.875rem 1.5rem;
+    flex: 1;
+    padding: 0.625rem 1rem;
+    font-size: 0.8125rem;
+    border-radius: ${tokens.radius.sm};
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+    gap: 0.375rem;
+
+    &:hover {
+      transform: none;
+      box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+    }
+
+    .arrow {
+      font-size: 0.875rem;
+    }
   }
 `;
 
@@ -572,12 +637,14 @@ const RatingBadge = styled.div`
     font-size: 1rem;
   }
 
-  @media (max-width: 900px) {
-    align-self: flex-start;
-  }
-
   @media (max-width: 640px) {
-    align-self: center;
+    padding: 0.375rem 0.625rem;
+    font-size: 0.75rem;
+    gap: 0.25rem;
+
+    svg {
+      font-size: 0.875rem;
+    }
   }
 `;
 
@@ -589,6 +656,12 @@ const DescriptionSection = styled.div`
   border-radius: ${tokens.radius.lg};
   animation: ${fadeUp} 0.5s ease-out both;
   animation-delay: 0.5s;
+
+  @media (max-width: 640px) {
+    margin-top: 1rem;
+    padding: 0.875rem;
+    border-radius: ${tokens.radius.md};
+  }
 `;
 
 const DescriptionTitle = styled.h4`
@@ -604,6 +677,16 @@ const DescriptionTitle = styled.h4`
     content: '📋';
     font-size: 1.125rem;
   }
+
+  @media (max-width: 640px) {
+    font-size: 0.8125rem;
+    margin-bottom: 0.5rem;
+    gap: 0.375rem;
+
+    &::before {
+      font-size: 0.875rem;
+    }
+  }
 `;
 
 const Description = styled.p`
@@ -611,6 +694,11 @@ const Description = styled.p`
   color: ${tokens.colors.textSecondary};
   line-height: 1.7;
   margin: 0;
+
+  @media (max-width: 640px) {
+    font-size: 0.8125rem;
+    line-height: 1.6;
+  }
 `;
 
 // ============================================================
@@ -660,48 +748,56 @@ export default function MeetOrganizer({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <AvatarSection>
-              <AvatarWrapper>
-                <Avatar>{avatarLetter}</Avatar>
-                {organizerVerified && (
-                  <VerifiedBadgeIcon>
-                    <FaShieldAlt />
-                  </VerifiedBadgeIcon>
-                )}
-              </AvatarWrapper>
-            </AvatarSection>
+            {/*
+              MobileTopRow is transparent on desktop (display:contents),
+              so the three grid columns work as before.
+              On mobile it becomes a flex row: avatar | info side-by-side.
+            */}
+            <MobileTopRow>
+              <AvatarSection>
+                <AvatarWrapper>
+                  <Avatar>{avatarLetter}</Avatar>
+                  {organizerVerified && (
+                    <VerifiedBadgeIcon>
+                      <FaShieldAlt />
+                    </VerifiedBadgeIcon>
+                  )}
+                </AvatarWrapper>
+              </AvatarSection>
 
-            <InfoSection>
-              <NameRow>
-                <OrganizerName>{organizerName || "Trek Organizer"}</OrganizerName>
-                {organizerVerified && (
-                  <VerifiedBadge>
-                    <FaShieldAlt /> Verified
-                  </VerifiedBadge>
-                )}
-              </NameRow>
+              <InfoSection>
+                <NameRow>
+                  <OrganizerName>{organizerName || "Trek Organizer"}</OrganizerName>
+                  {organizerVerified && (
+                    <VerifiedBadge>
+                      <FaShieldAlt /> Verified
+                    </VerifiedBadge>
+                  )}
+                </NameRow>
 
-              <StatsGrid>
-                {organizerTrekCount && (
-                  <StatItem>
-                    <StatIcon>🏔️</StatIcon>
-                    <StatContent>
-                      <StatValue>{organizerTrekCount}</StatValue>
-                      <StatLabel>Treks Led</StatLabel>
-                    </StatContent>
-                  </StatItem>
-                )}
-                {organizerExperience && (
-                  <StatItem>
-                    <StatIcon>⏱️</StatIcon>
-                    <StatContent>
-                      <StatValue>{organizerExperience}</StatValue>
-                      <StatLabel>Experience</StatLabel>
-                    </StatContent>
-                  </StatItem>
-                )}
-              </StatsGrid>
-            </InfoSection>
+                <StatsGrid>
+                  {organizerTrekCount && (
+                    <StatItem>
+                      <StatIcon>🏔️</StatIcon>
+                      <StatContent>
+                        <StatValue>{organizerTrekCount}</StatValue>
+                        <StatLabel>Treks Led</StatLabel>
+                      </StatContent>
+                    </StatItem>
+                  )}
+                  {organizerExperience && (
+                    <StatItem>
+                      {/* fixed: icon sits beside value, not above it */}
+                      <StatIcon>⏱️</StatIcon>
+                      <StatContent>
+                        <StatValue>{organizerExperience}</StatValue>
+                        <StatLabel>Experience</StatLabel>
+                      </StatContent>
+                    </StatItem>
+                  )}
+                </StatsGrid>
+              </InfoSection>
+            </MobileTopRow>
 
             <ActionSection>
               <RatingBadge>
@@ -715,7 +811,8 @@ export default function MeetOrganizer({
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <span>View Full Profile</span>
+                {/* Change 1: button label */}
+                <span>More Treks</span>
                 <FiArrowRight className="arrow" />
               </ViewProfileButton>
             </ActionSection>
