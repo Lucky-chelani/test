@@ -9,6 +9,8 @@ import {
   FaCheckCircle,
   FaMountain,
   FaTimes,
+  FaMousePointer,
+  FaHandPointer,
 } from "react-icons/fa";
 import {
   FiChevronRight,
@@ -17,6 +19,8 @@ import {
   FiSun,
   FiMoon,
   FiChevronDown,
+  FiInfo,
+  FiX,
 } from "react-icons/fi";
 
 // ─── Tokens ───────────────────────────────────────────────────────────────────
@@ -67,6 +71,17 @@ const pulse = keyframes`
   50%       { box-shadow: 0 0 0 10px rgba(249,115,22,0);   }
 `;
 
+const glowPulse = keyframes`
+  0%, 100% { 
+    box-shadow: 0 0 20px rgba(249,115,22,0.4),
+                0 0 40px rgba(249,115,22,0.2);
+  }
+  50% { 
+    box-shadow: 0 0 30px rgba(249,115,22,0.6),
+                0 0 60px rgba(249,115,22,0.3);
+  }
+`;
+
 const float = keyframes`
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(-4px); }
@@ -88,6 +103,46 @@ const modalSlideIn = keyframes`
   }
 `;
 
+const tooltipSlideUp = keyframes`
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+`;
+
+const slideDown = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+const tapAnimation = keyframes`
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+`;
+
+const pointerBounce = keyframes`
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+`;
+
 const tagSlide = keyframes`
   from { opacity: 0; transform: translateX(-10px); }
   to   { opacity: 1; transform: translateX(0); }
@@ -97,6 +152,17 @@ const dotPop = keyframes`
   0%   { transform: scale(0) translate(-50%, -100%); opacity: 0; }
   70%  { transform: scale(1.3) translate(-38%, -77%); }
   100% { transform: scale(1) translate(-50%, -100%);   opacity: 1; }
+`;
+
+const fadeSlideIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 `;
 
 // ─── Scroll Reveal Hook ───────────────────────────────────────────────────────
@@ -111,7 +177,7 @@ const useFadeIn = (threshold = 0.12) => {
       ([entry]) => {
         if (entry.isIntersecting) setVisible(true);
       },
-      { threshold }
+      { threshold },
     );
     obs.observe(el);
     return () => obs.unobserve(el);
@@ -154,6 +220,16 @@ const formatMeals = (meals) => {
     return list.join(", ");
   }
   return null;
+};
+
+// ─── Get first sentence or truncate description ──────────────────────────────
+const getPreviewText = (description) => {
+  if (!description) return "";
+  const firstSentence = description.split(/[.!?]/)[0];
+  if (firstSentence.length > 80) {
+    return firstSentence.substring(0, 77) + "...";
+  }
+  return firstSentence + ".";
 };
 
 // ─── Map Coordinates (up to 8 stops) ─────────────────────────────────────────
@@ -371,6 +447,143 @@ const InlineMapSvgBg = styled.svg`
   }
 `;
 
+/* ── MOBILE INSTRUCTION BANNER ── */
+const MobileInstructionBanner = styled.div`
+  display: none;
+
+  @media (max-width: 768px) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.875rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(
+      135deg,
+      rgba(249, 115, 22, 0.08) 0%,
+      rgba(249, 115, 22, 0.12) 100%
+    );
+    border: 1px solid ${tokens.colors.primaryBorder};
+    border-radius: ${tokens.radius.lg};
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 24px rgba(249, 115, 22, 0.15);
+    animation: ${slideDown} 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation-delay: 0.8s;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(249, 115, 22, 0.1),
+        transparent
+      );
+      animation: ${shimmer} 3s linear infinite;
+    }
+  }
+`;
+
+const InstructionIconWrapper = styled.div`
+  position: relative;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(
+    135deg,
+    ${tokens.colors.primary},
+    ${tokens.colors.primaryDark}
+  );
+  border-radius: ${tokens.radius.md};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(249, 115, 22, 0.3);
+  flex-shrink: 0;
+
+  svg {
+    font-size: 1.125rem;
+    color: white;
+    animation: ${pointerBounce} 2s ease-in-out infinite;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: ${tokens.radius.md};
+    background: linear-gradient(
+      135deg,
+      ${tokens.colors.primary},
+      ${tokens.colors.primaryLight}
+    );
+    opacity: 0.3;
+    z-index: -1;
+    animation: ${pulse} 2s ease-in-out infinite;
+  }
+`;
+
+const InstructionTextWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+`;
+
+const InstructionTitle = styled.div`
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: ${tokens.colors.textPrimary};
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  span.highlight {
+    color: ${tokens.colors.primary};
+    font-weight: 800;
+  }
+`;
+
+const InstructionSubtext = styled.div`
+  font-size: 0.6875rem;
+  color: ${tokens.colors.textMuted};
+  letter-spacing: 0.01em;
+`;
+
+const DismissButton = styled.button`
+  width: 32px;
+  height: 32px;
+  border-radius: ${tokens.radius.sm};
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid ${tokens.colors.border};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${tokens.colors.textMuted};
+  cursor: pointer;
+  transition: ${tokens.transition.fast};
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+
+  svg {
+    font-size: 0.875rem;
+  }
+
+  &:hover,
+  &:active {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: ${tokens.colors.borderHover};
+    color: ${tokens.colors.textPrimary};
+    transform: scale(0.95);
+  }
+`;
+
 const MapPin = styled.div`
   position: absolute;
   transform: translate(-50%, -100%);
@@ -380,10 +593,17 @@ const MapPin = styled.div`
   cursor: pointer;
   z-index: 10;
   transition: ${tokens.transition.spring};
-  animation: ${css`${dotPop}`} 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: ${css`
+      ${dotPop}`} 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   animation-delay: ${({ $delay }) => $delay || "0s"};
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 
   &:hover {
+    z-index: 20;
+  }
+
+  &.active {
     z-index: 20;
   }
 
@@ -404,18 +624,28 @@ const PinDot = styled.div`
   border: 3px solid rgba(249, 115, 22, 0.4);
   box-shadow: 0 0 0 6px rgba(249, 115, 22, 0.12);
   transition: ${tokens.transition.spring};
-  animation: ${css`${pulse}`} 2.5s ease-in-out infinite;
+  animation: ${css`
+      ${pulse}`} 2.5s ease-in-out infinite;
   animation-delay: ${({ $delay }) => $delay || "0s"};
 
-  ${MapPin}:hover & {
-    transform: scale(1.3);
+  ${MapPin}:hover &,
+  ${MapPin}.active & {
+    transform: scale(1.5);
     background: linear-gradient(135deg, #fbbf24, ${tokens.colors.primary});
+    animation: ${glowPulse} 1.5s ease-in-out infinite;
+    border-width: 4px;
   }
 
   @media (max-width: 600px) {
-    width: 14px;
-    height: 14px;
-    border-width: 2px;
+    width: 16px;
+    height: 16px;
+    border-width: 2.5px;
+
+    ${MapPin}:hover &,
+    ${MapPin}.active & {
+      transform: scale(1.4);
+      border-width: 3px;
+    }
   }
 `;
 
@@ -430,6 +660,7 @@ const PinLabel = styled.div`
   pointer-events: none;
   white-space: nowrap;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  transition: ${tokens.transition.spring};
 
   span.day-num {
     display: block;
@@ -451,16 +682,118 @@ const PinLabel = styled.div`
     text-overflow: ellipsis;
   }
 
+  ${MapPin}:hover &,
+  ${MapPin}.active & {
+    transform: translateY(-4px);
+    background: rgba(249, 115, 22, 0.15);
+    border-color: ${tokens.colors.primary};
+    box-shadow: 0 12px 32px rgba(249, 115, 22, 0.3);
+  }
+
   @media (max-width: 600px) {
-    padding: 0.35rem 0.6rem;
-    
+    padding: 0.4rem 0.65rem;
+
     span.day-num {
       font-size: 0.55rem;
     }
-    
+
     span.day-title {
       font-size: 0.7rem;
       max-width: 100px;
+    }
+  }
+`;
+
+/* ── HOVER TOOLTIP ── */
+const HoverTooltip = styled.div`
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translate(-50%, 0);
+  min-width: 280px;
+  max-width: 320px;
+  background: linear-gradient(
+    135deg,
+    rgba(17, 17, 17, 0.98),
+    rgba(26, 26, 26, 0.98)
+  );
+  backdrop-filter: blur(16px);
+  border: 1px solid ${tokens.colors.primaryBorder};
+  border-radius: ${tokens.radius.lg};
+  padding: 1rem 1.25rem;
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(249, 115, 22, 0.2);
+  pointer-events: none;
+  opacity: 0;
+  animation: ${tooltipSlideUp} 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  z-index: 100;
+
+  /* Arrow */
+  &::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 8px solid transparent;
+    border-top-color: ${tokens.colors.primaryBorder};
+  }
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 7px solid transparent;
+    border-top-color: rgba(17, 17, 17, 0.98);
+    margin-top: -1px;
+    z-index: 1;
+  }
+
+  @media (max-width: 600px) {
+    min-width: 220px;
+    max-width: 260px;
+    padding: 0.875rem 1rem;
+    font-size: 0.875rem;
+    bottom: calc(100% + 8px);
+  }
+`;
+
+const TooltipPreview = styled.p`
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: ${tokens.colors.textSecondary};
+  margin: 0 0 0.75rem;
+
+  @media (max-width: 600px) {
+    font-size: 0.75rem;
+    margin-bottom: 0.625rem;
+  }
+`;
+
+const TooltipCTA = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: ${tokens.colors.primary};
+  padding-top: 0.625rem;
+  border-top: 1px solid rgba(249, 115, 22, 0.2);
+
+  svg {
+    font-size: 0.875rem;
+    animation: ${float} 2s ease-in-out infinite;
+  }
+
+  @media (max-width: 600px) {
+    font-size: 0.7rem;
+    padding-top: 0.5rem;
+
+    svg {
+      font-size: 0.8rem;
     }
   }
 `;
@@ -478,6 +811,7 @@ const ModalOverlay = styled.div`
   padding: 1rem;
   animation: ${fadeIn} 0.2s ease-out;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 `;
 
 const ModalContent = styled.div`
@@ -491,11 +825,11 @@ const ModalContent = styled.div`
   max-height: 90vh;
   overflow-y: auto;
   animation: ${modalSlideIn} 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7),
-              0 0 0 1px rgba(249, 115, 22, 0.1);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(249, 115, 22, 0.1);
   will-change: transform, opacity;
 
-  /* Custom scrollbar */
   scrollbar-width: thin;
   scrollbar-color: ${tokens.colors.primary} ${tokens.colors.bgElevated};
 
@@ -536,6 +870,7 @@ const ModalClose = styled.button`
   transition: ${tokens.transition.fast};
   font-size: 1.1rem;
   z-index: 10;
+  -webkit-tap-highlight-color: transparent;
 
   &:hover {
     background: rgba(249, 115, 22, 0.15);
@@ -766,8 +1101,10 @@ const ModalDetailValue = styled.span`
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function Itinerary({ itinerary = [] }) {
   const [selectedDay, setSelectedDay] = useState(null);
+  const [hoveredDay, setHoveredDay] = useState(null);
+  const [touchTimer, setTouchTimer] = useState(null);
+  const [showInstruction, setShowInstruction] = useState(true);
 
-  // Close modal on ESC key
   useEffect(() => {
     const handleEsc = (e) => {
       if (e.key === "Escape") setSelectedDay(null);
@@ -776,7 +1113,6 @@ export default function Itinerary({ itinerary = [] }) {
     return () => window.removeEventListener("keydown", handleEsc);
   }, []);
 
-  // Prevent body scroll when modal is open
   useEffect(() => {
     if (selectedDay !== null) {
       document.body.style.overflow = "hidden";
@@ -788,16 +1124,58 @@ export default function Itinerary({ itinerary = [] }) {
     };
   }, [selectedDay]);
 
+  useEffect(() => {
+    return () => {
+      if (touchTimer) clearTimeout(touchTimer);
+    };
+  }, [touchTimer]);
+
+  // Auto-hide instruction after first interaction
+  useEffect(() => {
+    if (selectedDay !== null || hoveredDay !== null) {
+      setShowInstruction(false);
+    }
+  }, [selectedDay, hoveredDay]);
+
   if (!itinerary || itinerary.length === 0) return null;
 
   const visibleCoords = MAP_COORDS.slice(0, itinerary.length);
 
   const openDayModal = (dayIndex) => {
     setSelectedDay(dayIndex);
+    setHoveredDay(null);
   };
 
   const closeDayModal = () => {
     setSelectedDay(null);
+  };
+
+  const handleTouchStart = (dayIndex) => {
+    const timer = setTimeout(() => {
+      setHoveredDay(dayIndex);
+    }, 200);
+    setTouchTimer(timer);
+  };
+
+  const handleTouchEnd = (dayIndex) => {
+    if (touchTimer) {
+      clearTimeout(touchTimer);
+      setTouchTimer(null);
+    }
+
+    if (hoveredDay === dayIndex) {
+      setHoveredDay(null);
+    } else {
+      openDayModal(dayIndex);
+    }
+  };
+
+  const handleTouchCancel = () => {
+    if (touchTimer) {
+      clearTimeout(touchTimer);
+      setTouchTimer(null);
+    }
+    setHoveredDay(null);
   };
 
   const currentDay = selectedDay !== null ? itinerary[selectedDay] : null;
@@ -883,10 +1261,7 @@ export default function Itinerary({ itinerary = [] }) {
             ))}
           </TopoLines>
 
-          <RiverSvg
-            viewBox="0 0 1000 600"
-            preserveAspectRatio="xMidYMid slice"
-          >
+          <RiverSvg viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice">
             <path
               d="M -50 200 C 200 150, 400 350, 600 250 C 800 150, 900 400, 1100 300"
               fill="none"
@@ -952,6 +1327,29 @@ export default function Itinerary({ itinerary = [] }) {
 
       {/* ── INTERACTIVE MAP ── */}
       <InlineMapWrapper>
+        {/* Mobile Instruction Banner */}
+        {showInstruction && (
+          <MobileInstructionBanner>
+            <InstructionIconWrapper>
+              <FaHandPointer />
+            </InstructionIconWrapper>
+            <InstructionTextWrapper>
+              <InstructionTitle>
+                <span className="highlight">Tap</span> any marker to explore
+              </InstructionTitle>
+              <InstructionSubtext>
+                Discover daily highlights & activities
+              </InstructionSubtext>
+            </InstructionTextWrapper>
+            <DismissButton
+              onClick={() => setShowInstruction(false)}
+              aria-label="Dismiss instruction"
+            >
+              <FiX />
+            </DismissButton>
+          </MobileInstructionBanner>
+        )}
+
         <InlineMapSvgBg viewBox="0 0 800 760" preserveAspectRatio="none">
           <rect x="0" y="0" width="800" height="760" rx="20" fill="#111111" />
           <rect
@@ -988,7 +1386,6 @@ export default function Itinerary({ itinerary = [] }) {
             fill="url(#mapgrid)"
           />
 
-          {/* Topo rings */}
           <ellipse
             cx="160"
             cy="150"
@@ -1030,7 +1427,6 @@ export default function Itinerary({ itinerary = [] }) {
             opacity="0.1"
           />
 
-          {/* River */}
           <path
             d="M 260 -20 C 50 150, 700 350, 450 650 C 360 750, 120 720, 0 960"
             fill="none"
@@ -1048,7 +1444,6 @@ export default function Itinerary({ itinerary = [] }) {
             opacity="0.4"
           />
 
-          {/* Mountains */}
           <path
             d="M 400 760 L 480 600 L 520 670 L 570 550 L 620 650 L 680 530 L 730 610 L 800 470 L 800 760 Z"
             fill="#1e222b"
@@ -1065,7 +1460,6 @@ export default function Itinerary({ itinerary = [] }) {
             opacity="0.4"
           />
 
-          {/* Trees */}
           <text x="90" y="340" fontSize="18" opacity="0.3">
             🌲🌲
           </text>
@@ -1079,7 +1473,6 @@ export default function Itinerary({ itinerary = [] }) {
             🌲🌲🌲
           </text>
 
-          {/* Trail */}
           <path
             d={TRAIL_D}
             fill="none"
@@ -1101,24 +1494,43 @@ export default function Itinerary({ itinerary = [] }) {
         {itinerary.map((day, i) => {
           const coord =
             visibleCoords[i] || visibleCoords[visibleCoords.length - 1];
+          const isHovered = hoveredDay === i;
+
           return (
             <MapPin
               key={i}
+              className={isHovered ? "active" : ""}
               style={{ left: coord.cx, top: coord.cy }}
               $delay={`${i * 0.12 + 0.3}s`}
               onClick={() => openDayModal(i)}
+              onMouseEnter={() => setHoveredDay(i)}
+              onMouseLeave={() => setHoveredDay(null)}
+              onTouchStart={() => handleTouchStart(i)}
+              onTouchEnd={() => handleTouchEnd(i)}
+              onTouchCancel={handleTouchCancel}
             >
               <PinLabel>
-                <span className="day-num">Day {day.day}</span>
                 <span className="day-title">{day.title}</span>
               </PinLabel>
               <PinDot $delay={`${i * 0.12}s`} />
+
+              {isHovered && (
+                <HoverTooltip>
+                  <TooltipPreview>
+                    {getPreviewText(day.description)}
+                  </TooltipPreview>
+                  <TooltipCTA>
+                    <FaMousePointer />
+                    Click to read full details
+                  </TooltipCTA>
+                </HoverTooltip>
+              )}
             </MapPin>
           );
         })}
       </InlineMapWrapper>
 
-      {/* ── MODAL POPUP (OPTIMIZED) ── */}
+      {/* ── MODAL POPUP ── */}
       {selectedDay !== null && currentDay && (
         <ModalOverlay onClick={closeDayModal}>
           <ModalContent onClick={(e) => e.stopPropagation()}>

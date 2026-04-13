@@ -7,7 +7,7 @@ const tokens = {
 
 const FloatingWA = styled.a`
   position: fixed;
-  bottom: 5rem;
+  bottom: 1rem;
   right: 2rem;
   width: 56px;
   height: 56px;
@@ -29,7 +29,7 @@ const FloatingWA = styled.a`
   }
 
   @media (max-width: 640px) {
-    bottom: 4.25rem;
+    bottom: 1rem;
     right: 1.25rem;
     width: 50px;
     height: 50px;

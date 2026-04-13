@@ -33,6 +33,7 @@ import GalleryModal from "./TrekPage/GalleryModal";
 import ReviewsSection from "./TrekPage/ReviewsSection";
 import WhatsAppButton from "./TrekPage/WhatsAppButton";
 import BookingModal from "./BookingModal";
+import SectionNavigation from "./TrekPage/SectionNavigation";
 
 
 // ============================================================
@@ -51,6 +52,10 @@ const tokens = {
   radius: { lg: "16px", xl: "20px" },
   transition: { base: "all 0.25s ease" },
 };
+
+
+
+
 
 // ============================================================
 // GLOBAL STYLES
@@ -350,74 +355,8 @@ const ScrollIndicator = styled.div`
 
 // ============================================================
 // MOBILE BOOKING BAR
-// ============================================================
-const MobileBar = styled(motion.div)`
-  display: none;
 
-  @media (max-width: 900px) {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 90;
-    background: rgba(18, 18, 18, 0.95);
-    backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(249, 115, 22, 0.3);
-    padding: 1rem 1.25rem;
-    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.5);
-  }
-`;
 
-const MobilePrice = styled.div`
-  font-family: "Sora", sans-serif;
-  font-size: 1.4rem;
-  color: ${tokens.colors.primary};
-  line-height: 1;
-
-  sub {
-    font-size: 0.75rem;
-    color: ${tokens.colors.textMuted};
-  }
-`;
-
-const MobileLabel = styled.div`
-  font-size: 0.72rem;
-  color: ${tokens.colors.textMuted};
-  margin-bottom: 0.25rem;
-`;
-
-const PrimaryBtn = styled.button`
-  display: inline-flex;
-  align-items: center;
-  gap: 0.625rem;
-  padding: 0.75rem 1.5rem;
-  border-radius: ${tokens.radius.lg};
-  border: none;
-  background: linear-gradient(
-    135deg,
-    ${tokens.colors.primary} 0%,
-    ${tokens.colors.primaryDark} 100%
-  );
-  color: white;
-  font-weight: 700;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: ${tokens.transition.base};
-  box-shadow: 0 8px 25px rgba(249, 115, 22, 0.35);
-  white-space: nowrap;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 35px rgba(249, 115, 22, 0.5);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-`;
 
 // ============================================================
 // LOADING & ERROR STATES
@@ -703,7 +642,7 @@ export default function TrekDetails() {
 
   // Booking floating button
   const bookingCardRef = useRef(null);
-  const [showBookingFloating, setShowBookingFloating] = useState(false);
+
 
   // Section refs for navigation
   const sectionRefs = useRef({
@@ -767,25 +706,7 @@ export default function TrekDetails() {
     };
   }, [trek]);
 
-  // ── Booking card visibility ──────────────────────────────
-  useEffect(() => {
-    const el = bookingCardRef.current;
-    if (!el) return;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setShowBookingFloating(!entry.isIntersecting);
-      },
-      {
-        threshold: 0.15,
-        rootMargin: "0px 0px -10% 0px",
-      },
-    );
-
-    observer.observe(el);
-
-    return () => observer.disconnect();
-  }, [trek]);
 
   // ── Section nav scroll indicator ─────────────────────────
   useEffect(() => {
@@ -1186,32 +1107,12 @@ return (
       />
 
       {/* SECTION NAVIGATION */}
-      <SectionNavWrapper className={navScrolled ? 'scrolled' : ''}>
-        <SectionNavContainer>
-          <SectionNavScroller ref={sectionNavScrollerRef}>
-            <SectionNav>
-              {sections.map((section) => (
-                <NavItem
-                  key={section.id}
-                  data-section-nav={section.id}
-                  $active={activeSection === section.id}
-                  onClick={() => scrollToSection(section.id)}
-                >
-                  {section.label}
-                </NavItem>
-              ))}
-            </SectionNav>
-          </SectionNavScroller>
-          {showScrollIndicator && (
-            <ScrollIndicator>
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-              <span>Scroll for more</span>
-            </ScrollIndicator>
-          )}
-        </SectionNavContainer>
-      </SectionNavWrapper>
+      <SectionNavigation
+          sections={sections}
+          activeSection={activeSection}
+          onNavigate={scrollToSection}
+          scrolled={navScrolled}
+        />
 
       {/* MAIN CONTENT */}
       <MainLayout>
@@ -1328,22 +1229,6 @@ return (
         </div>
       </Container>
 
-      {/* MOBILE BOOKING BAR */}
-      <MobileBar
-        initial={{ y: 100 }}
-        animate={{ y: 0 }}
-        transition={{ delay: 0.5, duration: 0.4 }}
-      >
-        <div>
-          <MobileLabel>Starting from</MobileLabel>
-          <MobilePrice>
-            {price}
-            <sub>/ person</sub>
-          </MobilePrice>
-        </div>
-        <PrimaryBtn onClick={handleBook}>Book Now →</PrimaryBtn>
-      </MobileBar>
-
       {/* GALLERY MODAL */}
       <GalleryModal
         isOpen={galleryOpen}
@@ -1364,8 +1249,6 @@ return (
         />
       )}
 
-
-      
       {/* WHATSAPP BUTTON */}
       <WhatsAppButton href={waHref} />
     </PageWrapper>
