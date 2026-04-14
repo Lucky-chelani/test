@@ -1375,6 +1375,11 @@ const StepIndicator = styled.div`
   gap: 1rem;
   margin-bottom: 1rem;
   animation: ${fadeIn} 0.6s ease-out 0.1s both;
+
+  @media (max-width: 640px) {
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
 `;
 
 const Step = styled.div`
@@ -1385,6 +1390,15 @@ const Step = styled.div`
   font-weight: 600;
   color: ${props => props.active ? theme.primary : theme.darkGray};
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  span {
+    white-space: nowrap;
+  }
+
+  @media (max-width: 640px) {
+    font-size: 0.85rem;
+    gap: 0.4rem;
+  }
 `;
 
 // Step indicator updates
@@ -1418,6 +1432,32 @@ const StepConnector = styled.div`
     : theme.mediumGray
   };
   transition: all 0.3s ease;
+
+  @media (max-width: 640px) {
+    width: 100%;
+    flex: 1;
+  }
+`;
+
+const PaymentStepLayout = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 1.25rem;
+  align-items: start;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const PaymentSidebar = styled.div`
+  position: sticky;
+  top: 0.75rem;
+  align-self: start;
+
+  @media (max-width: 900px) {
+    position: static;
+  }
 `;
 
 const LoadingIndicator = styled.div`
@@ -2148,7 +2188,7 @@ const InteractiveCard = styled.div`
     : `linear-gradient(135deg, ${theme.white} 0%, ${theme.cream} 100%)`};
   padding: 1.25rem;
   border-radius: 14px;
-  border: 2px solid ${props => props.isOpen ? theme.primary : theme.peach};
+  border: 2px solid ${props => props.$invalid ? '#ef4444' : (props.isOpen ? theme.primary : theme.peach)};
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
@@ -2157,7 +2197,7 @@ const InteractiveCard = styled.div`
     : `0 2px 8px rgba(0, 0, 0, 0.06)`};
   
   &:hover {
-    border-color: ${theme.primary};
+    border-color: ${props => props.$invalid ? '#ef4444' : theme.primary};
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(255, 112, 67, 0.15);
   }
@@ -2673,6 +2713,21 @@ const handleParticipantSelect = (count) => {
         if (Number.isFinite(idx) && idx >= clampedCount) return null;
       }
       return prev;
+    });
+
+    // Clear any errors for removed participants
+    setErrors(prev => {
+      const next = { ...(prev || {}) };
+      Object.keys(next).forEach((k) => {
+        const m = /^participant_(\d+)_/.exec(k);
+        if (m) {
+          const idx = Number(m[1]);
+          if (Number.isFinite(idx) && idx >= clampedCount) {
+            delete next[k];
+          }
+        }
+      });
+      return next;
     });
   }
 };
@@ -3201,6 +3256,15 @@ const handleParticipantChange = (index, field, value) => {
 
 // ✅ NEW: Handle primary booker info change
 const handlePrimaryBookerChange = (field, value) => {
+  const errorKey =
+    field === 'name'
+      ? 'primaryBooker_name'
+      : field === 'email'
+        ? 'primaryBooker_email'
+        : field === 'contactNumber'
+          ? 'primaryBooker_contactNumber'
+          : field;
+
   setPrimaryBooker(prev => ({
     ...prev,
     [field]: value
@@ -3210,15 +3274,17 @@ const handlePrimaryBookerChange = (field, value) => {
     const updatedParticipants = [...participants];
     updatedParticipants[0] = {
       ...updatedParticipants[0],
-      [field]: value
+      ...(field === 'contactNumber'
+        ? { emergencyContact: value }
+        : { [field]: value })
     };
     setParticipants(updatedParticipants);
   }
   
-  if (errors[field]) {
+  if (errors[errorKey]) {
     setErrors(prev => ({
       ...prev,
-      [field]: undefined
+      [errorKey]: undefined
     }));
   }
 };
@@ -3633,7 +3699,18 @@ setParticipants([
     };
   }, [bookingId, handlePaymentSuccess, handlePaymentFailure]);
 
-  const canProceedToPayment = validateStep1({ set: false }).isValid;
+  const canProceedToPayment = React.useMemo(() => {
+    return validateStep1({ set: false }).isValid;
+  }, [
+    formData.startDate,
+    formData.totalParticipants,
+    primaryBooker.name,
+    primaryBooker.email,
+    primaryBooker.contactNumber,
+    participants,
+    trek,
+    isDateAvailable,
+  ]);
   const isPaymentButtonDisabled = !canProceedToPayment || isProcessingPayment || paymentSuccess;
 
   if (!isOpen) return null;
@@ -3851,8 +3928,8 @@ setParticipants([
           {/* Step Indicator */}
           <StepIndicator>
             <Step active={step === 1}>
-              <StepNumber active={step === 1} completed={step > 1}>
-                {step > 1 ? <FiCheck /> : '1'}
+              <StepNumber active={step === 1} completed={step > 1 || (step === 2 && canProceedToPayment)}>
+                {(step > 1 || (step === 2 && canProceedToPayment)) ? <FiCheck /> : '1'}
               </StepNumber>
               <span>Booking Details</span>
             </Step>
@@ -3898,6 +3975,7 @@ setParticipants([
           onClick={handleDateCardToggle}
           data-field="startDate"
           aria-invalid={Boolean(errors.startDate)}
+          $invalid={Boolean(errors.startDate)}
         >
           <CardHeader>
             <CardLabel>
@@ -4214,98 +4292,104 @@ setParticipants([
                 🔒 Secure Payment powered by Razorpay
               </SecurePaymentBanner>
 
-              {/* Booking Summary */}
-              <BookingSummaryCard>
-                <SummaryHeader>
-                  <SectionIcon>
-                    <FiInfo />
-                  </SectionIcon>
-                  <SummaryTitle>Booking Summary</SummaryTitle>
-                </SummaryHeader>
-                
-                <SummaryGrid>
-                  <SummaryItem>
-                    <strong>Trek:</strong> {trek?.name}
-                  </SummaryItem>
-                  <SummaryItem>
-                    <strong>Date:</strong> {formatDateForDisplay(formData.startDate)}
-                  </SummaryItem>
-                  <SummaryItem>
-                    <strong>Participants:</strong> {formData.totalParticipants} person(s)
-                  </SummaryItem>
-                  <SummaryItem>
-                    <strong>Price/Person:</strong> ₹{trek?.numericPrice}
-                  </SummaryItem>
-                </SummaryGrid>
-                
-                {/* Participant Names */}
-                <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(51, 153, 204, 0.1)' }}>
-                  <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#020202', marginBottom: '0.5rem' }}>
-                    Participants:
-                  </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0' }}>
-                    {participants.map((p, i) => (
-                      <ParticipantChip key={i} isPrimary={p.isPrimaryBooker}>
-                        {p.name || `Participant ${i + 1}`}
-                        {p.isPrimaryBooker && ' ✓'}
-                      </ParticipantChip>
-                    ))}
-                  </div>
-                </div>
-              </BookingSummaryCard>
+              <PaymentStepLayout>
+                <div>
+                  {/* Booking Summary */}
+                  <BookingSummaryCard>
+                    <SummaryHeader>
+                      <SectionIcon>
+                        <FiInfo />
+                      </SectionIcon>
+                      <SummaryTitle>Booking Summary</SummaryTitle>
+                    </SummaryHeader>
+                    
+                    <SummaryGrid>
+                      <SummaryItem>
+                        <strong>Trek:</strong> {trek?.name}
+                      </SummaryItem>
+                      <SummaryItem>
+                        <strong>Date:</strong> {formatDateForDisplay(formData.startDate)}
+                      </SummaryItem>
+                      <SummaryItem>
+                        <strong>Participants:</strong> {formData.totalParticipants} person(s)
+                      </SummaryItem>
+                      <SummaryItem>
+                        <strong>Price/Person:</strong> ₹{trek?.numericPrice}
+                      </SummaryItem>
+                    </SummaryGrid>
+                    
+                    {/* Participant Names */}
+                    <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(51, 153, 204, 0.1)' }}>
+                      <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#020202', marginBottom: '0.5rem' }}>
+                        Participants:
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0' }}>
+                        {participants.map((p, i) => (
+                          <ParticipantChip key={i} isPrimary={p.isPrimaryBooker}>
+                            {p.name || `Participant ${i + 1}`}
+                            {p.isPrimaryBooker && ' ✓'}
+                          </ParticipantChip>
+                        ))}
+                      </div>
+                    </div>
+                  </BookingSummaryCard>
 
-             {/* Coupon Section */}
-<CouponSection 
-  orderTotal={trek?.numericPrice * formData.totalParticipants}
-  onApplyCoupon={handleApplyCoupon}
-  theme={{ 
-    mainColor: theme.primary,
-    hoverColor: theme.primaryDark,
-    gradientLight: `linear-gradient(135deg, ${theme.peach}, ${theme.cream})`,
-    textColor:'#212223',
-    inputBackground: theme.white,
-    inputBorder: theme.mediumGray,
-    inputText: '#111827',
-    placeholderColor: '#4a4949'
-  }}
-/>            
-             <PriceSummary
-  style={{ 
-    background: `linear-gradient(135deg, rgba(255, 87, 34, 0.06), rgba(255, 152, 0, 0.04))`,
-    borderColor: theme.primary,
-    padding: '1.5rem',          // ✅ add space
-    borderRadius: '16px',
-    marginTop: '1rem',
-    minHeight: '325px'          // ✅ fix height issue
-  }}
->        
-                <PriceItem>
-                  <span>Trek Fee (per person)</span>
-                  <span>₹{trek?.numericPrice}</span>
-                </PriceItem>
-                
-                <PriceItem>
-                  <span>Number of Participants</span>
-                  <span>× {formData.totalParticipants}</span>
-                </PriceItem>
-                
-                <PriceItem>
-                  <span>Subtotal</span>
-                  <span>₹{(trek?.numericPrice * formData.totalParticipants).toFixed(2)}</span>
-                </PriceItem>
-                
-                {activeCoupon && (
-                  <PriceItem style={{ color: '#059669' }}>
-                    <span>Discount ({activeCoupon.code})</span>
-                    <span>-₹{discountAmount.toFixed(2)}</span>
-                  </PriceItem>
-                )}
-                
-                <PriceTotal style={{ }}>
-                  <span>Total</span>
-                  <span>₹{calculateTotalPrice()}</span>
-                </PriceTotal>
-              </PriceSummary>
+                  {/* Coupon Section */}
+                  <CouponSection 
+                    orderTotal={trek?.numericPrice * formData.totalParticipants}
+                    onApplyCoupon={handleApplyCoupon}
+                    theme={{ 
+                      mainColor: theme.primary,
+                      hoverColor: theme.primaryDark,
+                      gradientLight: `linear-gradient(135deg, ${theme.peach}, ${theme.cream})`,
+                      textColor:'#212223',
+                      inputBackground: theme.white,
+                      inputBorder: theme.mediumGray,
+                      inputText: '#111827',
+                      placeholderColor: '#4a4949'
+                    }}
+                  />
+                </div>
+
+                <PaymentSidebar>
+                  <PriceSummary
+                    style={{ 
+                      background: `linear-gradient(135deg, rgba(255, 87, 34, 0.06), rgba(255, 152, 0, 0.04))`,
+                      borderColor: theme.primary,
+                      padding: '1.5rem',
+                      borderRadius: '16px',
+                      marginTop: 0
+                    }}
+                  >        
+                    <PriceItem>
+                      <span>Trek Fee (per person)</span>
+                      <span>₹{trek?.numericPrice}</span>
+                    </PriceItem>
+                    
+                    <PriceItem>
+                      <span>Number of Participants</span>
+                      <span>× {formData.totalParticipants}</span>
+                    </PriceItem>
+                    
+                    <PriceItem>
+                      <span>Subtotal</span>
+                      <span>₹{(trek?.numericPrice * formData.totalParticipants).toFixed(2)}</span>
+                    </PriceItem>
+                    
+                    {activeCoupon && (
+                      <PriceItem style={{ color: '#059669' }}>
+                        <span>Discount ({activeCoupon.code})</span>
+                        <span>-₹{discountAmount.toFixed(2)}</span>
+                      </PriceItem>
+                    )}
+                    
+                    <PriceTotal>
+                      <span>Total</span>
+                      <span>₹{calculateTotalPrice()}</span>
+                    </PriceTotal>
+                  </PriceSummary>
+                </PaymentSidebar>
+              </PaymentStepLayout>
 
               {paymentError && (
                 <ErrorMessage>
