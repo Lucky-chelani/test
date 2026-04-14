@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import styled, { keyframes, css } from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { FiX, FiCalendar, FiUser, FiPhone, FiMessageSquare, FiCreditCard, FiCheck, FiAlertCircle, FiInfo } from 'react-icons/fi';
@@ -10,6 +10,16 @@ import CouponSection from './CouponSection';
 import emailService from '../services/emailService';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+
+const emailRegex = /^\S+@\S+\.\S+$/;
+const digitsOnly = (value) => String(value ?? '').replace(/\D/g, '');
+const isValidIndianMobile = (value) => digitsOnly(value).length === 10;
+const isValidAge = (value) => {
+  if (value === '' || value === null || value === undefined) return true; // optional
+  const n = Number(value);
+  if (!Number.isInteger(n)) return false;
+  return n >= 1 && n <= 100;
+};
 
 // Animations
 const fadeIn = keyframes`
@@ -59,6 +69,17 @@ const slideInFromRight = keyframes`
 const shimmer = keyframes`
   0% { background-position: -200px 0; }
   100% { background-position: calc(200px + 100%) 0; }
+`;
+
+const stepSwap = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 `;
 
 const pulse = keyframes`
@@ -318,6 +339,8 @@ const ModalBody = styled.div`
   @media (max-width: 480px) {
     padding: 1.25rem;
     gap: 1.5rem;
+    /* Make room for sticky mobile CTA (incl. safe area). */
+    padding-bottom: calc(1.25rem + 76px + env(safe-area-inset-bottom, 0px));
   }
 `;
 const TrekInfo = styled.div`
@@ -816,7 +839,7 @@ const Label = styled.label`
 // REPLACE Input
 const Input = styled.input`
   padding: 0.9rem 1.1rem;
-  border: 2px solid ${theme.mediumGray};
+  border: 2px solid ${props => (props.$invalid ? '#ef4444' : theme.mediumGray)};
   border-radius: 10px;
   font-size: 0.95rem;
   font-weight: 500;
@@ -832,14 +855,14 @@ const Input = styled.input`
   }
 
   &:focus {
-    border-color: ${theme.primary};
+    border-color: ${props => (props.$invalid ? '#ef4444' : theme.primary)};
     box-shadow: 
-      0 0 0 3px rgba(255, 112, 67, 0.12),
-      0 2px 8px rgba(255, 112, 67, 0.15);
+      0 0 0 3px ${props => (props.$invalid ? 'rgba(239, 68, 68, 0.14)' : 'rgba(255, 112, 67, 0.12)')},
+      0 2px 8px ${props => (props.$invalid ? 'rgba(239, 68, 68, 0.12)' : 'rgba(255, 112, 67, 0.15)')};
   }
   
   &:hover:not(:focus):not(:disabled) {
-    border-color: ${theme.primaryLight};
+    border-color: ${props => (props.$invalid ? '#ef4444' : theme.primaryLight)};
   }
   
   &:disabled {
@@ -852,7 +875,7 @@ const Input = styled.input`
 // REPLACE Select
 const Select = styled.select`
   padding: 0.9rem 1.1rem;
-  border: 2px solid ${theme.mediumGray};
+  border: 2px solid ${props => (props.$invalid ? '#ef4444' : theme.mediumGray)};
   border-radius: 10px;
   font-size: 0.95rem;
   font-weight: 500;
@@ -864,16 +887,20 @@ const Select = styled.select`
   color: ${theme.text};
 
   &:focus {
-    border-color: ${theme.primary};
+    border-color: ${props => (props.$invalid ? '#ef4444' : theme.primary)};
     box-shadow: 
-      0 0 0 3px rgba(255, 112, 67, 0.12),
-      0 2px 8px rgba(255, 112, 67, 0.15);
+      0 0 0 3px ${props => (props.$invalid ? 'rgba(239, 68, 68, 0.14)' : 'rgba(255, 112, 67, 0.12)')},
+      0 2px 8px ${props => (props.$invalid ? 'rgba(239, 68, 68, 0.12)' : 'rgba(255, 112, 67, 0.15)')};
   }
 `;
 const DateInput = styled(Input).attrs({ type: 'date' })``;
 const Textarea = styled(Input).attrs({ as: 'textarea' })`
   resize: vertical;
   min-height: 100px;
+`;
+
+const StepContent = styled.div`
+  animation: ${stepSwap} 220ms ease-out;
 `;
 
 const FieldHelpText = styled.div`
@@ -1182,6 +1209,11 @@ const ModalFooter = styled.div`
     flex-direction: column-reverse;
     padding: 1.25rem;
     gap: 0.75rem;
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -10px 30px rgba(2, 6, 23, 0.12);
   }
 `;
 
@@ -1938,6 +1970,13 @@ const BookingSummaryCard = styled.div`
   border-radius: 16px;
   border: 2px solid rgba(9, 10, 10, 0.12);
   margin-bottom: 1rem;
+
+  @media (min-width: 900px) {
+    position: sticky;
+    top: 0.75rem;
+    align-self: flex-start;
+    z-index: 1;
+  }
 `;
 
 const SummaryHeader = styled.div`
@@ -2439,6 +2478,7 @@ const PreviousButton = styled(Button)`
 // Main Component
 const BookingModal = ({ isOpen, onClose, trek, onBookingSuccess }) => {
   const navigate = useNavigate();
+  const modalBodyRef = useRef(null);
   const [step, setStep] = useState(1);
  // ✅ NEW: Separate form data from participant data
 const [formData, setFormData] = useState({
@@ -2589,10 +2629,11 @@ const formatDateForPopup = (dateStr) => {
 
 const handleParticipantSelect = (count) => {
   const currentParticipants = [...participants];
+  const clampedCount = Math.max(1, Math.min(10, Number(count) || 1));
   
-  if (count > currentParticipants.length) {
+  if (clampedCount > currentParticipants.length) {
     const newParticipants = [];
-    for (let i = currentParticipants.length; i < count; i++) {
+    for (let i = currentParticipants.length; i < clampedCount; i++) {
       newParticipants.push({
         participantId: `p${i + 1}`,
         name: '',
@@ -2603,12 +2644,37 @@ const handleParticipantSelect = (count) => {
       });
     }
     setParticipants([...currentParticipants, ...newParticipants]);
-  } else if (count < currentParticipants.length) {
-    setParticipants(currentParticipants.slice(0, count));
+  } else if (clampedCount < currentParticipants.length) {
+    setParticipants(currentParticipants.slice(0, clampedCount));
   }
   
-  setFormData(prev => ({ ...prev, totalParticipants: count }));
+  setFormData(prev => ({ ...prev, totalParticipants: clampedCount }));
   setIsParticipantCardOpen(false);
+
+  // Keep expanded state + completed state consistent when shrinking
+  if (clampedCount < currentParticipants.length) {
+    setCompletedBoxes(prev => {
+      const next = new Set();
+      prev.forEach((id) => {
+        if (id === 'primary') next.add(id);
+        if (id.startsWith('participant-')) {
+          const idx = Number(id.split('-')[1]);
+          if (Number.isFinite(idx) && idx < clampedCount) next.add(id);
+        }
+      });
+      return next;
+    });
+
+    setCurrentExpandedBox(prev => {
+      if (!prev) return prev;
+      if (prev === 'primary') return prev;
+      if (prev.startsWith('participant-')) {
+        const idx = Number(prev.split('-')[1]);
+        if (Number.isFinite(idx) && idx >= clampedCount) return null;
+      }
+      return prev;
+    });
+  }
 };
 
 const handleBoxClick = (boxId) => {
@@ -2644,10 +2710,22 @@ const handlePreviousBox = () => {
 
 const isBoxValid = (boxId) => {
   if (boxId === 'primary') {
-    return primaryBooker.name && primaryBooker.email && primaryBooker.contactNumber;
+    return (
+      primaryBooker.name?.trim() &&
+      primaryBooker.email?.trim() &&
+      emailRegex.test(primaryBooker.email) &&
+      primaryBooker.contactNumber?.trim() &&
+      isValidIndianMobile(primaryBooker.contactNumber)
+    );
   }
   const index = parseInt(boxId.split('-')[1]);
-  return participants[index]?.name?.trim() !== '';
+  const p = participants[index];
+  if (!p) return false;
+  const nameOk = p.name?.trim() !== '';
+  const emailOk = !p.email?.trim() || emailRegex.test(p.email);
+  const ageOk = isValidAge(p.age);
+  const emergencyOk = !p.emergencyContact?.trim() || isValidIndianMobile(p.emergencyContact);
+  return nameOk && emailOk && ageOk && emergencyOk;
 };
 
 
@@ -2872,59 +2950,104 @@ const isBoxValid = (boxId) => {
       }
     }
   }, [isOpen, availableDatesForCalendar, isDateAvailable]);
-  const validateForm = () => {
-  const newErrors = {};
+  const validateStep1 = ({ set = true } = {}) => {
+    const newErrors = {};
 
-  if (!formData.startDate) {
-    newErrors.startDate = "Start date is required";
-  } else if (!isDateAvailable(formData.startDate)) {
-    if (trek.availableDates && Array.isArray(trek.availableDates) && trek.availableDates.length > 0) {
-      const futureDates = trek.availableDates.filter(dateStr => {
-        const date = new Date(dateStr);
-        return date >= today;
-      });
-      
-      if (futureDates.length === 0) {
-        newErrors.startDate = "No dates are currently available for this trek.";
+    if (!formData.startDate) {
+      newErrors.startDate = "Start date is required";
+    } else if (!isDateAvailable(formData.startDate)) {
+      if (trek.availableDates && Array.isArray(trek.availableDates) && trek.availableDates.length > 0) {
+        const futureDates = trek.availableDates.filter(dateStr => {
+          const date = new Date(dateStr);
+          return date >= today;
+        });
+        
+        if (futureDates.length === 0) {
+          newErrors.startDate = "No dates are currently available for this trek.";
+        } else {
+          newErrors.startDate = "This date is not available for booking. Please select from the available dates.";
+        }
       } else {
-        newErrors.startDate = "This date is not available for booking. Please select from the available dates.";
+        newErrors.startDate = "Selected date is not available for booking.";
       }
-    } else {
-      newErrors.startDate = "Selected date is not available for booking.";
-    }
-  }
-  
-  // ✅ NEW: Validate primary booker
-  if (!primaryBooker.name) {
-    newErrors.primaryBooker_name = "Your name is required";
-  }
-  
-  if (!primaryBooker.email) {
-    newErrors.primaryBooker_email = "Your email is required";
-  } else if (!/\S+@\S+\.\S+/.test(primaryBooker.email)) {
-    newErrors.primaryBooker_email = "Email is invalid";
-  }
-  
-  if (!primaryBooker.contactNumber) {
-    newErrors.primaryBooker_contactNumber = "Contact number is required";
-  } else if (!/^\d{10}$/.test(primaryBooker.contactNumber)) {
-    newErrors.primaryBooker_contactNumber = "Contact number must be 10 digits";
-  }
-  
-  // ✅ NEW: Validate all participants
-  participants.forEach((participant, index) => {
-    if (!participant.name || participant.name.trim() === '') {
-      newErrors[`participant_${index}_name`] = `Participant ${index + 1} name is required`;
     }
     
-    if (participant.email && !/\S+@\S+\.\S+/.test(participant.email)) {
-      newErrors[`participant_${index}_email`] = `Invalid email for Participant ${index + 1}`;
+    if (!primaryBooker.name?.trim()) {
+      newErrors.primaryBooker_name = "Your name is required";
     }
-  });
-  
-  setErrors(newErrors);
-  return Object.keys(newErrors).length === 0;
-};
+    
+    if (!primaryBooker.email?.trim()) {
+      newErrors.primaryBooker_email = "Your email is required";
+    } else if (!emailRegex.test(primaryBooker.email)) {
+      newErrors.primaryBooker_email = "Email is invalid";
+    }
+    
+    if (!primaryBooker.contactNumber?.trim()) {
+      newErrors.primaryBooker_contactNumber = "Contact number is required";
+    } else if (!isValidIndianMobile(primaryBooker.contactNumber)) {
+      newErrors.primaryBooker_contactNumber = "Contact number must be 10 digits";
+    }
+    
+    participants.forEach((participant, index) => {
+      if (!participant.name || participant.name.trim() === '') {
+        newErrors[`participant_${index}_name`] = `Participant ${index + 1} name is required`;
+      }
+      
+      if (participant.email && participant.email.trim() && !emailRegex.test(participant.email)) {
+        newErrors[`participant_${index}_email`] = `Invalid email for Participant ${index + 1}`;
+      }
+
+      if (!isValidAge(participant.age)) {
+        newErrors[`participant_${index}_age`] = `Age must be between 1 and 100`;
+      }
+      
+      if (participant.emergencyContact && participant.emergencyContact.trim() && !isValidIndianMobile(participant.emergencyContact)) {
+        newErrors[`participant_${index}_emergencyContact`] = `Emergency contact must be 10 digits`;
+      }
+    });
+    
+    if (set) setErrors(newErrors);
+    return { isValid: Object.keys(newErrors).length === 0, newErrors };
+  };
+
+  const focusFirstInvalidField = useCallback((newErrors) => {
+    const container = modalBodyRef.current;
+    if (!container) return;
+
+    const errorKeys = Object.keys(newErrors || {});
+    if (errorKeys.length === 0) return;
+
+    // Deterministic priority order (primary booker first, then participants).
+    const order = [
+      'startDate',
+      'primaryBooker_name',
+      'primaryBooker_email',
+      'primaryBooker_contactNumber',
+      ...errorKeys.filter(k => k.startsWith('participant_')),
+      ...errorKeys
+    ];
+
+    const key = order.find(k => newErrors?.[k]) || errorKeys[0];
+
+    // Try to locate by explicit data-field, otherwise fallback to aria-invalid.
+    const byKey = container.querySelector(`[data-field="${CSS.escape(key)}"]`);
+    const el = byKey || container.querySelector('[aria-invalid="true"]');
+    if (!el) return;
+
+    // Smooth scroll inside the modal body.
+    try {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    } catch {
+      // ignore
+    }
+
+    // Focus after scroll begins; avoid blocking on mobile.
+    window.setTimeout(() => {
+      if (typeof el.focus === 'function') {
+        el.focus({ preventScroll: true });
+      }
+    }, 250);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -3103,8 +3226,11 @@ const handlePrimaryBookerChange = (field, value) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    if (validateForm()) {
+    const { isValid, newErrors } = validateStep1({ set: true });
+    if (isValid) {
       setStep(2);
+    } else {
+      requestAnimationFrame(() => focusFirstInvalidField(newErrors));
     }
   };
   const calculateTotalPrice = useCallback(() => {
@@ -3130,6 +3256,14 @@ const handlePrimaryBookerChange = (field, value) => {
   }; 
    const handlePaymentProcess = async () => {
   try {
+    const { isValid, newErrors } = validateStep1({ set: true });
+    if (!isValid) {
+      setStep(1);
+      setPaymentError('Please fix the highlighted fields before proceeding to payment.');
+      requestAnimationFrame(() => focusFirstInvalidField(newErrors));
+      return;
+    }
+
     setIsProcessingPayment(true);
     setPaymentError(null);
     
@@ -3499,6 +3633,9 @@ setParticipants([
     };
   }, [bookingId, handlePaymentSuccess, handlePaymentFailure]);
 
+  const canProceedToPayment = validateStep1({ set: false }).isValid;
+  const isPaymentButtonDisabled = !canProceedToPayment || isProcessingPayment || paymentSuccess;
+
   if (!isOpen) return null;
 
   return (
@@ -3710,7 +3847,7 @@ setParticipants([
             </CloseButton>
           </ModalHeader>
         
-        <ModalBody>
+        <ModalBody ref={modalBodyRef}>
           {/* Step Indicator */}
           <StepIndicator>
             <Step active={step === 1}>
@@ -3721,8 +3858,8 @@ setParticipants([
             </Step>
             <StepConnector completed={step > 1} />
             <Step active={step === 2}>
-              <StepNumber active={step === 2}>
-                2
+              <StepNumber active={step === 2} completed={paymentSuccess}>
+                {paymentSuccess ? <FiCheck /> : '2'}
               </StepNumber>
               <span>Payment</span>
             </Step>
@@ -3740,7 +3877,8 @@ setParticipants([
  {/* Booking Form - Step 1 */}
 
 {step === 1 && (
-  <Form onSubmit={handleSubmit}>
+  <StepContent>
+    <Form onSubmit={handleSubmit}>
     {/* FIRST ROW: Image + Date/Participants Cards */}
     <FirstRow>
       {/* Left: Trek Image */}
@@ -3758,6 +3896,8 @@ setParticipants([
         <InteractiveCard 
           isOpen={isDateCardOpen} 
           onClick={handleDateCardToggle}
+          data-field="startDate"
+          aria-invalid={Boolean(errors.startDate)}
         >
           <CardHeader>
             <CardLabel>
@@ -3852,6 +3992,9 @@ setParticipants([
             value={primaryBooker.name}
             onChange={(e) => handlePrimaryBookerChange('name', e.target.value)}
             placeholder="Enter your full name"
+  data-field="primaryBooker_name"
+            $invalid={Boolean(errors.primaryBooker_name)}
+            aria-invalid={Boolean(errors.primaryBooker_name)}
             onClick={(e) => e.stopPropagation()}
           />
           {errors.primaryBooker_name && <ErrorSpan>{errors.primaryBooker_name}</ErrorSpan>}
@@ -3865,6 +4008,9 @@ setParticipants([
               value={primaryBooker.email}
               onChange={(e) => handlePrimaryBookerChange('email', e.target.value)}
               placeholder="your.email@example.com"
+  data-field="primaryBooker_email"
+              $invalid={Boolean(errors.primaryBooker_email)}
+              aria-invalid={Boolean(errors.primaryBooker_email)}
               onClick={(e) => e.stopPropagation()}
             />
             {errors.primaryBooker_email && <ErrorSpan>{errors.primaryBooker_email}</ErrorSpan>}
@@ -3875,8 +4021,12 @@ setParticipants([
             <Input 
               type="tel" 
               value={primaryBooker.contactNumber}
-              onChange={(e) => handlePrimaryBookerChange('contactNumber', e.target.value)}
+              onChange={(e) => handlePrimaryBookerChange('contactNumber', digitsOnly(e.target.value))}
               placeholder="10-digit number"
+              inputMode="numeric"
+  data-field="primaryBooker_contactNumber"
+              $invalid={Boolean(errors.primaryBooker_contactNumber)}
+              aria-invalid={Boolean(errors.primaryBooker_contactNumber)}
               onClick={(e) => e.stopPropagation()}
             />
             {errors.primaryBooker_contactNumber && <ErrorSpan>{errors.primaryBooker_contactNumber}</ErrorSpan>}
@@ -3933,6 +4083,9 @@ setParticipants([
                 onChange={(e) => handleParticipantChange(index, 'name', e.target.value)}
                 placeholder="Full name"
                 disabled={participant.isPrimaryBooker}
+  data-field={`participant_${index}_name`}
+                $invalid={Boolean(errors[`participant_${index}_name`])}
+                aria-invalid={Boolean(errors[`participant_${index}_name`])}
                 onClick={(e) => e.stopPropagation()}
               />
               {errors[`participant_${index}_name`] && (
@@ -3948,8 +4101,14 @@ setParticipants([
                 onChange={(e) => handleParticipantChange(index, 'email', e.target.value)}
                 placeholder="Email"
                 disabled={participant.isPrimaryBooker}
+  data-field={`participant_${index}_email`}
+                $invalid={Boolean(errors[`participant_${index}_email`])}
+                aria-invalid={Boolean(errors[`participant_${index}_email`])}
                 onClick={(e) => e.stopPropagation()}
               />
+              {errors[`participant_${index}_email`] && (
+                <ErrorSpan>{errors[`participant_${index}_email`]}</ErrorSpan>
+              )}
             </FormGroup>
           </FieldRow>
           
@@ -3963,8 +4122,14 @@ setParticipants([
                 placeholder="Age"
                 min="1"
                 max="100"
+  data-field={`participant_${index}_age`}
+                $invalid={Boolean(errors[`participant_${index}_age`])}
+                aria-invalid={Boolean(errors[`participant_${index}_age`])}
                 onClick={(e) => e.stopPropagation()}
               />
+              {errors[`participant_${index}_age`] && (
+                <ErrorSpan>{errors[`participant_${index}_age`]}</ErrorSpan>
+              )}
             </FormGroup>
             
             <FormGroup>
@@ -3972,10 +4137,17 @@ setParticipants([
               <Input 
                 type="tel" 
                 value={participant.emergencyContact}
-                onChange={(e) => handleParticipantChange(index, 'emergencyContact', e.target.value)}
+                onChange={(e) => handleParticipantChange(index, 'emergencyContact', digitsOnly(e.target.value))}
                 placeholder="Phone number"
+                inputMode="numeric"
+  data-field={`participant_${index}_emergencyContact`}
+                $invalid={Boolean(errors[`participant_${index}_emergencyContact`])}
+                aria-invalid={Boolean(errors[`participant_${index}_emergencyContact`])}
                 onClick={(e) => e.stopPropagation()}
               />
+              {errors[`participant_${index}_emergencyContact`] && (
+                <ErrorSpan>{errors[`participant_${index}_emergencyContact`]}</ErrorSpan>
+              )}
             </FormGroup>
           </FieldRow>
           
@@ -4030,11 +4202,12 @@ setParticipants([
         style={{ minHeight: '80px' }}
       />
     </FormGroup>
-  </Form>
+    </Form>
+  </StepContent>
 )}    
                    {/* Payment Section - Step 2 */}
           {step === 2 && (
-            <>
+            <StepContent>
               {/* Secure Payment Banner */}
               <SecurePaymentBanner>
                 <FiCheck />
@@ -4154,7 +4327,7 @@ setParticipants([
                   </div>
                 </SuccessMessage>
               )}
-            </>
+            </StepContent>
           )}
         </ModalBody>
         
@@ -4176,7 +4349,7 @@ setParticipants([
               <PaymentButton 
                 type="button" 
                 onClick={handlePaymentProcess}
-                disabled={isProcessingPayment || paymentSuccess}
+                disabled={isPaymentButtonDisabled}
               >
                 {isProcessingPayment ? (
                   <LoadingIndicator />
@@ -4188,7 +4361,7 @@ setParticipants([
                 ) : (
                   <>
                     <FiCreditCard />
-                    Pay Now
+                    Pay ₹{Number(calculateTotalPrice()).toFixed(0)}
                   </>
                 )}
               </PaymentButton>
