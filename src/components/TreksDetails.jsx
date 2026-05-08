@@ -930,8 +930,7 @@ export default function TrekDetails() {
   const waMsg = encodeURIComponent(
     `Hi! I'm interested in booking the ${title} trek. Could you share more details?`,
   );
-  const waHref = `https://wa.me/?text=${waMsg}`;
-
+  const waHref = `https://wa.me/919479747915?text=${(waMsg)}`;
   const sections = [
     { id: "overview", label: "Overview" },
     { id: "highlights", label: "Highlights" },
@@ -992,10 +991,13 @@ export default function TrekDetails() {
           onBook={handleBook}
         />
 
+
         <Hero
           title={title}
           description={description}
-          image={image}
+          // Pass trek images for carousel (desktop auto-sliding background)
+          carouselImages={images.length >= 2 ? images : undefined}
+          heroImage={image}
           location={trekLocation}
           country={country}
           difficulty={difficulty}
@@ -1005,11 +1007,9 @@ export default function TrekDetails() {
           reviewCount={reviewCount}
           capacity={capacity}
           price={price}
-          imageLoaded={imageLoaded}
-          onImageLoad={() => setImageLoaded(true)}
-          onBook={handleBook}
           onBookNow={handleBook}
-          onViewItinerary={handleViewItinerary}
+          tourName={`${trekLocation} Trek`}
+          tourDate={season}
           organizerVerified={trek?.organizerVerified}
         />
 
@@ -1121,10 +1121,14 @@ export default function TrekDetails() {
             }}
           />
         </div>
-
         <Container>
           <div ref={(el) => (sectionRefs.current.reviews = el)} data-section="reviews">
-            <ReviewsSection reviews={reviews} rating={rating} />
+            <ReviewsSection
+              reviews={reviews}
+              rating={rating}
+              trekId={id}          /* ← ADD THIS - critical for saving */
+              trekTitle={title}    /* ← ADD THIS */
+            />
           </div>
         </Container>
 

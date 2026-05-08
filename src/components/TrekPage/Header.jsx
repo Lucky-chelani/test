@@ -26,8 +26,8 @@ const tokens = {
     primaryGlow: "rgba(249, 115, 22, 0.15)",
   },
   radius: { sm: "8px", md: "12px", lg: "16px", pill: "50px" },
-  transition: { 
-    fast: "all 0.15s ease", 
+  transition: {
+    fast: "all 0.15s ease",
     base: "all 0.25s ease",
     spring: "all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
   },
@@ -35,70 +35,30 @@ const tokens = {
 
 // ─── Keyframes ────────────────────────────────────────────────────────────────
 const slideDown = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(-100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-100%); }
+  to { opacity: 1; transform: translateY(0); }
 `;
 
 const fadeIn = keyframes`
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 `;
 
 const shimmer = keyframes`
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 `;
 
 const pulseGlow = keyframes`
-  0%, 100% {
-    box-shadow: 0 4px 14px rgba(249, 115, 22, 0.3);
-  }
-  50% {
-    box-shadow: 0 4px 20px rgba(249, 115, 22, 0.5);
-  }
+  0%, 100% { box-shadow: 0 4px 14px rgba(249, 115, 22, 0.3); }
+  50% { box-shadow: 0 4px 20px rgba(249, 115, 22, 0.5); }
 `;
 
 const heartBeat = keyframes`
-  0%, 100% {
-    transform: scale(1);
-  }
-  25% {
-    transform: scale(1.2);
-  }
-  50% {
-    transform: scale(0.95);
-  }
-  75% {
-    transform: scale(1.1);
-  }
-`;
-
-const iconPop = keyframes`
-  0% {
-    transform: scale(0.8);
-    opacity: 0;
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.2); }
+  50% { transform: scale(0.95); }
+  75% { transform: scale(1.1); }
 `;
 
 // ─── Styled Components ────────────────────────────────────────────────────────
@@ -114,7 +74,6 @@ const Nav = styled.nav`
   animation: ${slideDown} 0.6s ease-out;
   transition: ${tokens.transition.base};
 
-  /* ADD THIS MEDIA QUERY */
   @media (max-width: 768px) {
     display: none;
   }
@@ -171,6 +130,7 @@ const NavInner = styled.div`
   }
 `;
 
+// Brand shows ONLY the mountain icon + "Treks" — no trek title string
 const NavBrand = styled.button`
   display: flex;
   align-items: center;
@@ -183,10 +143,6 @@ const NavBrand = styled.button`
   font-weight: 700;
   font-size: 1rem;
   transition: ${tokens.transition.spring};
-  max-width: 300px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   animation: ${fadeIn} 0.6s ease 0.2s both;
   position: relative;
   padding: 0.5rem 0;
@@ -223,11 +179,6 @@ const NavBrand = styled.button`
     transition: ${tokens.transition.spring};
     filter: drop-shadow(0 0 8px ${tokens.colors.primaryGlow});
   }
-
-  @media (max-width: 640px) {
-    font-size: 0.875rem;
-    max-width: 150px;
-  }
 `;
 
 const NavBreadcrumb = styled.div`
@@ -263,10 +214,7 @@ const NavBreadcrumbItem = styled.span`
 
   &:hover {
     color: ${tokens.colors.primary};
-
-    &::after {
-      width: 100%;
-    }
+    &::after { width: 100%; }
   }
 `;
 
@@ -279,6 +227,10 @@ const NavBreadcrumbSep = styled.span`
 const NavBreadcrumbActive = styled.span`
   color: ${tokens.colors.primary};
   font-weight: 600;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   position: relative;
 
   &::before {
@@ -349,9 +301,7 @@ const NavIconBtn = styled.button`
       animation: ${shimmer} 1.5s ease infinite;
     }
 
-    svg {
-      transform: scale(1.1);
-    }
+    svg { transform: scale(1.1); }
   }
 
   &:active {
@@ -420,29 +370,10 @@ const NavCTA = styled.button`
     transition: left 0.5s ease;
   }
 
-  &::after {
-    content: "";
-    position: absolute;
-    inset: -2px;
-    background: linear-gradient(
-      135deg,
-      ${tokens.colors.primaryLight},
-      ${tokens.colors.primary},
-      ${tokens.colors.primaryDark}
-    );
-    border-radius: inherit;
-    z-index: -1;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
   &:hover {
     transform: translateY(-2px) scale(1.02);
     box-shadow: 0 8px 25px rgba(249, 115, 22, 0.4);
-
-    &::before {
-      left: 100%;
-    }
+    &::before { left: 100%; }
   }
 
   &:active {
@@ -462,7 +393,7 @@ const NavCTA = styled.button`
 
 const MobileBookBtn = styled(NavCTA)`
   display: none;
-  
+
   @media (max-width: 480px) {
     display: flex;
     align-items: center;
@@ -473,7 +404,6 @@ const MobileBookBtn = styled(NavCTA)`
   }
 `;
 
-// ─── Tooltip ──────────────────────────────────────────────────────────────────
 const Tooltip = styled.span`
   position: absolute;
   bottom: -36px;
@@ -514,24 +444,31 @@ const Tooltip = styled.span`
 `;
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function Header({ 
-  title, 
-  scrolled, 
-  isLiked, 
-  onLike, 
-  onShare, 
-  onBook 
+export default function Header({
+  title,       // Still accepted as prop for breadcrumb only
+  scrolled,
+  isLiked,
+  onLike,
+  onShare,
+  onBook
 }) {
   const navigate = useNavigate();
 
   return (
     <Nav $scrolled={scrolled}>
       <NavInner>
+
+        {/* 
+          Brand: Shows ONLY icon + "Treks" label.
+          The trek title string is intentionally removed from here.
+          Title still appears in the breadcrumb trail below.
+        */}
         <NavBrand onClick={() => navigate("/")}>
           <FaMountain />
-          {title}
+          Treks
         </NavBrand>
 
+        {/* Breadcrumb: Home > Treks > [Trek Title] */}
         <NavBreadcrumb>
           <NavBreadcrumbItem onClick={() => navigate("/")}>
             Home
@@ -540,8 +477,12 @@ export default function Header({
           <NavBreadcrumbItem onClick={() => navigate("/treks")}>
             Treks
           </NavBreadcrumbItem>
-          <NavBreadcrumbSep>›</NavBreadcrumbSep>
-          <NavBreadcrumbActive>{title}</NavBreadcrumbActive>
+          {title && (
+            <>
+              <NavBreadcrumbSep>›</NavBreadcrumbSep>
+              <NavBreadcrumbActive>{title}</NavBreadcrumbActive>
+            </>
+          )}
         </NavBreadcrumb>
 
         <NavActions>
@@ -549,17 +490,17 @@ export default function Header({
             <FaArrowLeft />
             <Tooltip>Go Back</Tooltip>
           </NavIconBtn>
-          
+
           <NavIconBtn onClick={onShare}>
             <FaShare />
             <Tooltip>Share Trek</Tooltip>
           </NavIconBtn>
-          
+
           <NavIconBtn onClick={onLike} $liked={isLiked}>
             {isLiked ? <FaHeart /> : <FiHeart />}
             <Tooltip>{isLiked ? "Remove from Wishlist" : "Add to Wishlist"}</Tooltip>
           </NavIconBtn>
-          
+
           <NavCTA onClick={onBook}>Book Now</NavCTA>
           <MobileBookBtn onClick={onBook}>Book</MobileBookBtn>
         </NavActions>

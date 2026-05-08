@@ -1,19 +1,24 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import styled, { keyframes, css } from "styled-components";
-import { motion } from "framer-motion";
-import { 
-  FaStar, 
-  FaQuoteLeft, 
-  FaCheckCircle, 
-  FaThumbsUp, 
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FaStar,
+  FaQuoteLeft,
+  FaCheckCircle,
+  FaThumbsUp,
   FaHeart,
-  FaUserCheck,
   FaMedal,
   FaAward,
   FaChevronDown,
-  FaChevronUp
+  FaChevronUp,
+  FaTrash,
+  FaTimes, // <--- Import FaTimes here
+  FaExclamationTriangle,
 } from "react-icons/fa";
-import { FiTrendingUp, FiShield, FiUsers, FiCamera } from "react-icons/fi";
+import { FiTrendingUp, FiShield, FiUsers, FiMoreVertical } from "react-icons/fi";
+import { db, auth } from "../../firebase";
+import { doc, deleteDoc } from "firebase/firestore";
+import ReviewForm from "./ReviewForm";
 
 // ─── Tokens ───────────────────────────────────────────────────────────────────
 const tokens = {
@@ -21,7 +26,6 @@ const tokens = {
     bg: "#0a0a0a",
     bgCard: "#121212",
     bgElevated: "#1a1a1a",
-    bgHover: "#1f1f1f",
     border: "rgba(255,255,255,0.07)",
     borderHover: "rgba(255,255,255,0.15)",
     primary: "#f97316",
@@ -36,8 +40,11 @@ const tokens = {
     goldGlow: "rgba(251, 191, 36, 0.2)",
     success: "#22c55e",
     successGlow: "rgba(34, 197, 94, 0.15)",
-    glass: "rgba(255, 255, 255, 0.08)",
-    glassBorder: "rgba(255, 255, 255, 0.12)",
+    error: "#ef4444",
+    errorGlow: "rgba(239, 68, 68, 0.08)",
+    errorBorder: "rgba(239, 68, 68, 0.3)",
+    glass: "rgba(255,255,255,0.08)",
+    glassBorder: "rgba(255,255,255,0.12)",
   },
   radius: { sm: "8px", md: "12px", lg: "16px", xl: "20px", pill: "100px" },
   transition: {
@@ -53,105 +60,56 @@ const tokens = {
 };
 
 // ─── Keyframes ────────────────────────────────────────────────────────────────
-const fadeUp = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(24px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-`;
-
 const shimmer = keyframes`
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 `;
 
 const float = keyframes`
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
 `;
 
 const pulse = keyframes`
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 0.9;
-  }
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.9; }
 `;
 
 const glow = keyframes`
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(249, 115, 22, 0.2);
-  }
-  50% {
-    box-shadow: 0 0 40px rgba(249, 115, 22, 0.4);
-  }
+  0%, 100% { box-shadow: 0 0 20px rgba(249, 115, 22, 0.2); }
+  50% { box-shadow: 0 0 40px rgba(249, 115, 22, 0.4); }
 `;
 
 const starPop = keyframes`
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.3);
-  }
-  100% {
-    transform: scale(1);
-  }
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
 `;
 
 const slideIn = keyframes`
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
 `;
 
 const heartBeat = keyframes`
-  0%, 100% {
-    transform: scale(1);
-  }
-  25% {
-    transform: scale(1.1);
-  }
-  50% {
-    transform: scale(1);
-  }
-  75% {
-    transform: scale(1.1);
-  }
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.1); }
+  50% { transform: scale(1); }
+  75% { transform: scale(1.1); }
 `;
 
-const countUp = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+const newReviewPop = keyframes`
+  0% { opacity: 0; transform: translateY(-16px) scale(0.97); }
+  60% { transform: translateY(4px) scale(1.01); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 `;
 
-// ─── Framer Motion Variants ───────────────────────────────────────────────────
+const spin = keyframes`
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+`;
+
+// ─── Framer Variants ──────────────────────────────────────────────────────────
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -169,8 +127,8 @@ const itemVariants = {
   },
 };
 
-// ─── Styled Components ────────────────────────────────────────────────────────
-const ReviewsSection = styled(motion.section)`
+// ─── Main Section ─────────────────────────────────────────────────────────────
+const Section = styled(motion.section)`
   background: ${tokens.colors.bg};
   padding: 0;
   margin: 3rem 0;
@@ -180,11 +138,7 @@ const ReviewsSection = styled(motion.section)`
 const SectionHeader = styled(motion.div)`
   margin-bottom: 3rem;
   text-align: center;
-  position: relative;
-
-  @media (max-width: 768px) {
-    margin-bottom: 2rem;
-  }
+  @media (max-width: 768px) { margin-bottom: 2rem; }
 `;
 
 const SectionBadge = styled.div`
@@ -192,7 +146,7 @@ const SectionBadge = styled.div`
   align-items: center;
   gap: 0.5rem;
   padding: 0.625rem 1.5rem;
-  background: linear-gradient(135deg, ${tokens.colors.primaryGlow}, rgba(249, 115, 22, 0.25));
+  background: linear-gradient(135deg, ${tokens.colors.primaryGlow}, rgba(249,115,22,0.25));
   border: 1px solid ${tokens.colors.primaryBorder};
   border-radius: ${tokens.radius.pill};
   font-family: "JetBrains Mono", monospace;
@@ -203,11 +157,7 @@ const SectionBadge = styled.div`
   text-transform: uppercase;
   margin-bottom: 1.25rem;
   animation: ${float} 3s ease-in-out infinite;
-
-  svg {
-    font-size: 0.875rem;
-    animation: ${pulse} 2s ease-in-out infinite;
-  }
+  svg { font-size: 0.875rem; animation: ${pulse} 2s ease-in-out infinite; }
 `;
 
 const SectionTitle = styled.h2`
@@ -217,17 +167,14 @@ const SectionTitle = styled.h2`
   color: ${tokens.colors.textPrimary};
   margin-bottom: 0.875rem;
   line-height: 1.2;
-
   span {
     background: linear-gradient(135deg, ${tokens.colors.primary}, ${tokens.colors.primaryLight});
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-
-  @media (max-width: 768px) {
-    font-size: 2rem;
-  }
+  @media (max-width: 768px) { font-size: 2rem; }
+  @media (max-width: 480px) { font-size: 1.625rem; }
 `;
 
 const SectionSubtitle = styled.p`
@@ -236,12 +183,11 @@ const SectionSubtitle = styled.p`
   max-width: 600px;
   margin: 0 auto;
   line-height: 1.7;
-
-  @media (max-width: 768px) {
-    font-size: 1rem;
-  }
+  @media (max-width: 768px) { font-size: 1rem; }
+  @media (max-width: 480px) { font-size: 0.875rem; padding: 0 0.5rem; }
 `;
 
+// ─── Overall Rating ───────────────────────────────────────────────────────────
 const OverallRatingBox = styled(motion.div)`
   display: flex;
   align-items: center;
@@ -260,33 +206,19 @@ const OverallRatingBox = styled(motion.div)`
   &::before {
     content: "";
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    top: 0; left: 0; right: 0;
     height: 3px;
     background: linear-gradient(90deg, ${tokens.colors.primary}, ${tokens.colors.primaryLight}, ${tokens.colors.gold});
     background-size: 200% 100%;
     animation: ${shimmer} 3s linear infinite;
   }
 
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at 30% 50%, ${tokens.colors.primaryGlow} 0%, transparent 50%);
-    pointer-events: none;
-  }
-
   @media (max-width: 640px) {
     flex-direction: column;
     gap: 1.5rem;
-    padding: 2rem;
+    padding: 1.75rem 1.5rem;
+    margin: 2rem 0 2.5rem;
   }
-`;
-
-const RatingNumberWrapper = styled.div`
-  position: relative;
-  z-index: 1;
 `;
 
 const RatingNumber = styled.div`
@@ -299,11 +231,9 @@ const RatingNumber = styled.div`
   background-clip: text;
   line-height: 1;
   animation: ${glow} 3s ease-in-out infinite;
-  filter: drop-shadow(0 0 30px ${tokens.colors.primaryGlow});
-
-  @media (max-width: 640px) {
-    font-size: 4rem;
-  }
+  position: relative;
+  z-index: 1;
+  @media (max-width: 640px) { font-size: 3.5rem; }
 `;
 
 const RatingMax = styled.span`
@@ -317,20 +247,14 @@ const RatingMeta = styled.div`
   text-align: left;
   position: relative;
   z-index: 1;
-
-  @media (max-width: 640px) {
-    text-align: center;
-  }
+  @media (max-width: 640px) { text-align: center; }
 `;
 
 const RatingStars = styled.div`
   display: flex;
   gap: 6px;
   margin-bottom: 0.75rem;
-
-  @media (max-width: 640px) {
-    justify-content: center;
-  }
+  @media (max-width: 640px) { justify-content: center; }
 `;
 
 const Star = styled.span`
@@ -338,41 +262,27 @@ const Star = styled.span`
   color: ${(p) => (p.$filled ? tokens.colors.gold : tokens.colors.border)};
   transition: ${tokens.transition.spring};
   text-shadow: ${(p) => (p.$filled ? `0 0 12px ${tokens.colors.goldGlow}` : "none")};
-  cursor: pointer;
-
-  &:hover {
-    transform: scale(1.2);
-    animation: ${starPop} 0.3s ease;
-  }
+  &:hover { transform: scale(1.2); animation: ${starPop} 0.3s ease; }
 `;
 
 const RatingText = styled.div`
   font-family: "JetBrains Mono", monospace;
   font-size: 0.875rem;
   color: ${tokens.colors.textMuted};
-  letter-spacing: 0.02em;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-
-  svg {
-    color: ${tokens.colors.success};
-    font-size: 0.875rem;
-  }
+  @media (max-width: 640px) { justify-content: center; font-size: 0.8125rem; }
+  svg { color: ${tokens.colors.success}; font-size: 0.875rem; }
 `;
 
 const TrustBadges = styled.div`
   display: flex;
-  justify-content: center;
   gap: 1.5rem;
   margin-top: 1rem;
   padding-top: 1rem;
   border-top: 1px solid ${tokens.colors.border};
-
-  @media (max-width: 640px) {
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
+  @media (max-width: 640px) { flex-wrap: wrap; justify-content: center; gap: 0.75rem; }
 `;
 
 const TrustBadge = styled.div`
@@ -381,14 +291,10 @@ const TrustBadge = styled.div`
   gap: 0.375rem;
   font-size: 0.75rem;
   color: ${tokens.colors.textMuted};
-
-  svg {
-    color: ${tokens.colors.success};
-    font-size: 0.875rem;
-  }
+  svg { color: ${tokens.colors.success}; font-size: 0.875rem; }
 `;
 
-// ─── Rating Bars Section ──────────────────────────────────────────────────────
+// ─── Rating Bars ──────────────────────────────────────────────────────────────
 const RatingBarsSection = styled(motion.div)`
   background: linear-gradient(135deg, ${tokens.colors.bgCard}, ${tokens.colors.bgElevated});
   border: 1px solid ${tokens.colors.border};
@@ -398,29 +304,16 @@ const RatingBarsSection = styled(motion.div)`
   box-shadow: ${tokens.shadows.card};
   position: relative;
   overflow: hidden;
-
   &::before {
     content: "";
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    top: 0; left: 0; right: 0;
     height: 2px;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      ${tokens.colors.primary}50,
-      ${tokens.colors.primaryLight},
-      ${tokens.colors.primary}50,
-      transparent
-    );
+    background: linear-gradient(90deg, transparent, ${tokens.colors.primary}50, ${tokens.colors.primaryLight}, ${tokens.colors.primary}50, transparent);
     background-size: 200% 100%;
     animation: ${shimmer} 3s linear infinite;
   }
-
-  @media (max-width: 768px) {
-    padding: 2rem 1.5rem;
-  }
+  @media (max-width: 768px) { padding: 1.75rem 1.25rem; }
 `;
 
 const RatingBarsHeader = styled.div`
@@ -430,11 +323,7 @@ const RatingBarsHeader = styled.div`
   margin-bottom: 2rem;
   flex-wrap: wrap;
   gap: 1rem;
-
-  @media (max-width: 768px) {
-    flex-direction: column;
-    text-align: center;
-  }
+  @media (max-width: 768px) { flex-direction: column; text-align: center; }
 `;
 
 const RatingBarsTitle = styled.h3`
@@ -446,15 +335,8 @@ const RatingBarsTitle = styled.h3`
   align-items: center;
   gap: 0.75rem;
   margin: 0;
-
-  svg {
-    color: ${tokens.colors.primary};
-    font-size: 1.25rem;
-  }
-
-  @media (max-width: 768px) {
-    font-size: 1.25rem;
-  }
+  svg { color: ${tokens.colors.primary}; }
+  @media (max-width: 768px) { font-size: 1.25rem; }
 `;
 
 const ExcellentBadge = styled.div`
@@ -463,26 +345,18 @@ const ExcellentBadge = styled.div`
   gap: 0.5rem;
   padding: 0.5rem 1rem;
   background: ${tokens.colors.successGlow};
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  border: 1px solid rgba(34,197,94,0.3);
   border-radius: ${tokens.radius.pill};
   font-size: 0.8125rem;
   font-weight: 600;
   color: ${tokens.colors.success};
-
-  svg {
-    font-size: 0.875rem;
-  }
 `;
 
 const RatingBarsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1.5rem 3rem;
-
-  @media (max-width: 900px) {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
-  }
+  @media (max-width: 900px) { grid-template-columns: 1fr; gap: 1.25rem; }
 `;
 
 const RatingBarItem = styled(motion.div)`
@@ -495,10 +369,7 @@ const RatingBarItem = styled(motion.div)`
   animation: ${slideIn} 0.5s ease-out;
   animation-delay: ${({ $index }) => $index * 0.1}s;
   animation-fill-mode: both;
-
-  &:hover {
-    background: ${tokens.colors.glass};
-  }
+  &:hover { background: ${tokens.colors.glass}; }
 `;
 
 const RatingBarIcon = styled.div`
@@ -513,7 +384,6 @@ const RatingBarIcon = styled.div`
   font-size: 1.125rem;
   flex-shrink: 0;
   transition: ${tokens.transition.spring};
-
   ${RatingBarItem}:hover & {
     transform: scale(1.1) rotate(-5deg);
     background: linear-gradient(135deg, ${tokens.colors.primary}, ${tokens.colors.primaryDark});
@@ -531,7 +401,6 @@ const RatingBarLabel = styled.div`
   color: ${tokens.colors.textSecondary};
   margin-bottom: 0.5rem;
   display: flex;
-  align-items: center;
   justify-content: space-between;
 `;
 
@@ -541,31 +410,13 @@ const RatingBarTrack = styled.div`
   border-radius: ${tokens.radius.pill};
   overflow: hidden;
   border: 1px solid ${tokens.colors.border};
-  position: relative;
 `;
 
 const RatingBarFill = styled(motion.div)`
   height: 100%;
   background: linear-gradient(90deg, ${tokens.colors.primary}, ${tokens.colors.primaryLight});
   border-radius: ${tokens.radius.pill};
-  position: relative;
   box-shadow: 0 0 15px ${tokens.colors.primaryGlow};
-
-  &::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.3),
-      transparent
-    );
-    animation: ${shimmer} 2s infinite;
-  }
 `;
 
 const RatingBarValue = styled.span`
@@ -581,15 +432,8 @@ const ReviewsGrid = styled(motion.div)`
   grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
   margin-top: 2rem;
-
-  @media (max-width: 1100px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (max-width: 640px) {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
-  }
+  @media (max-width: 1100px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 640px) { grid-template-columns: 1fr; gap: 1.25rem; }
 `;
 
 const ReviewCard = styled(motion.div)`
@@ -601,12 +445,16 @@ const ReviewCard = styled(motion.div)`
   transition: ${tokens.transition.base};
   overflow: hidden;
 
+  /* NEW review only gets a brief entry animation — no permanent glow */
+  ${({ $isNew }) => $isNew && css`
+    animation: ${newReviewPop} 0.55s cubic-bezier(0.34,1.56,0.64,1) both;
+  `}
+
+  /* Top line — only on hover (same as all other cards) */
   &::before {
     content: "";
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    top: 0; left: 0; right: 0;
     height: 3px;
     background: linear-gradient(90deg, ${tokens.colors.primary}, ${tokens.colors.primaryLight});
     transform: scaleX(0);
@@ -614,6 +462,7 @@ const ReviewCard = styled(motion.div)`
     transition: transform 0.4s ease;
   }
 
+  /* Glow background — only on hover */
   &::after {
     content: "";
     position: absolute;
@@ -624,6 +473,7 @@ const ReviewCard = styled(motion.div)`
     pointer-events: none;
   }
 
+  /* All hover effects — same for ALL cards including new ones */
   &:hover {
     border-color: ${tokens.colors.primaryBorder};
     transform: translateY(-6px);
@@ -637,6 +487,29 @@ const ReviewCard = styled(motion.div)`
       opacity: 1;
     }
   }
+
+  @media (max-width: 640px) {
+    padding: 1.25rem;
+  }
+`;
+
+const NewBadge = styled.div`
+  position: absolute;
+  top: 0.875rem;
+  left: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.6rem;
+  background: ${tokens.colors.primaryGlow};
+  border: 1px solid ${tokens.colors.primaryBorder};
+  border-radius: ${tokens.radius.pill};
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: ${tokens.colors.primary};
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  z-index: 3;
 `;
 
 const QuoteIcon = styled.div`
@@ -647,11 +520,7 @@ const QuoteIcon = styled.div`
   color: ${tokens.colors.primary};
   opacity: 0.2;
   transition: ${tokens.transition.base};
-
-  ${ReviewCard}:hover & {
-    opacity: 0.4;
-    transform: scale(1.1) rotate(-5deg);
-  }
+  ${ReviewCard}:hover & { opacity: 0.4; transform: scale(1.1) rotate(-5deg); }
 `;
 
 const ReviewHeader = styled.div`
@@ -661,6 +530,7 @@ const ReviewHeader = styled.div`
   margin-bottom: 1rem;
   position: relative;
   z-index: 1;
+  margin-top: ${({ $hasNewBadge }) => ($hasNewBadge ? "1.25rem" : "0")};
 `;
 
 const ReviewAvatar = styled.div`
@@ -680,24 +550,12 @@ const ReviewAvatar = styled.div`
   position: relative;
   transition: ${tokens.transition.spring};
 
-  &::after {
-    content: "";
-    position: absolute;
-    inset: -3px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, ${tokens.colors.primary}, ${tokens.colors.primaryLight});
-    z-index: -1;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
+  ${ReviewCard}:hover & { transform: scale(1.1); }
 
-  ${ReviewCard}:hover & {
-    transform: scale(1.1);
-
-    &::after {
-      opacity: 0.5;
-      animation: ${pulse} 2s ease-in-out infinite;
-    }
+  @media (max-width: 480px) {
+    width: 44px;
+    height: 44px;
+    font-size: 1rem;
   }
 `;
 
@@ -715,7 +573,7 @@ const VerifiedBadge = styled.div`
   color: white;
   font-size: 0.5rem;
   border: 2px solid ${tokens.colors.bgCard};
-  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.4);
+  box-shadow: 0 2px 8px rgba(34,197,94,0.4);
 `;
 
 const ReviewMeta = styled.div`
@@ -729,12 +587,12 @@ const ReviewAuthor = styled.div`
   font-size: 1rem;
   color: ${tokens.colors.textPrimary};
   margin-bottom: 0.25rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-wrap: wrap;
+
+  @media (max-width: 480px) { font-size: 0.875rem; }
 `;
 
 const TrekkerBadge = styled.span`
@@ -743,25 +601,254 @@ const TrekkerBadge = styled.span`
   gap: 0.25rem;
   padding: 0.2rem 0.5rem;
   background: ${tokens.colors.goldGlow};
-  border: 1px solid rgba(251, 191, 36, 0.3);
+  border: 1px solid rgba(251,191,36,0.3);
   border-radius: ${tokens.radius.sm};
   font-size: 0.625rem;
   font-weight: 600;
   color: ${tokens.colors.gold};
   text-transform: uppercase;
-
-  svg {
-    font-size: 0.5rem;
-  }
+  svg { font-size: 0.5rem; }
 `;
 
 const ReviewDate = styled.div`
   font-family: "JetBrains Mono", monospace;
   font-size: 0.75rem;
   color: ${tokens.colors.textMuted};
-  letter-spacing: 0.02em;
+  @media (max-width: 480px) { font-size: 0.675rem; }
 `;
 
+// ─── Three-dot Menu & Delete ──────────────────────────────────────────────────
+const MenuWrapper = styled.div`
+  position: relative;
+  flex-shrink: 0;
+  z-index: 5;
+`;
+
+const MenuBtn = styled.button`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid transparent;
+  color: ${tokens.colors.textMuted};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: ${tokens.transition.base};
+  font-size: 1rem;
+
+  &:hover {
+    background: ${tokens.colors.glass};
+    border-color: ${tokens.colors.border};
+    color: ${tokens.colors.textSecondary};
+  }
+`;
+
+const MenuDropdown = styled(motion.div)`
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 160px;
+  background: ${tokens.colors.bgElevated};
+  border: 1px solid ${tokens.colors.border};
+  border-radius: ${tokens.radius.md};
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+  overflow: hidden;
+  z-index: 50;
+`;
+
+const MenuItem = styled.button`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  color: ${({ $danger }) => ($danger ? tokens.colors.error : tokens.colors.textSecondary)};
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: ${tokens.transition.fast};
+  text-align: left;
+
+  &:hover {
+    background: ${({ $danger }) =>
+      $danger ? tokens.colors.errorGlow : tokens.colors.glass};
+    color: ${({ $danger }) =>
+      $danger ? tokens.colors.error : tokens.colors.textPrimary};
+  }
+
+  svg { font-size: 0.875rem; flex-shrink: 0; }
+`;
+
+// ─── Delete Confirm Modal ─────────────────────────────────────────────────────
+const ModalOverlay = styled(motion.div)`
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+`;
+
+const ModalBox = styled(motion.div)`
+  background: ${tokens.colors.bgElevated};
+  border: 1px solid ${tokens.colors.border};
+  border-radius: ${tokens.radius.xl};
+  padding: 2rem;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+
+  @media (max-width: 480px) {
+    padding: 1.5rem;
+  }
+`;
+
+const ModalIcon = styled.div`
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 1.25rem;
+  border-radius: 50%;
+  background: ${tokens.colors.errorGlow};
+  border: 1px solid ${tokens.colors.errorBorder};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${tokens.colors.error};
+  font-size: 1.5rem;
+`;
+
+const ModalTitle = styled.h4`
+  font-family: "Sora", sans-serif;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: ${tokens.colors.textPrimary};
+  margin: 0 0 0.5rem;
+`;
+
+const ModalText = styled.p`
+  font-size: 0.875rem;
+  color: ${tokens.colors.textMuted};
+  margin: 0 0 1.5rem;
+  line-height: 1.6;
+`;
+
+const ModalBtns = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+  }
+`;
+
+const ModalCancelBtn = styled.button`
+  padding: 0.75rem 1.5rem;
+  border-radius: ${tokens.radius.pill};
+  border: 1px solid ${tokens.colors.border};
+  background: transparent;
+  color: ${tokens.colors.textSecondary};
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: ${tokens.transition.base};
+  &:hover {
+    background: ${tokens.colors.glass};
+    color: ${tokens.colors.textPrimary};
+  }
+  @media (max-width: 480px) { width: 100%; }
+`;
+
+const ModalDeleteBtn = styled.button`
+  padding: 0.75rem 1.5rem;
+  border-radius: ${tokens.radius.pill};
+  border: none;
+  background: ${tokens.colors.error};
+  color: white;
+  font-weight: 700;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: ${tokens.transition.spring};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 120px;
+
+  &:hover {
+    transform: scale(1.04);
+    box-shadow: 0 6px 20px rgba(239,68,68,0.4);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  @media (max-width: 480px) { width: 100%; }
+`;
+
+const DeleteSpinner = styled.div`
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: ${spin} 0.7s linear infinite;
+`;
+
+// ─── AlertBox (Moved from ReviewForm.jsx) ─────────────────────────────────────
+const AlertBox = styled(motion.div)`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: ${tokens.radius.md};
+  margin-bottom: 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  position: relative;
+  z-index: 1;
+  background: ${({ $type }) =>
+    $type === "error" ? tokens.colors.errorGlow : tokens.colors.successGlow};
+  border: 1px solid ${({ $type }) =>
+    $type === "error" ? tokens.colors.errorBorder : tokens.colors.successBorder};
+  color: ${({ $type }) =>
+    $type === "error" ? tokens.colors.error : tokens.colors.success};
+
+  svg { flex-shrink: 0; margin-top: 1px; font-size: 1rem; }
+
+  @media (max-width: 480px) {
+    font-size: 0.8125rem;
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+`;
+
+const AlertClose = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  margin-left: auto;
+  opacity: 0.6;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  transition: opacity 0.2s;
+  &:hover { opacity: 1; }
+`;
+
+// ─── Review Stars / Text / Footer ─────────────────────────────────────────────
 const ReviewStars = styled.div`
   display: flex;
   gap: 4px;
@@ -771,7 +858,6 @@ const ReviewStars = styled.div`
 const ReviewStar = styled.span`
   font-size: 0.9375rem;
   color: ${(p) => (p.$filled ? tokens.colors.gold : tokens.colors.border)};
-  transition: ${tokens.transition.fast};
   text-shadow: ${(p) => (p.$filled ? `0 0 8px ${tokens.colors.goldGlow}` : "none")};
 `;
 
@@ -786,6 +872,8 @@ const ReviewText = styled.p`
   -webkit-line-clamp: ${({ $expanded }) => ($expanded ? "unset" : "3")};
   -webkit-box-orient: vertical;
   overflow: hidden;
+
+  @media (max-width: 480px) { font-size: 0.8125rem; }
 `;
 
 const ReadMoreBtn = styled.button`
@@ -800,19 +888,8 @@ const ReadMoreBtn = styled.button`
   gap: 0.375rem;
   padding: 0;
   transition: ${tokens.transition.fast};
-
-  &:hover {
-    color: ${tokens.colors.primaryLight};
-  }
-
-  svg {
-    font-size: 0.75rem;
-    transition: transform 0.2s ease;
-  }
-
-  &:hover svg {
-    transform: translateY(${({ $expanded }) => ($expanded ? "-2px" : "2px")});
-  }
+  &:hover { color: ${tokens.colors.primaryLight}; }
+  svg { font-size: 0.75rem; }
 `;
 
 const ReviewFooter = styled.div`
@@ -822,6 +899,8 @@ const ReviewFooter = styled.div`
   padding-top: 1rem;
   border-top: 1px solid ${tokens.colors.border};
   margin-top: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 `;
 
 const HelpfulButton = styled.button`
@@ -830,7 +909,8 @@ const HelpfulButton = styled.button`
   gap: 0.5rem;
   padding: 0.5rem 1rem;
   background: ${({ $liked }) => ($liked ? tokens.colors.primaryGlow : tokens.colors.glass)};
-  border: 1px solid ${({ $liked }) => ($liked ? tokens.colors.primaryBorder : tokens.colors.glassBorder)};
+  border: 1px solid ${({ $liked }) =>
+    $liked ? tokens.colors.primaryBorder : tokens.colors.glassBorder};
   border-radius: ${tokens.radius.pill};
   color: ${({ $liked }) => ($liked ? tokens.colors.primary : tokens.colors.textMuted)};
   font-size: 0.8125rem;
@@ -840,11 +920,7 @@ const HelpfulButton = styled.button`
 
   svg {
     font-size: 0.875rem;
-    ${({ $liked }) =>
-      $liked &&
-      css`
-        animation: ${heartBeat} 0.6s ease;
-      `}
+    ${({ $liked }) => $liked && css`animation: ${heartBeat} 0.6s ease;`}
   }
 
   &:hover {
@@ -853,21 +929,19 @@ const HelpfulButton = styled.button`
     color: ${tokens.colors.primary};
     transform: scale(1.05);
   }
-`;
 
-const PhotoBadge = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  font-size: 0.75rem;
-  color: ${tokens.colors.textMuted};
-
-  svg {
+  @media (max-width: 480px) {
+    padding: 0.4rem 0.75rem;
     font-size: 0.75rem;
-    color: ${tokens.colors.primary};
   }
 `;
 
+const HelpfulCount = styled.span`
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.75rem;
+`;
+
+// ─── Misc ─────────────────────────────────────────────────────────────────────
 const ShowMoreButton = styled(motion.button)`
   display: flex;
   align-items: center;
@@ -883,161 +957,303 @@ const ShowMoreButton = styled(motion.button)`
   font-weight: 700;
   cursor: pointer;
   transition: ${tokens.transition.spring};
-  box-shadow: 0 8px 25px rgba(249, 115, 22, 0.4);
-
+  box-shadow: 0 8px 25px rgba(249,115,22,0.4);
   &:hover {
     transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 12px 35px rgba(249, 115, 22, 0.5);
+    box-shadow: 0 12px 35px rgba(249,115,22,0.5);
   }
+  &:active { transform: translateY(-1px) scale(0.98); }
+  svg { transition: transform 0.2s ease; }
+  &:hover svg { transform: translateY(3px); }
 
-  &:active {
-    transform: translateY(-1px) scale(0.98);
-  }
-
-  svg {
-    transition: transform 0.2s ease;
-  }
-
-  &:hover svg {
-    transform: translateY(3px);
+  @media (max-width: 480px) {
+    padding: 0.875rem 2rem;
+    font-size: 0.9rem;
   }
 `;
 
-// ─── Component ────────────────────────────────────────────────────────────────
-const ReviewsSectionComponent = ({ reviews = [], rating = 0 }) => {
-  const [expandedReviews, setExpandedReviews] = useState({});
-  const [likedReviews, setLikedReviews] = useState({});
+const Divider = styled.div`
+  height: 1px;
+  background: linear-gradient(90deg, transparent, ${tokens.colors.border}, transparent);
+  margin: 3rem 0;
+  @media (max-width: 640px) { margin: 2rem 0; }
+`;
+
+const EmptyState = styled(motion.div)`
+  text-align: center;
+  padding: 3rem 2rem;
+  color: ${tokens.colors.textMuted};
+  p { font-size: 1rem; margin: 0.5rem 0 0; }
+  @media (max-width: 480px) { padding: 2rem 1rem; }
+`;
+
+const EmptyIcon = styled.div`
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.4;
+`;
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+const RATING_CATEGORIES = [
+  { label: "Trail Quality", icon: "🥾", value: 4.9 },
+  { label: "Expert Guides", icon: "👨‍🏫", value: 4.8 },
+  { label: "Safety Measures", icon: "🛡️", value: 5.0 },
+  { label: "Value for Money", icon: "💰", value: 4.7 },
+  { label: "Accommodation", icon: "🏕️", value: 4.6 },
+  { label: "Overall Experience", icon: "⭐", value: 4.9 },
+];
+
+// Replace with your actual admin UIDs
+const ADMIN_UIDS = [
+  "REPLACE_WITH_YOUR_ADMIN_UID",
+  // Add more admin UIDs here
+];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function formatDate(dateField) {
+  if (!dateField) return "Just now";
+  if (dateField?.seconds) {
+    const date = new Date(dateField.seconds * 1000);
+    const now = new Date();
+    const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
+    return `${Math.floor(diffDays / 365)} years ago`;
+  }
+  return dateField;
+}
+
+// ─── Single Review Card ───────────────────────────────────────────────────────
+function SingleReviewCard({ r, index, newReviewId, onDelete }) {
+  const [expanded, setExpanded] = useState(false);
+  const [liked, setLiked] = useState(false);
+  const [helpfulCount, setHelpfulCount] = useState(r.helpfulCount || 0);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const user = auth.currentUser;
+  const authorName = r.userName || r.author || "Anonymous Trekker";
+  const reviewText = r.comment || r.text || "Great experience!";
+  const reviewRating = r.rating || 5;
+  const reviewDate = formatDate(r.createdAt || r.date);
+  const isLongText = reviewText.length > 150;
+  const isThisNew = r._isNew || r.id === newReviewId;
+
+  // Check if current user can delete this review
+  const isAuthor = user && r.userId && user.uid === r.userId;
+  const isAdmin = user && ADMIN_UIDS.includes(user.uid);
+  const canDelete = isAuthor || isAdmin;
+
+  const handleHelpful = () => {
+    setLiked((prev) => {
+      setHelpfulCount((c) => (prev ? c - 1 : c + 1));
+      return !prev;
+    });
+  };
+
+  // Close menu when clicking outside
+  const handleMenuBlur = () => {
+    setTimeout(() => setMenuOpen(false), 150);
+  };
+
+  return (
+    <ReviewCard variants={itemVariants} whileHover={{ y: -6 }} $isNew={isThisNew} layout>
+      {isThisNew && <NewBadge>✨ New</NewBadge>}
+
+      <QuoteIcon><FaQuoteLeft /></QuoteIcon>
+
+      <ReviewHeader $hasNewBadge={isThisNew}>
+        <ReviewAvatar>
+          {authorName.charAt(0).toUpperCase()}
+          <VerifiedBadge><FaCheckCircle /></VerifiedBadge>
+        </ReviewAvatar>
+        <ReviewMeta>
+          <ReviewAuthor>
+            {authorName}
+            {index < 3 && !isThisNew && (
+              <TrekkerBadge><FaAward /> Top Reviewer</TrekkerBadge>
+            )}
+          </ReviewAuthor>
+          <ReviewDate>{reviewDate}</ReviewDate>
+        </ReviewMeta>
+
+        {/* Three-dot menu — only if user can delete */}
+        {canDelete && (
+          <MenuWrapper onBlur={handleMenuBlur}>
+            <MenuBtn onClick={() => setMenuOpen((p) => !p)} title="Options">
+              <FiMoreVertical />
+            </MenuBtn>
+            <AnimatePresence>
+              {menuOpen && (
+                <MenuDropdown
+                  initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <MenuItem
+                    $danger
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onDelete(r.id, authorName);
+                    }}
+                  >
+                    <FaTrash /> Delete Review
+                  </MenuItem>
+                </MenuDropdown>
+              )}
+            </AnimatePresence>
+          </MenuWrapper>
+        )}
+      </ReviewHeader>
+
+      <ReviewStars>
+        {[1, 2, 3, 4, 5].map((n) => (
+          <ReviewStar key={n} $filled={n <= reviewRating}>★</ReviewStar>
+        ))}
+      </ReviewStars>
+
+      <ReviewText $expanded={expanded}>{reviewText}</ReviewText>
+
+      {isLongText && (
+        <ReadMoreBtn onClick={() => setExpanded((p) => !p)} $expanded={expanded}>
+          {expanded ? "Show less" : "Read more"}
+          {expanded ? <FaChevronUp /> : <FaChevronDown />}
+        </ReadMoreBtn>
+      )}
+
+      <ReviewFooter>
+        <HelpfulButton $liked={liked} onClick={handleHelpful}>
+          {liked ? <FaHeart /> : <FaThumbsUp />}
+          Helpful {helpfulCount > 0 && `(${helpfulCount})`}
+        </HelpfulButton>
+      </ReviewFooter>
+    </ReviewCard>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+export default function ReviewsSectionComponent({
+  reviews: initialReviews = [],
+  rating = 0,
+  trekId = "",
+  trekTitle = "",
+}) {
+  const [reviews, setReviews] = useState(initialReviews);
+  const [newReviewId, setNewReviewId] = useState(null);
   const [showAll, setShowAll] = useState(false);
 
-  const toggleExpand = (id) => {
-    setExpandedReviews((prev) => ({ ...prev, [id]: !prev[id] }));
+  // Delete state
+  const [deleteTarget, setDeleteTarget] = useState(null); // { id, authorName }
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+
+  const avgRating = rating || (reviews.length > 0
+    ? reviews.reduce((sum, r) => sum + (r.rating || 5), 0) / reviews.length
+    : 0);
+
+  // ── Add new review (from ReviewForm) ──────────────────────────────────────
+  const handleNewReview = (newReview) => {
+    setReviews((prev) => [newReview, ...prev]);
+    setNewReviewId(newReview.id);
+    setTimeout(() => setNewReviewId(null), 8000);
   };
 
-  const toggleLike = (id) => {
-    setLikedReviews((prev) => ({ ...prev, [id]: !prev[id] }));
+  // ── Open delete confirmation ──────────────────────────────────────────────
+  const handleDeleteRequest = (reviewId, authorName) => {
+    setDeleteTarget({ id: reviewId, authorName });
+    setDeleteError("");
   };
 
-  const formatDate = (dateField) => {
-    if (!dateField) return "Recent";
+  // ── Confirm delete — removes from Firestore + local state ─────────────────
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setDeleteError("");
 
-    if (dateField.seconds) {
-      const date = new Date(dateField.seconds * 1000);
-      const now = new Date();
-      const diffTime = Math.abs(now - date);
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    try {
+      // Delete from Firestore
+      await deleteDoc(doc(db, "reviews", deleteTarget.id));
+      console.log("🗑️ Review deleted:", deleteTarget.id);
 
-      if (diffDays === 0) return "Today";
-      if (diffDays === 1) return "Yesterday";
-      if (diffDays < 7) return `${diffDays} days ago`;
-      if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-      if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
-      return `${Math.floor(diffDays / 365)} years ago`;
+      // Remove from local state
+      setReviews((prev) => prev.filter((r) => r.id !== deleteTarget.id));
+      setDeleteTarget(null);
+    } catch (err) {
+      console.error("❌ Error deleting review:", err);
+      if (err.code === "permission-denied") {
+        setDeleteError("You don't have permission to delete this review. (Admin access needed or review author)");
+      } else {
+        setDeleteError("Failed to delete. Please try again.");
+      }
+    } finally {
+      setDeleting(false);
     }
-
-    return dateField;
   };
-
-  const avgRating =
-    rating ||
-    (reviews.length > 0
-      ? reviews.reduce((sum, r) => sum + (r.rating || 5), 0) / reviews.length
-      : 0);
-
-  if (!reviews || reviews.length === 0) {
-    return null;
-  }
-
-  const ratingCategories = [
-    { label: "Trail Quality", icon: "🥾", value: 4.9 },
-    { label: "Expert Guides", icon: "👨‍🏫", value: 4.8 },
-    { label: "Safety Measures", icon: "🛡️", value: 5.0 },
-    { label: "Value for Money", icon: "💰", value: 4.7 },
-    { label: "Accommodation", icon: "🏕️", value: 4.6 },
-    { label: "Overall Experience", icon: "⭐", value: 4.9 },
-  ];
 
   const displayedReviews = showAll ? reviews : reviews.slice(0, 6);
 
   return (
-    <ReviewsSection
+    <Section
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, margin: "-100px" }}
       variants={containerVariants}
     >
+      {/* ── Header ── */}
       <SectionHeader variants={itemVariants}>
-        <SectionBadge>
-          <FaStar /> Verified Reviews
-        </SectionBadge>
-        <SectionTitle>
-          What <span>Trekkers</span> Say
-        </SectionTitle>
-        <SectionSubtitle>
-          Real experiences from adventurers who conquered this trail
-        </SectionSubtitle>
+        <SectionBadge><FaStar /> Verified Reviews</SectionBadge>
+        <SectionTitle>What <span>Trekkers</span> Say</SectionTitle>
+        <SectionSubtitle>Real experiences from adventurers who conquered this trail</SectionSubtitle>
       </SectionHeader>
 
+      {/* ── Overall Rating ── */}
       {avgRating > 0 && (
         <OverallRatingBox variants={itemVariants}>
-          <RatingNumberWrapper>
-            <RatingNumber>
-              {avgRating.toFixed(1)}
-              <RatingMax>/5</RatingMax>
-            </RatingNumber>
-          </RatingNumberWrapper>
+          <RatingNumber>
+            {avgRating.toFixed(1)}<RatingMax>/5</RatingMax>
+          </RatingNumber>
           <RatingMeta>
             <RatingStars>
               {[1, 2, 3, 4, 5].map((n) => (
-                <Star key={n} $filled={n <= Math.round(avgRating)}>
-                  ★
-                </Star>
+                <Star key={n} $filled={n <= Math.round(avgRating)}>★</Star>
               ))}
             </RatingStars>
             <RatingText>
               <FaCheckCircle />
-              Based on {reviews.length} verified review
-              {reviews.length !== 1 ? "s" : ""}
+              Based on {reviews.length} verified review{reviews.length !== 1 ? "s" : ""}
             </RatingText>
             <TrustBadges>
-              <TrustBadge>
-                <FiShield /> Verified Trekkers
-              </TrustBadge>
-              <TrustBadge>
-                <FiUsers /> Real Experiences
-              </TrustBadge>
+              <TrustBadge><FiShield /> Verified Trekkers</TrustBadge>
+              <TrustBadge><FiUsers /> Real Experiences</TrustBadge>
             </TrustBadges>
           </RatingMeta>
         </OverallRatingBox>
       )}
 
+      {/* ── Rating Bars ── */}
       <RatingBarsSection variants={itemVariants}>
         <RatingBarsHeader>
-          <RatingBarsTitle>
-            <FiTrendingUp /> Detailed Ratings
-          </RatingBarsTitle>
-          <ExcellentBadge>
-            <FaMedal /> Excellent Overall
-          </ExcellentBadge>
+          <RatingBarsTitle><FiTrendingUp /> Detailed Ratings</RatingBarsTitle>
+          <ExcellentBadge><FaMedal /> Excellent Overall</ExcellentBadge>
         </RatingBarsHeader>
         <RatingBarsGrid>
-          {ratingCategories.map((category, index) => (
-            <RatingBarItem key={category.label} $index={index}>
-              <RatingBarIcon>{category.icon}</RatingBarIcon>
+          {RATING_CATEGORIES.map((cat, index) => (
+            <RatingBarItem key={cat.label} $index={index}>
+              <RatingBarIcon>{cat.icon}</RatingBarIcon>
               <RatingBarContent>
                 <RatingBarLabel>
-                  {category.label}
-                  <RatingBarValue>{category.value.toFixed(1)}</RatingBarValue>
+                  {cat.label}
+                  <RatingBarValue>{cat.value.toFixed(1)}</RatingBarValue>
                 </RatingBarLabel>
                 <RatingBarTrack>
                   <RatingBarFill
                     initial={{ width: 0 }}
-                    whileInView={{ width: `${(category.value / 5) * 100}%` }}
+                    whileInView={{ width: `${(cat.value / 5) * 100}%` }}
                     viewport={{ once: true }}
-                    transition={{
-                      duration: 1,
-                      delay: index * 0.1,
-                      ease: "easeOut",
-                    }}
+                    transition={{ duration: 1, delay: index * 0.1, ease: "easeOut" }}
                   />
                 </RatingBarTrack>
               </RatingBarContent>
@@ -1046,76 +1262,35 @@ const ReviewsSectionComponent = ({ reviews = [], rating = 0 }) => {
         </RatingBarsGrid>
       </RatingBarsSection>
 
-      <ReviewsGrid variants={containerVariants}>
-        {displayedReviews.map((r, i) => {
-          const reviewId = r.id || i;
-          const authorName = r.userName || r.author || "Anonymous Trekker";
-          const reviewText = r.comment || r.text || "Great experience!";
-          const reviewRating = r.rating || 5;
-          const reviewDate = formatDate(r.createdAt || r.date);
-          const isExpanded = expandedReviews[reviewId];
-          const isLiked = likedReviews[reviewId];
-          const isLongText = reviewText.length > 150;
+      {/* ── Review Form ── */}
+      <ReviewForm
+        trekId={trekId}
+        trekTitle={trekTitle}
+        onReviewSubmitted={handleNewReview}
+      />
 
-          return (
-            <ReviewCard key={reviewId} variants={itemVariants} whileHover={{ y: -6 }}>
-              <QuoteIcon>
-                <FaQuoteLeft />
-              </QuoteIcon>
+      <Divider />
 
-              <ReviewHeader>
-                <ReviewAvatar>
-                  {authorName.charAt(0).toUpperCase()}
-                  <VerifiedBadge>
-                    <FaCheckCircle />
-                  </VerifiedBadge>
-                </ReviewAvatar>
-                <ReviewMeta>
-                  <ReviewAuthor>
-                    {authorName}
-                    {i < 3 && (
-                      <TrekkerBadge>
-                        <FaAward /> Top Reviewer
-                      </TrekkerBadge>
-                    )}
-                  </ReviewAuthor>
-                  <ReviewDate>{reviewDate}</ReviewDate>
-                </ReviewMeta>
-              </ReviewHeader>
-
-              <ReviewStars>
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <ReviewStar key={n} $filled={n <= reviewRating}>
-                    ★
-                  </ReviewStar>
-                ))}
-              </ReviewStars>
-
-              <ReviewText $expanded={isExpanded}>{reviewText}</ReviewText>
-
-              {isLongText && (
-                <ReadMoreBtn
-                  onClick={() => toggleExpand(reviewId)}
-                  $expanded={isExpanded}
-                >
-                  {isExpanded ? "Show less" : "Read more"}
-                  {isExpanded ? <FaChevronUp /> : <FaChevronDown />}
-                </ReadMoreBtn>
-              )}
-
-              <ReviewFooter>
-                <HelpfulButton $liked={isLiked} onClick={() => toggleLike(reviewId)}>
-                  {isLiked ? <FaHeart /> : <FaThumbsUp />}
-                  Helpful {isLiked && "(1)"}
-                </HelpfulButton>
-                <PhotoBadge>
-                  <FiCamera /> {Math.floor(Math.random() * 5) + 1} photos
-                </PhotoBadge>
-              </ReviewFooter>
-            </ReviewCard>
-          );
-        })}
-      </ReviewsGrid>
+      {/* ── Reviews Grid ── */}
+      {reviews.length === 0 ? (
+        <EmptyState initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <EmptyIcon>🏔️</EmptyIcon>
+          <SectionTitle style={{ fontSize: "1.25rem" }}>No reviews yet</SectionTitle>
+          <p>Be the first to share your experience on this trek!</p>
+        </EmptyState>
+      ) : (
+        <ReviewsGrid variants={containerVariants}>
+          {displayedReviews.map((r, i) => (
+            <SingleReviewCard
+              key={r.id || i}
+              r={r}
+              index={i}
+              newReviewId={newReviewId}
+              onDelete={handleDeleteRequest}
+            />
+          ))}
+        </ReviewsGrid>
+      )}
 
       {reviews.length > 6 && !showAll && (
         <ShowMoreButton
@@ -1127,8 +1302,51 @@ const ReviewsSectionComponent = ({ reviews = [], rating = 0 }) => {
           <FaChevronDown />
         </ShowMoreButton>
       )}
-    </ReviewsSection>
-  );
-};
 
-export default ReviewsSectionComponent;
+      {/* ── Delete Confirmation Modal ── */}
+      <AnimatePresence>
+        {deleteTarget && (
+          <ModalOverlay
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => !deleting && setDeleteTarget(null)}
+          >
+            <ModalBox
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <ModalIcon><FaExclamationTriangle /></ModalIcon>
+              <ModalTitle>Delete Review?</ModalTitle>
+              <ModalText>
+                This will permanently remove {deleteTarget.authorName}'s review.
+                This action cannot be undone.
+              </ModalText>
+              {deleteError && (
+                <AlertBox $type="error" style={{ marginBottom: "1rem", textAlign: "left" }}>
+                  <FaTimes />
+                  {deleteError}
+                </AlertBox>
+              )}
+              <ModalBtns>
+                <ModalCancelBtn onClick={() => setDeleteTarget(null)} disabled={deleting}>
+                  Cancel
+                </ModalCancelBtn>
+                <ModalDeleteBtn onClick={handleConfirmDelete} disabled={deleting}>
+                  {deleting ? (
+                    <><DeleteSpinner /> Deleting...</>
+                  ) : (
+                    <><FaTrash /> Delete</>
+                  )}
+                </ModalDeleteBtn>
+              </ModalBtns>
+            </ModalBox>
+          </ModalOverlay>
+        )}
+      </AnimatePresence>
+    </Section>
+  );
+}

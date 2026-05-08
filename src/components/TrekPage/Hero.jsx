@@ -1,12 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
 import { FiArrowUpRight, FiHeart, FiArrowLeft } from "react-icons/fi";
-import { FaCompass, FaHeart, FaClock, FaMountain, FaStar, FaUsers, FaCalendarAlt } from "react-icons/fa";
+import { FaCompass, FaHeart, FaClock, FaMountain, FaStar, FaUsers, FaCalendarAlt, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { FiMapPin, FiTrendingUp } from "react-icons/fi";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TOKENS  (shared)
+// TOKENS
 // ─────────────────────────────────────────────────────────────────────────────
 const tokens = {
   font: {
@@ -23,27 +23,62 @@ const tokens = {
     gold: "#F59E0B",
   },
   radius: { pill: "100px", card: "20px" },
-  transition: { base: "all 0.3s ease", spring: "all 0.35s cubic-bezier(0.34,1.56,0.64,1)" },
+  transition: { 
+    base: "all 0.3s ease", 
+    spring: "all 0.35s cubic-bezier(0.34,1.56,0.64,1)" 
+  },
   blur: "blur(14px)",
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// KEYFRAMES  (shared)
+// KEYFRAMES
 // ─────────────────────────────────────────────────────────────────────────────
-const fadeUp = keyframes`from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}`;
-const fadeIn = keyframes`from{opacity:0}to{opacity:1}`;
-const slideRight = keyframes`from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}`;
-const slideLeft = keyframes`from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:translateX(0)}`;
-const pulse = keyframes`0%,100%{opacity:1}50%{opacity:0.4}`;
-const imageTransition = keyframes`
-  from { opacity: 0; transform: scale(1.1); }
+const fadeUp = keyframes`
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+const pulse = keyframes`
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+`;
+
+// Cross-fade keyframe for carousel
+const crossFadeIn = keyframes`
+  from { opacity: 0; transform: scale(1.06); }
   to { opacity: 1; transform: scale(1.04); }
 `;
-const mImgReveal = keyframes`from{opacity:0;transform:scale(1.06)}to{opacity:1;transform:scale(1)}`;
-const mFadeUp = keyframes`from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}`;
+
+const mImgReveal = keyframes`
+  from { opacity: 0; transform: scale(1.06); }
+  to { opacity: 1; transform: scale(1); }
+`;
+
+const mFadeUp = keyframes`
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const slideLeft = keyframes`
+  from { opacity: 0; transform: translateX(-40px); }
+  to { opacity: 1; transform: translateX(0); }
+`;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CAROUSEL PROGRESS BAR ANIMATION
+// ─────────────────────────────────────────────────────────────────────────────
+const progressAnim = (duration) => keyframes`
+  from { width: 0%; }
+  to { width: 100%; }
+`;
 
 // =============================================================================
-// DESKTOP STYLED-COMPONENTS — REDUCED FONT SIZES
+// DESKTOP STYLED-COMPONENTS
 // =============================================================================
 
 const Root = styled.section`
@@ -56,19 +91,34 @@ const Root = styled.section`
   display: flex;
   flex-direction: column;
   font-family: ${tokens.font.body};
-  @media(max-width:768px){ display: none; }
+
+  @media (max-width: 768px) {
+    display: none;
+  }
 `;
 
-const BgImage = styled.div`
+// ── Carousel Background ──────────────────────────────────────────────────────
+const CarouselTrack = styled.div`
   position: absolute;
   inset: 0;
   z-index: 0;
+`;
+
+const CarouselSlide = styled.div`
+  position: absolute;
+  inset: 0;
+  opacity: ${({ $active }) => ($active ? 1 : 0)};
+  transition: opacity 1.2s ease-in-out;
+  
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    animation: ${imageTransition} 0.8s ease-out forwards;
+    transform: scale(${({ $active }) => ($active ? 1.04 : 1)});
+    transition: transform 8s ease-out, opacity 1.2s ease-in-out;
+    animation: ${({ $active }) => $active ? crossFadeIn : 'none'} 1.2s ease-out forwards;
   }
+
   &::after {
     content: "";
     position: absolute;
@@ -77,6 +127,108 @@ const BgImage = styled.div`
       linear-gradient(to top, rgba(5,5,10,0.95) 0%, rgba(5,5,10,0.55) 45%, rgba(5,5,10,0.15) 75%, transparent 100%),
       linear-gradient(to right, rgba(5,5,10,0.65) 0%, transparent 55%);
   }
+`;
+
+// ── Carousel Controls ────────────────────────────────────────────────────────
+const CarouselControls = styled.div`
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+`;
+
+const CarouselDots = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+const CarouselDot = styled.button`
+  position: relative;
+  width: ${({ $active }) => ($active ? '32px' : '8px')};
+  height: 8px;
+  border-radius: 100px;
+  border: none;
+  background: ${({ $active }) => ($active ? tokens.color.primary : 'rgba(255,255,255,0.35)')};
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  padding: 0;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.4);
+    border-radius: inherit;
+    transform: scaleX(0);
+    transform-origin: left;
+    ${({ $active, $duration }) => $active && `
+      animation: progressFill ${$duration}ms linear forwards;
+    `}
+  }
+
+  @keyframes progressFill {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+
+  &:hover {
+    background: ${({ $active }) => $active ? tokens.color.primary : 'rgba(255,255,255,0.6)'};
+    transform: scaleY(1.3);
+  }
+`;
+
+const CarouselArrow = styled.button`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(12px);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: ${tokens.transition.spring};
+  font-size: 0.875rem;
+
+  &:hover {
+    background: ${tokens.color.primary};
+    border-color: ${tokens.color.primary};
+    transform: scale(1.1);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+`;
+
+// ── Slide Counter ────────────────────────────────────────────────────────────
+const SlideCounter = styled.div`
+  position: absolute;
+  top: 2rem;
+  right: 3rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.6);
+  animation: ${fadeIn} 1s ease 0.5s both;
+`;
+
+const SlideCurrentNum = styled.span`
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  line-height: 1;
 `;
 
 const Body = styled.div`
@@ -109,32 +261,31 @@ const BadgePill = styled.span`
   font-size: 0.8rem;
   font-weight: 500;
   letter-spacing: 0.01em;
-  svg { color: ${tokens.color.primary}; font-size: 0.875rem; }
+
+  svg {
+    color: ${tokens.color.primary};
+    font-size: 0.875rem;
+  }
 `;
 
 const TitleBlock = styled.div`
   text-align: center;
-  padding: 0 1rem;
+  padding: 6.5rem 1rem;
   animation: ${fadeUp} 0.8s ease 0.35s both;
 `;
 
 const MainTitle = styled.h1`
   font-family: ${tokens.font.display};
-  font-size: clamp(2rem, 5vw, 3.8rem);
+  font-size: clamp(4rem, 5vw, 3.8rem);
   font-weight: 700;
   color: white;
   line-height: 1.15;
   letter-spacing: -0.015em;
   margin: 0;
-  em {
-    font-style: italic;
-    font-weight: 400;
-    background: linear-gradient(135deg, ${tokens.color.primary}, #fb923c);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+
+  @media (max-width: 640px) {
+    font-size: clamp(1.75rem, 7vw, 2.4rem);
   }
-  @media(max-width:640px){ font-size: clamp(1.75rem, 7vw, 2.4rem); }
 `;
 
 const BottomRow = styled.div`
@@ -143,7 +294,10 @@ const BottomRow = styled.div`
   justify-content: space-between;
   padding: 0 3rem;
   gap: 2rem;
-  @media(max-width:1024px){ padding: 0 2rem; }
+
+  @media (max-width: 1024px) {
+    padding: 0 2rem;
+  }
 `;
 
 const LeftPanel = styled.div`
@@ -239,6 +393,7 @@ const BookNowBtn = styled.button`
   cursor: pointer;
   transition: ${tokens.transition.spring};
   box-shadow: 0 4px 20px ${tokens.color.primaryGlow};
+
   .icon {
     width: 28px;
     height: 28px;
@@ -251,116 +406,53 @@ const BookNowBtn = styled.button`
     flex-shrink: 0;
     transition: ${tokens.transition.base};
   }
-  &:hover { transform: scale(1.04) translateY(-2px); box-shadow: 0 10px 30px ${tokens.color.primaryGlow}; }
-  &:hover .icon { background: rgba(255,255,255,0.3); transform: rotate(45deg); }
-  &:active { transform: scale(0.98); }
-`;
 
-const CardsPanel = styled.div`
-  display: flex;
-  align-items: flex-end;
-  gap: 0.85rem;
-  animation: ${slideRight} 0.9s ease 0.6s both;
-`;
-
-const CardBase = styled.div`
-  border-radius: ${tokens.radius.card};
-  overflow: hidden;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: ${tokens.transition.spring};
-  position: relative;
-  border: 2px solid transparent;
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, ${tokens.color.primary}, #ea580c);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: 1;
-    pointer-events: none;
+  &:hover {
+    transform: scale(1.04) translateY(-2px);
+    box-shadow: 0 10px 30px ${tokens.color.primaryGlow};
   }
-  &:hover { transform: translateY(-6px) scale(1.02); border-color: ${tokens.color.primary}; }
-  ${({ $active }) => $active && `
-    border-color: ${tokens.color.primary};
-    box-shadow: 0 0 30px rgba(249,115,22,0.4);
-    &::before { opacity: 0.1; }
-  `}
-`;
 
-const MainCard = styled(CardBase)`
-  width: 220px; height: 240px;
-  @media(max-width:1100px){ width: 190px; height: 210px; }
-`;
+  &:hover .icon {
+    background: rgba(255,255,255,0.3);
+    transform: rotate(45deg);
+  }
 
-const SmallCard = styled(CardBase)`
-  width: 130px; height: 190px;
-  @media(max-width:1100px){ width: 115px; height: 170px; }
-`;
-
-const TinyCard = styled(CardBase)`
-  width: 115px; height: 165px;
-  @media(max-width:1100px){ width: 100px; height: 148px; }
-`;
-
-const CardImg = styled.img`
-  width: 100%; height: 100%; object-fit: cover; display: block;
-  transition: transform 0.5s ease;
-  ${CardBase}:hover & { transform: scale(1.1); }
-`;
-
-const CardOverlay = styled.div`
-  position: absolute; inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 55%, transparent 100%);
-  padding: 0.9rem;
-  display: flex; flex-direction: column; justify-content: flex-end;
-  z-index: 2;
-`;
-
-const CardTimeBadge = styled.span`
-  position: absolute; top: 0.75rem; right: 0.75rem;
-  background: linear-gradient(135deg, ${tokens.color.primary}, #ea580c);
-  border-radius: ${tokens.radius.pill};
-  color: white; font-size: 0.7rem; font-weight: 600; padding: 0.25rem 0.6rem;
-`;
-
-const CardTitle = styled.p`
-  color: white; font-weight: 700; font-size: 0.9rem; margin: 0 0 0.2rem; line-height: 1.3;
-`;
-
-const CardDesc = styled.p`
-  color: rgba(255,255,255,0.75); font-size: 0.72rem; line-height: 1.45; margin: 0;
-`;
-
-const ActiveIndicator = styled.div`
-  position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
-  width: 30px; height: 3px; background: ${tokens.color.primary}; border-radius: 2px;
-  opacity: ${({ $active }) => ($active ? 1 : 0)};
-  transition: opacity 0.3s ease;
+  &:active {
+    transform: scale(0.98);
+  }
 `;
 
 const ScrollHint = styled.div`
-  position: absolute; bottom: 2rem; right: 3rem;
-  display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
-  color: ${tokens.color.muted}; font-size: 0.7rem;
-  letter-spacing: 0.12em; text-transform: uppercase;
+  position: absolute;
+  bottom: 5rem;
+  right: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  color: ${tokens.color.muted};
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   animation: ${fadeIn} 1s ease 1.2s both;
+  z-index: 10;
 `;
 
 const ScrollLine = styled.div`
-  width: 1px; height: 42px;
+  width: 1px;
+  height: 42px;
   background: linear-gradient(to bottom, ${tokens.color.primary}, transparent);
   animation: ${pulse} 2s ease-in-out infinite;
 `;
 
 // =============================================================================
-// MOBILE STYLED-COMPONENTS — FIXED NAV, LEFT REVIEWS
+// MOBILE STYLED-COMPONENTS
 // =============================================================================
 
 const MRoot = styled.div`
   display: none;
-  @media(max-width:768px){
+
+  @media (max-width: 768px) {
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -372,7 +464,6 @@ const MRoot = styled.div`
   }
 `;
 
-/* Hero image - full viewport */
 const MHero = styled.div`
   position: relative;
   width: 100%;
@@ -380,81 +471,99 @@ const MHero = styled.div`
   min-height: 100svh;
   display: flex;
   flex-direction: column;
-  
+
   img {
     position: absolute;
     inset: 0;
-    width: 100%; 
+    width: 100%;
     height: 100%;
-    object-fit: cover; 
+    object-fit: cover;
     z-index: 0;
     animation: ${mImgReveal} 0.8s ease forwards;
   }
-  
+
   &::after {
     content: "";
-    position: absolute; 
+    position: absolute;
     inset: 0;
     z-index: 1;
-    background:
-      linear-gradient(to bottom,
-        rgba(0,0,0,0.4) 0%,
-        rgba(0,0,0,0.1) 30%,
-        rgba(0,0,0,0.1) 60%,
-        rgba(0,0,0,0.9) 100%
-      );
+    background: linear-gradient(
+      to bottom,
+      rgba(0,0,0,0.2) 0%,
+      rgba(0,0,0,0.05) 30%,
+      rgba(0,0,0,0.05) 55%,
+      rgba(0,0,0,0.92) 100%
+    );
   }
 `;
 
-/* Top bar - FIXED POSITION, stays on scroll */
+// ── FIXED: Fully transparent mobile top bar — just icons, no background ──────
 const MTopBar = styled.div`
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 100;
-  display: flex; 
-  align-items: center; 
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-  padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px 16px;
-  background: ${({ $scrolled }) => 
-    $scrolled ? 'rgba(0,0,0,0.8)' : 'transparent'};
-  backdrop-filter: ${({ $scrolled }) => $scrolled ? 'blur(20px)' : 'none'};
-  transition: all 0.3s ease;
+  padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px 14px;
+
+  /* Always fully transparent — no background, no blur, no border */
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-bottom: none;
+  box-shadow: none;
+
+  /* Remove all scroll-based transitions */
+  pointer-events: none;
+
   animation: ${mFadeUp} 0.5s ease both;
 `;
 
+// ── Update MIconBtn to keep pointer events working ───────────────────────────
 const MIconBtn = styled.button`
-  width: 40px; 
-  height: 40px; 
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.2);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: ${({ $liked }) => ($liked ? tokens.color.primary : "white")};
   cursor: pointer;
-  display: flex; 
-  align-items: center; 
+  display: flex;
+  align-items: center;
   justify-content: center;
   transition: ${tokens.transition.spring};
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  
-  &:hover { 
-    background: rgba(255,255,255,0.15); 
-    transform: scale(1.08); 
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+
+  /* Re-enable pointer events on buttons since parent is pointer-events: none */
+  pointer-events: auto;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.08);
   }
-  
-  &:active { 
-    transform: scale(0.95); 
+
+  &:active {
+    transform: scale(0.95);
   }
-  
-  svg { 
+
+  svg {
     pointer-events: none;
     font-size: 18px;
   }
+
+  @media (max-width: 380px) {
+    width: 38px;
+    height: 38px;
+    svg { font-size: 16px; }
+  }
 `;
 
-/* Content wrapper - overlaid on image */
+// ── Mobile Content - Centered, thumb-accessible ──────────────────────────────
 const MContentWrapper = styled.div`
   position: relative;
   z-index: 10;
@@ -462,101 +571,102 @@ const MContentWrapper = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: 0 18px calc(100px + env(safe-area-inset-bottom, 0px)) 18px;
+  align-items: center;
+  padding: 0 20px calc(110px + env(safe-area-inset-bottom, 0px)) 20px;
   animation: ${mFadeUp} 0.65s ease 0.15s both;
+  width: 100%;
 `;
 
-/* Title */
 const MTitleArea = styled.div`
   text-align: center;
   margin-bottom: 20px;
+  width: 100%;
 `;
 
 const MTrekName = styled.h1`
   font-family: ${tokens.font.display};
-  font-size: 2rem; 
+  font-size: clamp(1.75rem, 7vw, 2.25rem);
   font-weight: 700;
-  color: white; 
-  line-height: 1.15; 
-  letter-spacing: -0.015em; 
+  color: white;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
   margin: 0 0 8px;
   text-shadow: 0 3px 20px rgba(0,0,0,0.8);
+  text-align: center;
 `;
 
-const MTrekSub = styled.p`
-  font-family: ${tokens.font.display};
-  font-size: 1rem; 
-  font-style: italic; 
-  font-weight: 400;
-  color: ${tokens.color.primary}; 
-  margin: 0;
-  text-shadow: 0 2px 12px rgba(0,0,0,0.6);
-`;
-
-/* Rating - LEFT ALIGNED */
 const MRating = styled.div`
-  display: flex; 
-  align-items: center; 
-  justify-content: flex-start;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 8px;
   margin-bottom: 20px;
   text-shadow: 0 2px 8px rgba(0,0,0,0.8);
   animation: ${slideLeft} 0.6s ease 0.2s both;
+  width: 100%;
 `;
 
 const MStars = styled.span`
-  color: ${tokens.color.gold}; 
-  font-size: 0.9rem; 
+  color: ${tokens.color.gold};
+  font-size: 0.9rem;
   letter-spacing: 2px;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
 `;
 
 const MRatNum = styled.span`
-  color: white; 
-  font-weight: 700; 
+  color: white;
+  font-weight: 700;
   font-size: 0.95rem;
 `;
 
 const MRatCnt = styled.span`
-  color: rgba(255,255,255,0.65); 
+  color: rgba(255,255,255,0.65);
   font-size: 0.8rem;
 `;
 
-/* Info grid - 2 columns */
+// ── Info Grid - 2x2 centered ─────────────────────────────────────────────────
 const MInfoGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px 16px;
+  gap: 10px 14px;
   margin-bottom: 16px;
+  width: 100%;
+  max-width: 360px;
+  margin-left: auto;
+  margin-right: auto;
 `;
 
 const MInfoItem = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+  gap: 4px;
+  background: rgba(255,255,255,0.07);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 10px 12px;
 `;
 
 const MInfoLabel = styled.div`
   display: flex;
   align-items: center;
-  gap: 6px;
-  color: rgba(255,255,255,0.65);
-  font-size: 0.68rem;
+  gap: 5px;
+  color: rgba(255,255,255,0.6);
+  font-size: 0.65rem;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.07em;
   font-weight: 600;
 `;
 
 const MInfoIcon = styled.div`
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: ${tokens.color.primary};
-  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.6));
-  
+
   svg {
     width: 100%;
     height: 100%;
@@ -565,32 +675,32 @@ const MInfoIcon = styled.div`
 
 const MInfoValue = styled.div`
   color: white;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   font-weight: 700;
   line-height: 1.3;
 `;
 
-/* Description */
 const MDesc = styled.p`
-  color: rgba(255,255,255,0.75);
-  font-size: 0.82rem; 
-  line-height: 1.6; 
+  color: rgba(255,255,255,0.7);
+  font-size: 0.8rem;
+  line-height: 1.6;
   margin: 0;
   text-align: center;
   text-shadow: 0 2px 8px rgba(0,0,0,0.8);
-  padding: 0 10px;
+  padding: 0 8px;
+  max-width: 340px;
 `;
 
-/* ── Floating CTA bar ── */
+// ── Mobile Sticky CTA Bar ────────────────────────────────────────────────────
 const MStickyBar = styled.div`
   display: none;
-  
-  @media(max-width:768px){
+
+  @media (max-width: 768px) {
     display: block;
-    position: fixed; 
-    bottom: calc(64px + env(safe-area-inset-bottom, 0px)); 
-    left: 16px; 
-    right: 16px; 
+    position: fixed;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    left: 16px;
+    right: 16px;
     z-index: 200;
     background: linear-gradient(135deg, ${tokens.color.primary}, #ea580c);
     backdrop-filter: blur(20px);
@@ -605,17 +715,17 @@ const MStickyBar = styled.div`
 const MUrgencyLine = styled.p`
   text-align: center;
   color: white;
-  font-size: 0.65rem; 
+  font-size: 0.65rem;
   font-weight: 700;
-  text-transform: uppercase; 
+  text-transform: uppercase;
   letter-spacing: 0.06em;
   margin: 0 0 10px;
-  opacity: 0.95;
+  opacity: 0.9;
 `;
 
 const MCtaRow = styled.div`
-  display: flex; 
-  align-items: center; 
+  display: flex;
+  align-items: center;
   gap: 14px;
 `;
 
@@ -624,102 +734,68 @@ const MPriceWrap = styled.div`
 `;
 
 const MPriceLabel = styled.p`
-  color: rgba(255,255,255,0.7); 
+  color: rgba(255,255,255,0.7);
   font-size: 0.6rem;
-  text-transform: uppercase; 
-  letter-spacing: 0.08em; 
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   margin: 0 0 2px;
 `;
 
 const MPriceVal = styled.p`
-  color: white; 
-  font-size: 1.3rem; 
-  font-weight: 800; 
-  margin: 0; 
+  color: white;
+  font-size: 1.3rem;
+  font-weight: 800;
+  margin: 0;
   line-height: 1;
-  
-  span { 
-    font-size: 0.72rem; 
-    font-weight: 400; 
-    color: rgba(255,255,255,0.7); 
-    margin-left: 3px; 
+
+  span {
+    font-size: 0.72rem;
+    font-weight: 400;
+    color: rgba(255,255,255,0.7);
+    margin-left: 3px;
   }
 `;
 
 const MBookBtn = styled.button`
-  flex: 1; 
+  flex: 1;
   height: 48px;
   background: white;
-  border: none; 
+  border: none;
   border-radius: 12px;
-  color: ${tokens.color.primary}; 
+  color: ${tokens.color.primary};
   font-family: ${tokens.font.body};
-  font-size: 0.9rem; 
-  font-weight: 800; 
+  font-size: 0.9rem;
+  font-weight: 800;
   cursor: pointer;
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 8px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
   transition: ${tokens.transition.spring};
-  
-  &:hover { 
-    transform: scale(1.02); 
-    box-shadow: 0 6px 20px rgba(0,0,0,0.3); 
+
+  &:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
   }
-  
-  &:active { 
-    transform: scale(0.98); 
+
+  &:active {
+    transform: scale(0.98);
   }
-  
+
   svg {
     font-size: 16px;
   }
 `;
 
 // =============================================================================
-// INLINE SVG ICONS
-// =============================================================================
-const IcoArrow = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M5 12h14M12 5l7 7-7 7"/>
-  </svg>
-);
-
-// =============================================================================
 // FALLBACK DATA
 // =============================================================================
-const FALLBACK_HERO_IMAGE = "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?w=1600&q=80";
-
-const FALLBACK_CARDS = [
-  {
-    id: 1,
-    img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80",
-    heroImg: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=80",
-    title: "Sunrise View Point",
-    time: "02:30",
-    desc: "Arrive at Sukapura Village and head to Sunrise View Point by using 4WD Jeep",
-    main: true,
-  },
-  {
-    id: 2,
-    img: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80",
-    heroImg: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1600&q=80",
-    title: "Crater Rim Trek",
-    time: "05:00",
-    desc: null,
-    main: false,
-  },
-  {
-    id: 3,
-    img: "https://images.unsplash.com/photo-1501854140801-50d01698950b?w=800&q=80",
-    heroImg: "https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1600&q=80",
-    title: "Sea of Sand",
-    time: "07:30",
-    desc: null,
-    main: false,
-  },
+const FALLBACK_IMAGES = [
+  "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?w=1600&q=80",
+  "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=80",
+  "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1600&q=80",
+  "https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1600&q=80",
 ];
 
 const DEFAULT_AVATARS = [
@@ -728,24 +804,24 @@ const DEFAULT_AVATARS = [
   { color: "#e8a87c", initials: "KM" },
 ];
 
+const CAROUSEL_INTERVAL = 5000; // 5 seconds per slide
+
 // =============================================================================
 // COMPONENT
 // =============================================================================
 export default function Hero({
-  /* ── Desktop props ── */
-  title = "Unforgettable Mount Bromo",
-  titleItalic = "Sunrise Tour",
-  tagline = "Experience the Magic of East Java",
-  tourName = "Magic of East Java Tour",
+  // Desktop props
+  title = "Unforgettable Mountain Trek",
+  tourName = "Magic Himalayan Tour",
   tourDate = "24 July 2024",
-  description = "Immerse yourself in the stunning beauty of East Java with our iconic Mount Bromo Sunrise Tour",
+  description = "Immerse yourself in the stunning beauty of the Himalayas with our iconic mountain treks",
   heroImage = null,
-  cards = null,
+  carouselImages = null,
   avatars = DEFAULT_AVATARS,
   peopleCount = 32,
   onBookNow = () => {},
-  
-  /* ── Mobile props from backend ── */
+
+  // Mobile props
   price = "₹4,999",
   rating = 4.8,
   reviewCount = 120,
@@ -759,72 +835,68 @@ export default function Hero({
   spotsLeft = 3,
 }) {
   const navigate = useNavigate();
-  
-  // ── Desktop card state ─────────────────────────────────────────────────────
-  const cardData = cards && cards.length > 0 ? cards : FALLBACK_CARDS;
-  const [activeCardIndex, setActiveCardIndex] = useState(0);
-  const [imageKey, setImageKey] = useState(0);
+
+  // ── Carousel State ─────────────────────────────────────────────────────────
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const intervalRef = useRef(null);
+
+  // ── UI State ───────────────────────────────────────────────────────────────
   const [liked, setLiked] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  // Detect scroll for mobile top bar background
+  // ── Build image array ──────────────────────────────────────────────────────
+  // Priority: carouselImages prop > heroImage prop > fallback images
+  const slideImages = (() => {
+    if (carouselImages && carouselImages.length > 0) return carouselImages;
+    if (heroImage) return [heroImage, ...FALLBACK_IMAGES.slice(1)];
+    return FALLBACK_IMAGES;
+  })();
+
+  // ── Scroll listener - subtle glassmorphism ─────────────────────────────────
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    const handleScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const getCurrentHeroImage = () => {
-    if (heroImage) return heroImage;
-    const activeCard = cardData[activeCardIndex];
-    return activeCard?.heroImg || activeCard?.img || FALLBACK_HERO_IMAGE;
+  // ── Auto-carousel with setInterval ────────────────────────────────────────
+  const startAutoPlay = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % slideImages.length);
+    }, CAROUSEL_INTERVAL);
   };
 
-  const handleCardClick = (index) => {
-    if (index !== activeCardIndex) {
-      setActiveCardIndex(index);
-      setImageKey((prev) => prev + 1);
+  useEffect(() => {
+    if (isAutoPlaying) {
+      startAutoPlay();
     }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [isAutoPlaying, slideImages.length]);
+
+  // ── Manual navigation ──────────────────────────────────────────────────────
+  const goToSlide = (index) => {
+    setActiveSlide(index);
+    // Reset timer on manual navigation
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (isAutoPlaying) startAutoPlay();
   };
 
-  const renderCard = (card, index) => {
-    const isActive = activeCardIndex === index;
-    const CardComponent =
-      card.main ? MainCard : index === 1 ? SmallCard : TinyCard;
-    return (
-      <CardComponent key={card.id} $active={isActive} onClick={() => handleCardClick(index)}>
-        <CardImg src={card.img} alt={card.title} />
-        {card.main && (
-          <CardOverlay>
-            <CardTimeBadge>{card.time}</CardTimeBadge>
-            <CardTitle>{card.title}</CardTitle>
-            {card.desc && <CardDesc>{card.desc}</CardDesc>}
-          </CardOverlay>
-        )}
-        <ActiveIndicator $active={isActive} />
-      </CardComponent>
-    );
-  };
+  const goNext = () => goToSlide((activeSlide + 1) % slideImages.length);
+  const goPrev = () => goToSlide((activeSlide - 1 + slideImages.length) % slideImages.length);
 
+  // ── Handlers ──────────────────────────────────────────────────────────────
   const handleBack = () => {
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      navigate('/');
-    }
+    if (window.history.length > 1) navigate(-1);
+    else navigate("/");
   };
 
-  const toggleLike = () => {
-    setLiked(prev => !prev);
-  };
+  const toggleLike = () => setLiked((prev) => !prev);
 
-  // Stars component
-  const MStarsComponent = ({ rating }) => {
-    const fullStars = Math.floor(rating);
-    return "★".repeat(fullStars);
-  };
+  const MStarsComponent = ({ rating }) => "★".repeat(Math.floor(rating));
 
   return (
     <>
@@ -832,23 +904,26 @@ export default function Hero({
           DESKTOP LAYOUT
       ==================================================================== */}
       <Root>
-        <BgImage key={imageKey}>
-          <img src={getCurrentHeroImage()} alt={title} />
-        </BgImage>
+        {/* ── Auto Carousel Background ── */}
+        <CarouselTrack>
+          {slideImages.map((src, index) => (
+            <CarouselSlide key={index} $active={index === activeSlide}>
+              <img
+                src={src}
+                alt={`${title} - slide ${index + 1}`}
+                loading={index === 0 ? "eager" : "lazy"}
+              />
+            </CarouselSlide>
+          ))}
+        </CarouselTrack>
+
 
         <Body>
-          <TopBadge>
-            <BadgePill>
-              <FaCompass /> {tagline}
-            </BadgePill>
-          </TopBadge>
 
+
+          {/* Title Only - No subtitle/italic text */}
           <TitleBlock>
-            <MainTitle>
-              {title}
-              <br />
-              <em>{titleItalic}</em>
-            </MainTitle>
+            <MainTitle>{title}</MainTitle>
           </TitleBlock>
 
           <BottomRow>
@@ -869,13 +944,34 @@ export default function Hero({
               <Description>{description}</Description>
               <BookNowBtn onClick={onBookNow}>
                 Book Now
-                <span className="icon"><FiArrowUpRight size={14} /></span>
+                <span className="icon">
+                  <FiArrowUpRight size={14} />
+                </span>
               </BookNowBtn>
             </LeftPanel>
 
-            <CardsPanel>
-              {cardData.map((card, index) => renderCard(card, index))}
-            </CardsPanel>
+            {/* ── Carousel Controls (dots + arrows) ── */}
+            <CarouselControls>
+              <CarouselArrow onClick={goPrev} aria-label="Previous slide">
+                <FaChevronLeft />
+              </CarouselArrow>
+
+              <CarouselDots>
+                {slideImages.map((_, index) => (
+                  <CarouselDot
+                    key={index}
+                    $active={index === activeSlide}
+                    $duration={CAROUSEL_INTERVAL}
+                    onClick={() => goToSlide(index)}
+                    aria-label={`Go to slide ${index + 1}`}
+                  />
+                ))}
+              </CarouselDots>
+
+              <CarouselArrow onClick={goNext} aria-label="Next slide">
+                <FaChevronRight />
+              </CarouselArrow>
+            </CarouselControls>
           </BottomRow>
         </Body>
 
@@ -886,10 +982,10 @@ export default function Hero({
       </Root>
 
       {/* ====================================================================
-          MOBILE LAYOUT - FIXED NAV, LEFT-ALIGNED REVIEWS
+          MOBILE LAYOUT
       ==================================================================== */}
       <MRoot>
-        {/* Fixed Top Bar - stays on scroll */}
+        {/* Fixed Glassmorphism Top Bar */}
         <MTopBar $scrolled={scrolled}>
           <MIconBtn onClick={handleBack} aria-label="Go back">
             <FiArrowLeft />
@@ -904,25 +1000,26 @@ export default function Hero({
         </MTopBar>
 
         <MHero>
-          {/* Background image */}
-          <img src={getCurrentHeroImage()} alt={title} />
+          {/* Background image - uses first carousel image or heroImage */}
+          <img src={slideImages[0]} alt={title} />
 
-          {/* All content overlaid at bottom */}
+          {/* All content overlaid at bottom, centered */}
           <MContentWrapper>
             {/* Title */}
             <MTitleArea>
               <MTrekName>{title}</MTrekName>
-              <MTrekSub>{titleItalic}</MTrekSub>
             </MTitleArea>
 
-            {/* Rating - LEFT ALIGNED */}
+            {/* Rating - Centered */}
             <MRating>
-              <MStars><MStarsComponent rating={rating} /></MStars>
+              <MStars>
+                <MStarsComponent rating={rating} />
+              </MStars>
               <MRatNum>{rating}</MRatNum>
               <MRatCnt>· {reviewCount} reviews</MRatCnt>
             </MRating>
 
-            {/* Info grid */}
+            {/* Info Grid */}
             <MInfoGrid>
               <MInfoItem>
                 <MInfoLabel>
@@ -961,8 +1058,8 @@ export default function Hero({
             <MDesc>{description}</MDesc>
           </MContentWrapper>
         </MHero>
-      </MRoot>
 
+      </MRoot>
     </>
   );
 }
