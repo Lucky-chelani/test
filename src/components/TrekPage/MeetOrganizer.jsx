@@ -68,8 +68,6 @@ const pulse = keyframes`
 const SectionWrapper = styled.section`
   width: 100%;
   margin: 2rem 0;
-  animation: ${fadeUp} 0.6s ease-out both;
-  animation-delay: 0.2s;
 
   @media (max-width: 768px) {
     margin: 1rem 0;
@@ -790,7 +788,7 @@ export default function MeetOrganizer({
                       {/* fixed: icon sits beside value, not above it */}
                       <StatIcon>⏱️</StatIcon>
                       <StatContent>
-                        <StatValue>{organizerExperience}</StatValue>
+                        <StatValue>{organizerExperience} Years</StatValue>
                         <StatLabel>Experience</StatLabel>
                       </StatContent>
                     </StatItem>

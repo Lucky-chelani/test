@@ -1,6 +1,5 @@
 import { db, auth } from '../firebase';
-import { collection, addDoc, doc, updateDoc, getDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
-import { processPayment, handlePaymentSuccess, handlePaymentFailure } from '../services/payment';
+import { collection, addDoc, doc, setDoc, updateDoc, getDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 
 /**
  * Save a booking to Firestore with full participant details
@@ -18,14 +17,12 @@ export const saveBooking = async (bookingData) => {
     // Clean up any undefined values to prevent Firestore errors
     const cleanedBookingData = {};
     
-    // Only include defined fields
     Object.keys(bookingData).forEach(key => {
       if (bookingData[key] !== undefined) {
         cleanedBookingData[key] = bookingData[key];
       }
     });
 
-    // Ensure trek name is properly set based on trekId if it's missing
     if ((!cleanedBookingData.trekName || !cleanedBookingData.trekTitle) && cleanedBookingData.trekId) {
       const trekName = cleanedBookingData.trekId
         .replace(/-/g, ' ')
@@ -35,11 +32,8 @@ export const saveBooking = async (bookingData) => {
         
       if (!cleanedBookingData.trekName) cleanedBookingData.trekName = trekName;
       if (!cleanedBookingData.trekTitle) cleanedBookingData.trekTitle = trekName;
-      
-      console.log(`Fixed missing trek name for booking. Using: ${trekName} for trek ID: ${cleanedBookingData.trekId}`);
     }
     
-    // Never use "Test Trek" as a placeholder
     if (cleanedBookingData.trekName === "Test Trek" && cleanedBookingData.trekId) {
       const correctedName = cleanedBookingData.trekId
         .replace(/-/g, ' ')
@@ -49,13 +43,9 @@ export const saveBooking = async (bookingData) => {
       
       cleanedBookingData.trekName = correctedName;
       cleanedBookingData.trekTitle = correctedName;
-      
-      console.log(`Replaced "Test Trek" placeholder with actual name: ${correctedName} for trek ID: ${cleanedBookingData.trekId}`);
     }
 
-    // ✅ NEW: Validate participants array
     if (!cleanedBookingData.participants || !Array.isArray(cleanedBookingData.participants)) {
-      console.warn('No participants array found, creating from legacy data');
       cleanedBookingData.participants = [{
         participantId: 'p1',
         name: cleanedBookingData.name || cleanedBookingData.userName || 'Unknown',
@@ -66,12 +56,10 @@ export const saveBooking = async (bookingData) => {
       }];
     }
 
-    // ✅ NEW: Ensure totalParticipants matches participants array length
     if (cleanedBookingData.participants && Array.isArray(cleanedBookingData.participants)) {
       cleanedBookingData.totalParticipants = cleanedBookingData.participants.length;
     }
 
-    // ✅ NEW: Ensure primaryBooker info is set
     if (!cleanedBookingData.primaryBooker) {
       cleanedBookingData.primaryBooker = {
         uid: user.uid,
@@ -81,7 +69,6 @@ export const saveBooking = async (bookingData) => {
       };
     }
 
-    // Create booking in Firestore
     const bookingsRef = collection(db, 'bookings');
     const bookingDoc = await addDoc(bookingsRef, {
       ...cleanedBookingData,
@@ -91,11 +78,6 @@ export const saveBooking = async (bookingData) => {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
-
-    console.log(`✅ Booking saved with ID: ${bookingDoc.id}`);
-    console.log(`   Trek: ${cleanedBookingData.trekName}`);
-    console.log(`   Participants: ${cleanedBookingData.totalParticipants}`);
-    console.log(`   Primary Booker: ${cleanedBookingData.primaryBooker.name}`);
 
     return {
       id: bookingDoc.id,
@@ -113,18 +95,15 @@ export const saveBooking = async (bookingData) => {
  */
 export const getUserBookings = async () => {
   try {
-    // Check if user is authenticated
     const user = auth.currentUser;
     if (!user) {
       throw new Error('User must be logged in to view bookings');
     }
 
-    // Query bookings
     const bookingsRef = collection(db, 'bookings');
     const q = query(bookingsRef, where('userId', '==', user.uid));
     const querySnapshot = await getDocs(q);
 
-    // Process results
     const bookings = [];
     querySnapshot.forEach((doc) => {
       bookings.push({
@@ -164,32 +143,95 @@ export const getBookingById = async (bookingId) => {
   }
 };
 
+/* ==========================================================================
+   RAZORPAY INTEGRATION (Fixes the Redirect and Organizer Bug)
+   ========================================================================== */
+
 /**
  * Process payment for a trek booking
- * @param {Object} trekData - Trek details
- * @param {Object} bookingDetails - Booking details
- * @returns {Promise<Object>} - Payment result
  */
 export const processBookingPayment = async (trekData, bookingDetails) => {
   try {
-    const paymentResult = await processPayment(trekData, bookingDetails);
-    return paymentResult;
+    // 1. Create a unique booking ID
+    const bookingId = `order_${Date.now()}`;
+
+    // 2. Extract API Key safely
+    const razorpayKey = process.env.REACT_APP_RAZORPAY_KEY_ID || import.meta.env?.VITE_RAZORPAY_KEY_ID;
+    
+    if (!razorpayKey) {
+      throw new Error("Razorpay API Key is missing from your .env file");
+    }
+
+    // 3. Save the pending booking to Firebase immediately to lock in the Organizer!
+    await setDoc(doc(db, 'bookings', bookingId), {
+      ...bookingDetails,
+      id: bookingId,
+      organizerId: bookingDetails.organizerId || trekData.organizerId || trekData.createdBy || null,
+      organizerName: bookingDetails.organizerName || trekData.organizerName || trekData.authorName || 'Unassigned',
+      status: 'pending',
+      paymentStatus: 'pending',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+
+    // 4. Open Razorpay Checkout Modal
+    const options = {
+      key: razorpayKey,
+      amount: Math.round(bookingDetails.amount * 100), // Paise
+      currency: "INR",
+      name: "Trovia Adventures",
+      description: `Payment for ${trekData.name}`,
+      handler: function (response) {
+        // THIS IS THE FIX: This triggers the redirect in BookingPage!
+        if (typeof window.onRazorpaySuccess === 'function') {
+          window.onRazorpaySuccess({
+            ...response,
+            bookingId: bookingId
+          });
+        }
+      },
+      prefill: {
+        name: bookingDetails.primaryBooker?.name || "",
+        email: bookingDetails.primaryBooker?.email || "",
+        contact: bookingDetails.primaryBooker?.contactNumber || "",
+      },
+      theme: { color: "#FF6B35" }
+    };
+
+    const rzp = new window.Razorpay(options);
+    
+    rzp.on('payment.failed', function (response) {
+      if (typeof window.onRazorpayFailure === 'function') {
+        window.onRazorpayFailure(response.error);
+      }
+    });
+    
+    rzp.open();
+
+    // Tell the BookingPage that initialization was successful
+    return { success: true, orderId: bookingId };
+
   } catch (error) {
-    console.error('Error processing booking payment:', error);
-    throw new Error('Payment processing failed');
+    console.error('Error initiating payment:', error);
+    return { success: false, error: error.message };
   }
 };
 
 /**
- * Handle Razorpay payment success
- * @param {string} bookingId - Booking ID
- * @param {Object} paymentResponse - Razorpay payment response
- * @returns {Promise<Object>} - Updated booking
+ * Handle Razorpay payment success - Updates DB to Confirmed
  */
 export const completeBookingPayment = async (bookingId, paymentResponse) => {
   try {
-    const updatedBooking = await handlePaymentSuccess(bookingId, paymentResponse);
-    return updatedBooking;
+    const bookingRef = doc(db, 'bookings', bookingId);
+    await updateDoc(bookingRef, {
+      status: 'confirmed',
+      paymentStatus: 'completed',
+      paymentId: paymentResponse.razorpay_payment_id || 'N/A',
+      updatedAt: serverTimestamp()
+    });
+
+    const snap = await getDoc(bookingRef);
+    return { id: snap.id, ...snap.data() };
   } catch (error) {
     console.error('Error completing booking payment:', error);
     throw new Error('Failed to complete payment');
@@ -198,15 +240,18 @@ export const completeBookingPayment = async (bookingId, paymentResponse) => {
 
 /**
  * Handle Razorpay payment failure
- * @param {string} bookingId - Booking ID
- * @param {Object} error - Error details
- * @returns {Promise<void>}
  */
 export const handleBookingPaymentFailure = async (bookingId, error) => {
   try {
-    await handlePaymentFailure(bookingId, error);
+    if (bookingId) {
+      await updateDoc(doc(db, 'bookings', bookingId), {
+        status: 'failed',
+        paymentStatus: 'failed',
+        errorReason: error?.description || 'Unknown error',
+        updatedAt: serverTimestamp()
+      });
+    }
   } catch (error) {
     console.error('Error handling booking payment failure:', error);
-    throw new Error('Failed to handle payment failure');
   }
 };

@@ -210,7 +210,6 @@ const OverallRatingBox = styled(motion.div)`
     height: 3px;
     background: linear-gradient(90deg, ${tokens.colors.primary}, ${tokens.colors.primaryLight}, ${tokens.colors.gold});
     background-size: 200% 100%;
-    animation: ${shimmer} 3s linear infinite;
   }
 
   @media (max-width: 640px) {
@@ -230,7 +229,6 @@ const RatingNumber = styled.div`
   -webkit-text-fill-color: transparent;
   background-clip: text;
   line-height: 1;
-  animation: ${glow} 3s ease-in-out infinite;
   position: relative;
   z-index: 1;
   @media (max-width: 640px) { font-size: 3.5rem; }
@@ -311,7 +309,6 @@ const RatingBarsSection = styled(motion.div)`
     height: 2px;
     background: linear-gradient(90deg, transparent, ${tokens.colors.primary}50, ${tokens.colors.primaryLight}, ${tokens.colors.primary}50, transparent);
     background-size: 200% 100%;
-    animation: ${shimmer} 3s linear infinite;
   }
   @media (max-width: 768px) { padding: 1.75rem 1.25rem; }
 `;
@@ -1250,10 +1247,6 @@ export default function ReviewsSectionComponent({
                 </RatingBarLabel>
                 <RatingBarTrack>
                   <RatingBarFill
-                    initial={{ width: 0 }}
-                    whileInView={{ width: `${(cat.value / 5) * 100}%` }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 1, delay: index * 0.1, ease: "easeOut" }}
                   />
                 </RatingBarTrack>
               </RatingBarContent>

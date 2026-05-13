@@ -182,7 +182,6 @@ const SectionCard = styled.section`
       transparent
     );
     background-size: 200% 100%;
-    animation: ${shimmer} 3s linear infinite;
   }
 
   &:hover {

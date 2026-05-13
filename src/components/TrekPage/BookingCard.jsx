@@ -134,7 +134,6 @@ const BookingCard = styled.div`
       transparent
     );
     background-size: 200% 100%;
-    animation: ${shimmer} 3s linear infinite;
   }
 `;
 
@@ -679,7 +678,7 @@ export default function BookingCardComponent({
           Have questions about this trek? Chat with {organizerName || "our team"} directly.
         </p>
         <WhatsAppSideBtn href={whatsappLink} target="_blank" rel="noopener noreferrer">
-          <FaWhatsapp /> Chat on WhatsApp
+          <FaWhatsapp /> Chat with our Team on Whatsapp
         </WhatsAppSideBtn>
       </SideCard>
 

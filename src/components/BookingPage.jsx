@@ -157,7 +157,7 @@ const PageWrapper = styled.div`
   overflow: hidden;
   margin-bottom: calc(-90px - env(safe-area-inset-bottom));
   @media (max-width: 768px) { margin-bottom: calc(-75px - env(safe-area-inset-bottom)); }
-  @media (max-width: 480px) { padding: 0; align-items: flex-start; height: 100dvh; overflow: hidden; margin-bottom: calc(-70px - env(safe-area-inset-bottom)); }
+  @media (max-width: 480px) { padding: 0; align-items: flex-start; height: auto; min-height: 100dvh; overflow: auto; margin-bottom: 0; }
   @media (max-height: 600px) { margin-bottom: calc(-65px - env(safe-area-inset-bottom)); }
 `;
 
@@ -173,7 +173,7 @@ const BookingCard = styled.div`
   box-shadow: 0 50px 100px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
   position: relative;
   animation: ${scaleIn} 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-  @media (max-width: 900px) { display: flex; flex-direction: column; height: 100dvh; min-height: 100dvh; max-height: 100dvh; max-width: 100%; border-radius: 0; box-shadow: none; animation: none; }
+  @media (max-width: 900px) { display: flex; flex-direction: column; height: auto; min-height: 100dvh; max-height: none; max-width: 100%; border-radius: 0; box-shadow: none; animation: none; overflow: visible; }
 `;
 
 const OrangePanel = styled.div`
@@ -241,12 +241,12 @@ const PriceTag = styled.div`
 const DarkFormPanel = styled.div`
   background: ${theme.secondary}; display: flex; flex-direction: column; overflow-y: auto; max-height: 100%; position: relative; min-height: 0;
   &::-webkit-scrollbar { width: 4px; } &::-webkit-scrollbar-track { background: transparent; } &::-webkit-scrollbar-thumb { background: ${theme.mediumGray}; border-radius: 4px; }
-  @media (max-width: 900px) { flex: 1; min-height: 0; max-height: none; overflow-y: auto; -webkit-overflow-scrolling: touch; border-top-left-radius: 20px; border-top-right-radius: 20px; margin-top: -1px; }
+  @media (max-width: 900px) { flex: none; overflow: visible; min-height: auto; max-height: none; border-top-left-radius: 20px; border-top-right-radius: 20px; margin-top: -1px; }
 `;
 
 const PanelHeader = styled.div`
   padding: 1.75rem 2rem 0; position: sticky; top: 0; background: ${theme.secondary}; z-index: 10; border-bottom: 1px solid ${theme.borderLight}; padding-bottom: 1rem;
-  @media (max-width: 900px) { padding: 1.25rem 1.25rem 0; padding-bottom: 0.75rem; }
+  @media (max-width: 900px) { padding: 1.25rem 1.25rem 0; padding-bottom: 0.75rem; position: relative; }
   @media (max-width: 480px) { padding: 1rem 1rem 0; padding-bottom: 0.65rem; }
 `;
 
@@ -256,6 +256,8 @@ const HeaderTitle = styled.h1`font-family: 'Sora', sans-serif; font-size: 1.2rem
 
 const StepTrack = styled.div`
   display: flex; align-items: center; gap: 0;
+  margin-bottom: 15px;
+  margin-left: 20px;
   @media (max-width: 480px) { justify-content: center; transform: scale(0.85); transform-origin: center center; margin: -4px 0 -8px 0; }
   @media (max-width: 360px) { transform: scale(0.75); margin: -6px 0 -10px 0; }
 `;
@@ -268,7 +270,7 @@ const StepDot = styled.div`
   @media (max-width: 480px) { transform: translateY(-6px); }
 `;
 const StepLine = styled.div`
-  width: 60px; height: 2px;
+  width: 100px; height: 2px;
   background: ${props => props.completed ? `linear-gradient(90deg, ${theme.success}, ${theme.success})` : theme.mediumGray};
   transition: all 0.4s ease; margin: 0 0.3rem;
   @media (max-width: 900px) { width: 50px; }
@@ -289,8 +291,8 @@ const PanelBody = styled.div`
 `;
 
 const PanelFooter = styled.div`
-  padding: 1rem 2rem 1em; background: ${theme.secondary}; border-top: 1px solid ${theme.borderLight}; display: flex; justify-content: space-between; align-items: center; gap: 1rem; position: sticky; bottom: 0; z-index: 10;
-  @media (max-width: 900px) { padding: 1rem 1.25rem 1.25rem; }
+  padding: 1rem 2rem 1rem; background: ${theme.secondary}; border-top: 1px solid ${theme.borderLight}; display: flex; justify-content: space-between; align-items: center; gap: 1rem; position: sticky; bottom: 0; z-index: 10;
+  @media (max-width: 900px) { padding: 1rem 1.25rem 1.25rem; position: relative; }
   @media (max-width: 480px) { padding: 0.85rem 1rem 1rem; flex-direction: column-reverse; gap: 0.75rem; }
 `;
 
@@ -369,49 +371,49 @@ const ErrorSpan = styled.span`
 // ============================================
 const SecurePaymentBanner = styled.div`display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.6rem; background: rgba(78, 171, 83, 0.1); border: 1px solid rgba(78, 171, 83, 0.25); border-radius: 10px; font-size: 0.8rem; font-weight: 600; color: #6BCB77; svg { font-size: 0.9rem; } @media (max-width: 480px) { font-size: 0.72rem; padding: 0.5rem; }`;
 
-const BookingSummaryCard = styled.div`background: ${theme.cardBg}; padding: 1.25rem; border-radius: 16px; border: 1px solid ${theme.borderLight}; @media (max-width: 480px) { padding: 1rem; border-radius: 12px; }`;
-const SummaryHeader = styled.div`display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.85rem; padding-bottom: 0.65rem; border-bottom: 1px solid ${theme.borderLight};`;
-const SectionIcon = styled.div`width: 36px; height: 36px; border-radius: 10px; background: ${props => props.variant === 'green' ? 'linear-gradient(135deg, #4CAF50 0%, #388E3C 100%)' : `linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryDark} 100%)`}; display: flex; align-items: center; justify-content: center; color: white; font-size: 1rem; flex-shrink: 0; @media (max-width: 480px) { width: 32px; height: 32px; font-size: 0.9rem; }`;
-const SummaryTitle = styled.h3`margin: 0; font-size: 1rem; font-weight: 700; color: ${theme.textDark}; font-family: 'Sora', sans-serif; @media (max-width: 480px) { font-size: 0.9rem; }`;
-const SummaryGrid = styled.div`display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; @media (max-width: 480px) { grid-template-columns: 1fr; gap: 0.5rem; }`;
-const SummaryItem = styled.div`font-size: 0.85rem; color: ${theme.textLight}; font-weight: 500; strong { color: ${theme.textDark}; font-weight: 600; } @media (max-width: 480px) { font-size: 0.8rem; }`;
-const ParticipantChip = styled.div`display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.65rem; background: ${props => props.isPrimary ? `rgba(255, 107, 53, 0.15)` : theme.cardBgLight}; border-radius: 20px; font-size: 0.78rem; font-weight: 600; color: ${props => props.isPrimary ? theme.primary : theme.textLight}; border: 1px solid ${props => props.isPrimary ? 'rgba(255,107,53,0.25)' : theme.borderLight}; margin: 0.2rem 0.2rem 0.2rem 0; @media (max-width: 480px) { font-size: 0.72rem; padding: 0.25rem 0.5rem; }`;
+const BookingSummaryCard = styled.div`background: ${theme.cardBg}; padding: 1.5rem; border-radius: 20px; border: 1px solid ${theme.borderLight}; margin-bottom: 1.5rem; @media (max-width: 480px) { padding: 1.25rem; border-radius: 16px; margin-bottom: 1.25rem; }`;
+const SummaryHeader = styled.div`display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; padding-bottom: 0.85rem; border-bottom: 1px solid ${theme.borderLight};`;
+const SectionIcon = styled.div`width: 40px; height: 40px; border-radius: 12px; background: ${props => props.variant === 'green' ? 'linear-gradient(135deg, #4CAF50 0%, #388E3C 100%)' : `linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryDark} 100%)`}; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.1rem; flex-shrink: 0; @media (max-width: 480px) { width: 36px; height: 36px; font-size: 1rem; }`;
+const SummaryTitle = styled.h3`margin: 0; font-size: 1.1rem; font-weight: 700; color: ${theme.textDark}; font-family: 'Sora', sans-serif; @media (max-width: 480px) { font-size: 1rem; }`;
+const SummaryGrid = styled.div`display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; @media (max-width: 480px) { grid-template-columns: 1fr; gap: 0.75rem; }`;
+const SummaryItem = styled.div`font-size: 0.9rem; color: ${theme.textLight}; font-weight: 500; strong { color: ${theme.textDark}; font-weight: 600; display: inline-block; width: 100px; } @media (max-width: 480px) { font-size: 0.85rem; strong { width: 90px; } }`;
+const ParticipantChip = styled.div`display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.75rem; background: ${props => props.isPrimary ? `rgba(255, 107, 53, 0.15)` : theme.cardBgLight}; border-radius: 20px; font-size: 0.8rem; font-weight: 600; color: ${props => props.isPrimary ? theme.primary : theme.textLight}; border: 1px solid ${props => props.isPrimary ? 'rgba(255,107,53,0.25)' : theme.borderLight}; margin: 0.25rem 0.25rem 0.25rem 0; @media (max-width: 480px) { font-size: 0.75rem; padding: 0.3rem 0.6rem; }`;
 
-// ★ Payment Split Card
 const PaymentSplitCard = styled.div`
   background: rgba(255, 107, 53, 0.06);
   border: 1px solid rgba(255, 107, 53, 0.2);
-  border-radius: 14px;
-  padding: 1.25rem;
+  border-radius: 20px;
+  padding: 1.5rem;
   position: relative;
   overflow: hidden;
-  &::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, ${theme.primary}, ${theme.primaryDark}); }
-  @media (max-width: 480px) { padding: 1rem; border-radius: 12px; }
+  margin-bottom: 1.5rem;
+  &::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, ${theme.primary}, ${theme.primaryDark}); }
+  @media (max-width: 480px) { padding: 1.25rem; border-radius: 16px; margin-bottom: 1.25rem; }
 `;
-const SplitGrid = styled.div`display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 0.85rem; @media (max-width: 400px) { grid-template-columns: 1fr; }`;
+const SplitGrid = styled.div`display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; @media (max-width: 400px) { grid-template-columns: 1fr; }`;
 const SplitItem = styled.div`
   background: ${props => props.$active ? 'rgba(255, 107, 53, 0.12)' : 'rgba(255,255,255,0.03)'};
   border: 1px solid ${props => props.$active ? 'rgba(255, 107, 53, 0.25)' : theme.borderLight};
-  border-radius: 12px;
-  padding: 1rem;
+  border-radius: 16px;
+  padding: 1.25rem;
   text-align: center;
 `;
-const SplitPercent = styled.div`font-size: 1.6rem; font-weight: 800; color: ${props => props.$active ? theme.primary : theme.textLight}; line-height: 1; margin-bottom: 0.25rem; font-family: 'Sora', sans-serif; @media (max-width: 480px) { font-size: 1.3rem; }`;
-const SplitLabel = styled.div`font-size: 0.72rem; color: ${theme.darkGray}; font-weight: 500; line-height: 1.4; margin-bottom: 0.4rem;`;
-const SplitAmount = styled.div`font-size: 1rem; font-weight: 700; color: ${props => props.$active ? theme.primary : theme.textDark}; font-family: 'Sora', sans-serif;`;
-const SplitNote = styled.div`margin-top: 0.85rem; padding: 0.6rem 0.85rem; background: rgba(255,255,255,0.03); border-radius: 8px; font-size: 0.72rem; color: ${theme.darkGray}; display: flex; align-items: flex-start; gap: 0.4rem; line-height: 1.5; svg { color: ${theme.primary}; flex-shrink: 0; margin-top: 1px; } @media (max-width: 480px) { font-size: 0.68rem; }`;
+const SplitPercent = styled.div`font-size: 1.8rem; font-weight: 800; color: ${props => props.$active ? theme.primary : theme.textLight}; line-height: 1; margin-bottom: 0.35rem; font-family: 'Sora', sans-serif; @media (max-width: 480px) { font-size: 1.5rem; }`;
+const SplitLabel = styled.div`font-size: 0.8rem; color: ${theme.darkGray}; font-weight: 500; line-height: 1.4; margin-bottom: 0.6rem;`;
+const SplitAmount = styled.div`font-size: 1.1rem; font-weight: 700; color: ${props => props.$active ? theme.primary : theme.textDark}; font-family: 'Sora', sans-serif;`;
+const SplitNote = styled.div`margin-top: 1rem; padding: 0.75rem 1rem; background: rgba(255,255,255,0.03); border-radius: 10px; font-size: 0.8rem; color: ${theme.darkGray}; display: flex; align-items: flex-start; gap: 0.5rem; line-height: 1.5; svg { color: ${theme.primary}; flex-shrink: 0; margin-top: 2px; } @media (max-width: 480px) { font-size: 0.75rem; padding: 0.65rem 0.85rem; }`;
 
 const PriceSummary = styled.div`
-  background: ${theme.cardBg}; padding: 1.4rem; border-radius: 16px; border: 1px solid ${theme.borderLight}; position: relative; overflow: hidden;
-  &::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, ${theme.primary}, ${theme.accent}, ${theme.primary}); background-size: 200% 100%; animation: ${shimmer} 2s infinite linear; }
-  @media (max-width: 480px) { padding: 1.1rem; border-radius: 12px; }
+  background: ${theme.cardBg}; padding: 1.75rem; border-radius: 20px; border: 1px solid ${theme.borderLight}; position: relative; overflow: hidden; margin-bottom: 1.5rem;
+  &::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, ${theme.primary}, ${theme.accent}, ${theme.primary}); background-size: 200% 100%; animation: ${shimmer} 2s infinite linear; }
+  @media (max-width: 480px) { padding: 1.25rem; border-radius: 16px; margin-bottom: 1.25rem; }
 `;
-const PriceItem = styled.div`display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; font-size: 0.9rem; font-weight: 500; color: ${theme.textLight}; &:not(:last-child) { border-bottom: 1px solid ${theme.borderLight}; } @media (max-width: 480px) { font-size: 0.82rem; padding: 0.5rem 0; }`;
+const PriceItem = styled.div`display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; font-size: 0.95rem; font-weight: 500; color: ${theme.textLight}; &:not(:last-child) { border-bottom: 1px solid ${theme.borderLight}; } @media (max-width: 480px) { font-size: 0.85rem; padding: 0.6rem 0; }`;
 const PriceTotal = styled(PriceItem)`
-  margin-top: 0.5rem; padding-top: 1rem; border-top: 2px solid ${theme.borderLight}; font-weight: 800; font-size: 1.25rem; color: ${theme.textDark};
-  background: rgba(255, 107, 53, 0.08); margin: 0.5rem -1.4rem -1.4rem; padding: 1rem 1.4rem; border-radius: 0 0 14px 14px;
-  span:last-child { color: ${theme.primary}; font-size: 1.5rem; }
-  @media (max-width: 480px) { font-size: 1.1rem; margin: 0.5rem -1.1rem -1.1rem; padding: 0.85rem 1.1rem; border-radius: 0 0 10px 10px; span:last-child { font-size: 1.3rem; } }
+  margin-top: 0.75rem; padding-top: 1.25rem; border-top: 2px solid ${theme.borderLight}; font-weight: 800; font-size: 1.35rem; color: ${theme.textDark};
+  background: rgba(255, 107, 53, 0.08); margin: 0.75rem -1.75rem -1.75rem; padding: 1.25rem 1.75rem; border-radius: 0 0 20px 20px;
+  span:last-child { color: ${theme.primary}; font-size: 1.6rem; }
+  @media (max-width: 480px) { font-size: 1.15rem; margin: 0.6rem -1.25rem -1.25rem; padding: 1rem 1.25rem; border-radius: 0 0 16px 16px; span:last-child { font-size: 1.4rem; } }
 `;
 
 const ErrorMessage = styled.div`color: #EF5350; background: rgba(239, 83, 80, 0.1); border: 1.5px solid rgba(239, 83, 80, 0.25); padding: 1rem 1.1rem; border-radius: 12px; font-size: 0.9rem; font-weight: 500; display: flex; align-items: center; gap: 0.75rem; animation: ${bounceIn} 0.5s ease-out; svg { color: #EF5350; font-size: 1.1rem; flex-shrink: 0; } @media (max-width: 480px) { padding: 0.85rem; font-size: 0.82rem; }`;
@@ -427,8 +429,8 @@ const Button = styled.button`
   @media (max-width: 480px) { width: 100%; padding: 0.8rem 1.5rem; font-size: 0.85rem; }
 `;
 const CancelButton = styled(Button)`background: ${theme.cardBg}; border: 1.5px solid ${theme.borderLight}; color: ${theme.textLight}; min-width: 100px; padding: 0.85rem 1.25rem; &:hover { background: ${theme.cardBgLight}; color: ${theme.textDark}; border-color: ${theme.mediumGray}; } @media (max-width: 480px) { min-width: auto; }`;
-const ProceedButton = styled(Button)`background: linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryDark} 100%); border: none; color: white; min-width: 160px; box-shadow: 0 4px 15px ${theme.primaryGlow}; &:hover { transform: translateY(-2px); box-shadow: 0 8px 25px ${theme.primaryGlow}; } &:disabled { background: ${theme.mediumGray}; box-shadow: none; } @media (max-width: 480px) { min-width: auto; }`;
-const PaymentButton = styled(ProceedButton)`background: linear-gradient(135deg, #2a2d35 0%, #1a1d23 100%); border: 1.5px solid ${theme.primary}; box-shadow: 0 4px 15px rgba(255, 107, 53, 0.2); &:hover { background: linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryDark} 100%); box-shadow: 0 8px 25px ${theme.primaryGlow}; }`;
+const ProceedButton = styled(Button)`background: linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryDark} 100%); border: none; color: white; min-width: 160px; box-shadow: 0 4px 15px ${theme.primaryGlow}; &:hover { transform: translateY(-2px); box-shadow: 0 8px 25px ${theme.primaryGlow}; } &:disabled { background: ${theme.mediumGray}; box-shadow: none; cursor: not-allowed; } @media (max-width: 480px) { min-width: auto; }`;
+const PaymentButton = styled(ProceedButton)`background: linear-gradient(135deg, #2a2d35 0%, #1a1d23 100%); border: 1.5px solid ${theme.primary}; box-shadow: 0 4px 15px rgba(255, 107, 53, 0.2); &:hover:not(:disabled) { background: linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryDark} 100%); box-shadow: 0 8px 25px ${theme.primaryGlow}; }`;
 const LoadingIndicator = styled.div`display: inline-block; width: 1.1rem; height: 1.1rem; border: 2.5px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #ffffff; animation: ${spin} 1s linear infinite;`;
 
 // ============================================
@@ -609,11 +611,10 @@ const BookingPage = () => {
 
   // ── Pricing ──
   const calculateTotalPrice = useCallback(() => {
-    const sub = basePrice * formData.totalParticipants;
+    const sub = basePrice * (formData.totalParticipants || 1);
     return activeCoupon ? Math.max(sub - discountAmount, 0) : sub;
   }, [basePrice, formData.totalParticipants, activeCoupon, discountAmount]);
 
-  // ★ 20% upfront, 80% remaining
   const calculateUpfront = useCallback(() => Math.ceil(calculateTotalPrice() * 0.20), [calculateTotalPrice]);
   const calculateRemaining = useCallback(() => calculateTotalPrice() - calculateUpfront(), [calculateTotalPrice, calculateUpfront]);
 
@@ -635,16 +636,54 @@ const BookingPage = () => {
     else if (count < cur.length) setParticipants(cur.slice(0, count));
     setFormData(prev => ({ ...prev, totalParticipants: count })); setIsParticipantCardOpen(false);
   };
+  
   const handleBoxClick = (boxId) => { if (currentExpandedBox === boxId) return; setCurrentExpandedBox(boxId); };
-  const handleDoneClick = (boxId) => { setCompletedBoxes(prev => new Set([...prev, boxId])); if (boxId === 'primary') setCurrentExpandedBox('participant-0'); else { const ci = parseInt(boxId.split('-')[1]); if (ci < participants.length-1) setCurrentExpandedBox(`participant-${ci+1}`); else setCurrentExpandedBox(null); } };
-  const handlePreviousBox = () => { if (!currentExpandedBox || currentExpandedBox === 'primary') return; if (currentExpandedBox === 'participant-0') setCurrentExpandedBox('primary'); else { const ci = parseInt(currentExpandedBox.split('-')[1]); setCurrentExpandedBox(`participant-${ci-1}`); } };
+  
+  const handleDoneClick = (boxId) => { 
+    setCompletedBoxes(prev => new Set([...prev, boxId])); 
+    if (boxId === 'primary') {
+      if (participants.length > 1) setCurrentExpandedBox('participant-1');
+      else setCurrentExpandedBox(null);
+    } else {
+      const ci = parseInt(boxId.split('-')[1]); 
+      if (ci < participants.length - 1) setCurrentExpandedBox(`participant-${ci+1}`); 
+      else setCurrentExpandedBox(null); 
+    } 
+  };
+  
+  const handlePreviousBox = () => { 
+    if (!currentExpandedBox || currentExpandedBox === 'primary') return; 
+    if (currentExpandedBox === 'participant-1') setCurrentExpandedBox('primary');
+    else { 
+      const ci = parseInt(currentExpandedBox.split('-')[1]); 
+      setCurrentExpandedBox(`participant-${ci-1}`); 
+    } 
+  };
+  
   const isBoxValid = (boxId) => {
     if (boxId === 'primary') return primaryBooker.name && primaryBooker.email && /^\d{10}$/.test(primaryBooker.contactNumber);
     const idx = parseInt(boxId.split('-')[1]); return participants[idx]?.name?.trim() !== '';
   };
-  const handlePrimaryBookerChange = (field, value) => { setPrimaryBooker(prev => ({ ...prev, [field]: value })); if (participants[0]?.isPrimaryBooker) { const u = [...participants]; u[0] = { ...u[0], [field]: value }; setParticipants(u); } if (errors[`primaryBooker_${field}`]) setErrors(prev => ({ ...prev, [`primaryBooker_${field}`]: undefined })); };
-  const handleParticipantChange = (idx, field, value) => { const u = [...participants]; u[idx] = { ...u[idx], [field]: value }; setParticipants(u); if (errors[`participant_${idx}_${field}`]) setErrors(prev => ({ ...prev, [`participant_${idx}_${field}`]: undefined })); };
+  
+  const handlePrimaryBookerChange = (field, value) => { 
+    setPrimaryBooker(prev => ({ ...prev, [field]: value })); 
+    if (participants[0]?.isPrimaryBooker) { 
+      const u = [...participants]; 
+      u[0] = { ...u[0], [field]: value }; 
+      setParticipants(u); 
+    } 
+    if (errors[`primaryBooker_${field}`]) setErrors(prev => ({ ...prev, [`primaryBooker_${field}`]: undefined })); 
+  };
+  
+  const handleParticipantChange = (idx, field, value) => { 
+    const u = [...participants]; 
+    u[idx] = { ...u[idx], [field]: value }; 
+    setParticipants(u); 
+    if (errors[`participant_${idx}_${field}`]) setErrors(prev => ({ ...prev, [`participant_${idx}_${field}`]: undefined })); 
+  };
+  
   const handleChange = (e) => { const { name, value } = e.target; setFormData(prev => ({ ...prev, [name]: value })); if (errors[name]) setErrors(prev => ({ ...prev, [name]: undefined })); };
+  
   const validateForm = () => {
     const e = {};
     if (!formData.startDate) e.startDate = "Start date is required";
@@ -657,68 +696,172 @@ const BookingPage = () => {
     participants.forEach((p, i) => { if (!p.name?.trim()) e[`participant_${i}_name`] = `Participant ${i+1} name required`; if (p.email && !/\S+@\S+\.\S+/.test(p.email)) e[`participant_${i}_email`] = `Invalid email`; });
     setErrors(e); return Object.keys(e).length === 0;
   };
+  
   const handleSubmit = (e) => { e.preventDefault(); if (validateForm()) setStep(2); };
+  
   const handleApplyCoupon = (coupon) => { if (coupon) { setActiveCoupon(coupon); setDiscountAmount(coupon.calculatedDiscount); setPaymentError(null); } else { setActiveCoupon(null); setDiscountAmount(0); } };
 
-  // ★ Payment — charges only 20% via Razorpay
+  // ============================================
+  // FAULT TOLERANT PAYMENT PROCESS
+  // ============================================
   const handlePaymentProcess = async () => {
+    // Fail-safe to prevent double clicking
+    if (isProcessingPayment || paymentSuccess) return; 
+
     try {
-      setIsProcessingPayment(true); setPaymentError(null);
-      const fullTrekCost = calculateTotalPrice();  // e.g. ₹6,170
-      const upfront = calculateUpfront();          // e.g. ₹1,234 (20%)
-      const remain = calculateRemaining();         // e.g. ₹4,936 (80%)
+      setIsProcessingPayment(true); 
+      setPaymentError(null);
+
+      const fullTrekCost = calculateTotalPrice(); 
+      const upfront = calculateUpfront();         
+      const remain = calculateRemaining();        
+
+      // 💥 FAULT TOLERANCE: Safe extraction of all fields so nothing breaks 💥
+      const safeParticipants = Array.isArray(participants) ? participants : [];
+      const safeTotalPax = Number(formData.totalParticipants) || 1;
+      const safeBasePrice = Number(basePrice) || 0;
 
       const bookingData = {
-        primaryBooker: { uid: auth.currentUser?.uid || null, ...primaryBooker },
-        participants, trekId: trek.id, trekName: trek.name, startDate: formData.startDate,
-        pricePerPerson: basePrice, totalParticipants: formData.totalParticipants,
-        subtotal: basePrice * formData.totalParticipants, discount: discountAmount,
-        totalAmount: fullTrekCost,          // ★ FULL cost for DB
-        upfrontAmount: upfront,             // ★ 20% for DB
-        remainingAmount: remain,            // ★ 80% for DB
+        primaryBooker: { 
+          uid: auth.currentUser?.uid || 'guest', 
+          ...primaryBooker 
+        },
+        participants: safeParticipants, 
+        trekId: trek?.id || 'unknown_trek', 
+        // Inside BookingPage.jsx (in handlePaymentProcess)
+        trekName: trek?.name || trek?.title || 'Unknown Trek',
+        
+        // ★ THE ORGANIZER TRACKING LOGIC ★
+        organizerId: trek?.organizerId || trek?.createdBy || null, 
+        organizerName: trek?.organizerName || trek?.authorName || 'Unassigned', 
+
+        startDate: formData.startDate || '',
+        pricePerPerson: safeBasePrice, 
+        totalParticipants: safeTotalPax,
+        subtotal: safeBasePrice * safeTotalPax, 
+        discount: discountAmount || 0,
+        totalAmount: fullTrekCost,          
+        upfrontAmount: upfront,             
+        remainingAmount: remain,            
         upfrontPercentage: 20,
-        coupon: activeCoupon ? { id: activeCoupon.id, code: activeCoupon.code, discount: discountAmount, discountType: activeCoupon.discountType, originalAmount: basePrice * formData.totalParticipants, finalAmount: fullTrekCost } : null,
-        specialRequests: formData.specialRequests || '', createdAt: new Date().toISOString()
+        coupon: activeCoupon ? { 
+          id: activeCoupon.id, 
+          code: activeCoupon.code, 
+          discount: discountAmount, 
+          discountType: activeCoupon.discountType, 
+          originalAmount: safeBasePrice * safeTotalPax, 
+          finalAmount: fullTrekCost 
+        } : null,
+        specialRequests: formData.specialRequests || '', 
+        createdAt: new Date().toISOString()
       };
 
-      // ★ Only charge 20% via Razorpay
-      const upfrontPerPerson = Math.ceil(upfront / formData.totalParticipants);
+      const upfrontPerPerson = Math.ceil(upfront / safeTotalPax);
       const trekForPayment = { ...trek, numericPrice: upfrontPerPerson };
 
       const result = await processBookingPayment(trekForPayment, {
         ...bookingData,
-        totalAmount: upfront,    // ★ Override for payment
+        totalAmount: upfront,    
         amount: upfront,
         paymentAmount: upfront,
       });
 
-      if (result.success) { const oid = result.orderId || `order_${Date.now()}`; setBookingId(oid); window.lastRazorpayBookingId = oid; }
-      else setPaymentError(result.error || "Payment failed");
-    } catch (err) { setPaymentError(err.message || "Failed to process payment"); }
-    finally { setIsProcessingPayment(false); }
+      if (result.success) { 
+        const oid = result.orderId || `order_${Date.now()}`; 
+        setBookingId(oid); 
+        window.lastRazorpayBookingId = oid; 
+      }
+      else {
+        setPaymentError(result.error || "Payment failed to initiate.");
+      }
+    } catch (err) { 
+      console.error("Booking submission error:", err);
+      setPaymentError(err.message || "Failed to process payment. Please try again."); 
+    } finally { 
+      setIsProcessingPayment(false); 
+    }
   };
 
   const handlePaymentSuccess = useCallback(async (response) => {
     try {
-      setIsProcessingPayment(false); setIsProcessingBooking(true);
-      const paymentResponse = { ...response, bookingId: bookingId || response.bookingId || response.razorpay_order_id, orderId: bookingId || response.razorpay_order_id, verifiedBookingId: bookingId, notes: { ...(response.notes || {}), bookingId: bookingId || response.notes?.bookingId, backupId: bookingId } };
+      setIsProcessingPayment(false); 
+      setIsProcessingBooking(true);
+
+      const paymentResponse = { 
+        ...response, 
+        bookingId: bookingId || response.bookingId || response.razorpay_order_id, 
+        orderId: bookingId || response.razorpay_order_id, 
+        verifiedBookingId: bookingId, 
+        notes: { ...(response.notes || {}), bookingId: bookingId || response.notes?.bookingId, backupId: bookingId } 
+      };
+      
       window.lastRazorpayBookingId = bookingId || response.bookingId || response.razorpay_order_id;
       let effectiveBookingId = bookingId || paymentResponse.bookingId || paymentResponse.razorpay_order_id || window.lastRazorpayBookingId;
-      if (!effectiveBookingId) { effectiveBookingId = `fallback_${Date.now()}_${Math.floor(Math.random() * 10000)}`; paymentResponse.bookingId = effectiveBookingId; }
+      
+      if (!effectiveBookingId) { 
+        effectiveBookingId = `fallback_${Date.now()}_${Math.floor(Math.random() * 10000)}`; 
+        paymentResponse.bookingId = effectiveBookingId; 
+      }
+      
       await completeBookingPayment(effectiveBookingId, paymentResponse);
+
+      // Fault tolerant email extraction
       try {
         const snap = await getDoc(doc(db, 'bookings', effectiveBookingId));
         const data = snap.exists() ? { id: snap.id, ...snap.data() } : {};
-        const emailData = { id: effectiveBookingId, bookingId: effectiveBookingId, name: data.name || primaryBooker.name, email: data.email || primaryBooker.email, contactNumber: data.contactNumber || primaryBooker.contactNumber, startDate: data.startDate || formData.startDate, participants: data.participants || formData.totalParticipants, totalAmount: data.totalAmount || calculateTotalPrice(), upfrontAmount: data.upfrontAmount || calculateUpfront(), remainingAmount: data.remainingAmount || calculateRemaining(), paymentId: response.razorpay_payment_id, status: 'confirmed', paymentStatus: 'completed', specialRequests: data.specialRequests || formData.specialRequests || 'None', discountAmount, createdAt: data.createdAt || new Date().toISOString() };
+        
+        const emailData = { 
+          id: effectiveBookingId, 
+          bookingId: effectiveBookingId, 
+          name: data.name || primaryBooker.name || 'Guest', 
+          email: data.email || primaryBooker.email, 
+          contactNumber: data.contactNumber || primaryBooker.contactNumber, 
+          startDate: data.startDate || formData.startDate, 
+          participants: data.participants || formData.totalParticipants || 1, 
+          totalAmount: data.totalAmount || calculateTotalPrice(), 
+          upfrontAmount: data.upfrontAmount || calculateUpfront(), 
+          remainingAmount: data.remainingAmount || calculateRemaining(), 
+          paymentId: response.razorpay_payment_id || 'N/A', 
+          status: 'confirmed', 
+          paymentStatus: 'completed', 
+          
+          // Add Organizer tracking to emails if needed
+          organizerId: data.organizerId || trek?.organizerId || trek?.createdBy || null,
+          organizerName: data.organizerName || trek?.organizerName || trek?.authorName || 'Unassigned',
+          
+          specialRequests: data.specialRequests || formData.specialRequests || 'None', 
+          discountAmount: discountAmount || 0, 
+          createdAt: data.createdAt || new Date().toISOString() 
+        };
+        
         if (emailData.email) await emailService.sendConfirmationEmail(emailData, trek);
-      } catch (emailErr) { console.error('Email error:', emailErr); }
-      setIsProcessingBooking(false); setPaymentSuccess(true); setShowSuccessAnimation(true);
+      } catch (emailErr) { 
+        // Soft fail: Even if email fails, payment is still successful!
+        console.error('Email error (payment successful):', emailErr); 
+      }
+
+      setIsProcessingBooking(false); 
+      setPaymentSuccess(true); 
+      setShowSuccessAnimation(true);
+
       setTimeout(() => navigate(`/booking-confirmation/${effectiveBookingId}`), 3000);
-    } catch (err) { setPaymentError(err.message || "Failed to verify payment"); setIsProcessingBooking(false); }
-    finally { setIsProcessingPayment(false); }
+
+    } catch (err) { 
+      setPaymentError(err.message || "Failed to verify payment with our servers."); 
+      setIsProcessingBooking(false); 
+    } finally { 
+      setIsProcessingPayment(false); 
+    }
   }, [bookingId, navigate, formData, primaryBooker, trek, calculateTotalPrice, calculateUpfront, calculateRemaining, discountAmount]);
 
-  const handlePaymentFailure = useCallback(async (error) => { try { if (bookingId) await handleBookingPaymentFailure(bookingId, error); setPaymentError(error.description || error.message || "Payment failed"); } catch { setPaymentError("Payment failed: " + (error.description || "Unknown error")); } }, [bookingId]);
+  const handlePaymentFailure = useCallback(async (error) => { 
+    try { 
+      if (bookingId) await handleBookingPaymentFailure(bookingId, error); 
+      setPaymentError(error.description || error.message || "Payment failed"); 
+    } catch { 
+      setPaymentError("Payment failed: " + (error.description || "Unknown error")); 
+    } 
+  }, [bookingId]);
 
   useEffect(() => {
     const cur = bookingId; if (cur) window.lastRazorpayBookingId = cur;
@@ -727,10 +870,8 @@ const BookingPage = () => {
     return () => { window.onRazorpaySuccess = null; window.onRazorpayFailure = null; };
   }, [bookingId, handlePaymentSuccess, handlePaymentFailure]);
 
-  // ── Computed ──
   const upfront = calculateUpfront();
   const remaining = calculateRemaining();
-  const subtotal = basePrice * formData.totalParticipants;
 
   if (loading) return <PageWrapper><LoadingContainer><LoadingSpinner /><LoadingText>Loading trek details...</LoadingText></LoadingContainer></PageWrapper>;
   if (fetchError || !trek) return <PageWrapper><ErrorContainer><FiAlertCircle size={48} color={theme.primary} /><ErrorTitle>{fetchError || 'Trek not found'}</ErrorTitle><ErrorText>We couldn't find the trek you're looking for.</ErrorText><GoBackButton onClick={() => navigate('/explore')}><FiArrowLeft />Browse Treks</GoBackButton></ErrorContainer></PageWrapper>;
@@ -830,37 +971,43 @@ const BookingPage = () => {
                     {currentExpandedBox !== 'primary' && <span style={{ fontSize: '0.8rem', color: theme.textLight }}>{completedBoxes.has('primary') ? '✓ Done' : ''}</span>}
                   </DetailBoxHeader>
                   <DetailBoxContent isExpanded={currentExpandedBox === 'primary'}>
-                    <FormGroup style={{ marginTop: 0 }}><Label>Full Name *</Label><Input type="text" value={primaryBooker.name} onChange={e => handlePrimaryBookerChange('name', e.target.value)} placeholder="Enter your full name" onClick={e => e.stopPropagation()} />{errors.primaryBooker_name && <ErrorSpan>{errors.primaryBooker_name}</ErrorSpan>}</FormGroup>
-                    <FieldRow>
+                    <FieldRow style={{ marginTop: 0 }}>
+                      <FormGroup><Label>Full Name *</Label><Input type="text" value={primaryBooker.name} onChange={e => handlePrimaryBookerChange('name', e.target.value)} placeholder="Enter your full name" onClick={e => e.stopPropagation()} />{errors.primaryBooker_name && <ErrorSpan>{errors.primaryBooker_name}</ErrorSpan>}</FormGroup>
                       <FormGroup><Label>Email *</Label><Input type="email" value={primaryBooker.email} onChange={e => handlePrimaryBookerChange('email', e.target.value)} placeholder="your@email.com" onClick={e => e.stopPropagation()} />{errors.primaryBooker_email && <ErrorSpan>{errors.primaryBooker_email}</ErrorSpan>}</FormGroup>
+                    </FieldRow>
+                    <FieldRow>
                       <FormGroup><Label>Contact *</Label><Input type="tel" value={primaryBooker.contactNumber} onChange={e => { const v = e.target.value.replace(/\D/g,'').slice(0,10); handlePrimaryBookerChange('contactNumber', v); }} placeholder="10-digit number" onClick={e => e.stopPropagation()} maxLength={10} style={{ borderColor: primaryBooker.contactNumber.length > 0 && primaryBooker.contactNumber.length !== 10 ? '#EF5350' : primaryBooker.contactNumber.length === 10 ? '#4CAF50' : undefined }} />{primaryBooker.contactNumber.length > 0 && primaryBooker.contactNumber.length !== 10 && <ErrorSpan>{primaryBooker.contactNumber.length < 10 ? `${10 - primaryBooker.contactNumber.length} more digit(s)` : 'Must be 10 digits'}</ErrorSpan>}{errors.primaryBooker_contactNumber && primaryBooker.contactNumber.length === 0 && <ErrorSpan>{errors.primaryBooker_contactNumber}</ErrorSpan>}</FormGroup>
+                      <FormGroup><Label>Age (Optional)</Label><Input type="number" value={participants[0]?.age || ''} onChange={e => handleParticipantChange(0, 'age', e.target.value)} placeholder="Age" min="1" max="100" onClick={e => e.stopPropagation()} /></FormGroup>
                     </FieldRow>
                     <DoneButton type="button" onClick={e => { e.stopPropagation(); if (isBoxValid('primary')) handleDoneClick('primary'); }} disabled={!isBoxValid('primary')}><FiCheck />Done – Continue</DoneButton>
                   </DetailBoxContent>
                 </DetailBox>
 
-                {participants.map((p, idx) => (
-                  <DetailBox key={p.participantId} isExpanded={currentExpandedBox === `participant-${idx}`} data-expanded={currentExpandedBox === `participant-${idx}`} isDisabled={!completedBoxes.has('primary')} onClick={() => { if (completedBoxes.has('primary') && currentExpandedBox !== `participant-${idx}`) handleBoxClick(`participant-${idx}`); }}>
-                    <DetailBoxHeader isExpanded={currentExpandedBox === `participant-${idx}`}>
-                      <DetailBoxTitle><FiUser />Participant {idx + 1} {p.isPrimaryBooker && '(You)'}<StatusDot completed={completedBoxes.has(`participant-${idx}`)} /></DetailBoxTitle>
-                      {currentExpandedBox !== `participant-${idx}` && <span style={{ fontSize: '0.8rem', color: theme.textLight }}>{completedBoxes.has(`participant-${idx}`) ? '✓ Done' : ''}</span>}
-                    </DetailBoxHeader>
-                    <DetailBoxContent isExpanded={currentExpandedBox === `participant-${idx}`}>
-                      <FieldRow style={{ marginTop: 0 }}>
-                        <FormGroup><Label>Full Name *</Label><Input value={p.name} onChange={e => handleParticipantChange(idx, 'name', e.target.value)} placeholder="Full name" disabled={p.isPrimaryBooker} onClick={e => e.stopPropagation()} />{errors[`participant_${idx}_name`] && <ErrorSpan>{errors[`participant_${idx}_name`]}</ErrorSpan>}</FormGroup>
-                        <FormGroup><Label>Email {!p.isPrimaryBooker && '(Optional)'}</Label><Input type="email" value={p.email} onChange={e => handleParticipantChange(idx, 'email', e.target.value)} placeholder="Email" disabled={p.isPrimaryBooker} onClick={e => e.stopPropagation()} /></FormGroup>
-                      </FieldRow>
-                      <FieldRow>
-                        <FormGroup><Label>Age (Optional)</Label><Input type="number" value={p.age} onChange={e => handleParticipantChange(idx, 'age', e.target.value)} placeholder="Age" min="1" max="100" onClick={e => e.stopPropagation()} /></FormGroup>
-                        <FormGroup><Label>Emergency Contact</Label><Input type="tel" value={p.emergencyContact} onChange={e => { const v = e.target.value.replace(/\D/g,'').slice(0,10); handleParticipantChange(idx, 'emergencyContact', v); }} placeholder="10-digit number" onClick={e => e.stopPropagation()} maxLength={10} style={{ borderColor: p.emergencyContact?.length > 0 && p.emergencyContact?.length !== 10 ? '#EF5350' : p.emergencyContact?.length === 10 ? '#4CAF50' : undefined }} />{p.emergencyContact?.length > 0 && p.emergencyContact?.length !== 10 && <ErrorSpan>{p.emergencyContact.length < 10 ? `${10 - p.emergencyContact.length} more digit(s)` : 'Must be 10 digits'}</ErrorSpan>}</FormGroup>
-                      </FieldRow>
-                      <div style={{ display: 'flex', gap: '0.65rem', marginTop: '1rem', flexWrap: 'wrap' }}>
-                        {idx > 0 && <DoneButton type="button" onClick={e => { e.stopPropagation(); handlePreviousBox(); }} style={{ background: 'transparent', color: theme.primary, border: `2px solid ${theme.primary}`, boxShadow: 'none' }}>← Previous</DoneButton>}
-                        <DoneButton type="button" onClick={e => { e.stopPropagation(); if (isBoxValid(`participant-${idx}`)) handleDoneClick(`participant-${idx}`); }} disabled={!isBoxValid(`participant-${idx}`)}><FiCheck />{idx === participants.length - 1 ? 'Done' : 'Next Participant'}</DoneButton>
-                      </div>
-                    </DetailBoxContent>
-                  </DetailBox>
-                ))}
+                {participants.slice(1).map((p, slicedIdx) => {
+                  const idx = slicedIdx + 1; 
+                  return (
+                    <DetailBox key={p.participantId} isExpanded={currentExpandedBox === `participant-${idx}`} data-expanded={currentExpandedBox === `participant-${idx}`} isDisabled={!completedBoxes.has('primary')} onClick={() => { if (completedBoxes.has('primary') && currentExpandedBox !== `participant-${idx}`) handleBoxClick(`participant-${idx}`); }}>
+                      <DetailBoxHeader isExpanded={currentExpandedBox === `participant-${idx}`}>
+                        <DetailBoxTitle><FiUser />Participant {idx + 1}<StatusDot completed={completedBoxes.has(`participant-${idx}`)} /></DetailBoxTitle>
+                        {currentExpandedBox !== `participant-${idx}` && <span style={{ fontSize: '0.8rem', color: theme.textLight }}>{completedBoxes.has(`participant-${idx}`) ? '✓ Done' : ''}</span>}
+                      </DetailBoxHeader>
+                      <DetailBoxContent isExpanded={currentExpandedBox === `participant-${idx}`}>
+                        <FieldRow style={{ marginTop: 0 }}>
+                          <FormGroup><Label>Full Name *</Label><Input value={p.name} onChange={e => handleParticipantChange(idx, 'name', e.target.value)} placeholder="Full name" onClick={e => e.stopPropagation()} />{errors[`participant_${idx}_name`] && <ErrorSpan>{errors[`participant_${idx}_name`]}</ErrorSpan>}</FormGroup>
+                          <FormGroup><Label>Email (Optional)</Label><Input type="email" value={p.email} onChange={e => handleParticipantChange(idx, 'email', e.target.value)} placeholder="Email" onClick={e => e.stopPropagation()} /></FormGroup>
+                        </FieldRow>
+                        <FieldRow>
+                          <FormGroup><Label>Age (Optional)</Label><Input type="number" value={p.age} onChange={e => handleParticipantChange(idx, 'age', e.target.value)} placeholder="Age" min="1" max="100" onClick={e => e.stopPropagation()} /></FormGroup>
+                          <FormGroup><Label>Emergency Contact</Label><Input type="tel" value={p.emergencyContact} onChange={e => { const v = e.target.value.replace(/\D/g,'').slice(0,10); handleParticipantChange(idx, 'emergencyContact', v); }} placeholder="10-digit number" onClick={e => e.stopPropagation()} maxLength={10} style={{ borderColor: p.emergencyContact?.length > 0 && p.emergencyContact?.length !== 10 ? '#EF5350' : p.emergencyContact?.length === 10 ? '#4CAF50' : undefined }} />{p.emergencyContact?.length > 0 && p.emergencyContact?.length !== 10 && <ErrorSpan>{p.emergencyContact.length < 10 ? `${10 - p.emergencyContact.length} more digit(s)` : 'Must be 10 digits'}</ErrorSpan>}</FormGroup>
+                        </FieldRow>
+                        <div style={{ display: 'flex', gap: '0.65rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+                          <DoneButton type="button" onClick={e => { e.stopPropagation(); handlePreviousBox(); }} style={{ background: 'transparent', color: theme.primary, border: `2px solid ${theme.primary}`, boxShadow: 'none' }}>← Previous</DoneButton>
+                          <DoneButton type="button" onClick={e => { e.stopPropagation(); if (isBoxValid(`participant-${idx}`)) handleDoneClick(`participant-${idx}`); }} disabled={!isBoxValid(`participant-${idx}`)}><FiCheck />{idx === participants.length - 1 ? 'Done' : 'Next Participant'}</DoneButton>
+                        </div>
+                      </DetailBoxContent>
+                    </DetailBox>
+                  );
+                })}
 
                 <FormGroup><Label><FiMessageSquare />Special Requests (Optional)</Label><Textarea name="specialRequests" value={formData.specialRequests} onChange={handleChange} placeholder="Dietary requirements, accessibility needs..." /></FormGroup>
               </Form>
@@ -886,7 +1033,6 @@ const BookingPage = () => {
 
                 <CouponSection orderTotal={basePrice * formData.totalParticipants} onApplyCoupon={handleApplyCoupon} />
 
-                {/* ★ Payment Split Card */}
                 <PaymentSplitCard>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', fontWeight: 700, color: theme.textDark, fontFamily: "'Sora', sans-serif" }}>
                     <FiInfo color={theme.primary} /> How Payment Works
