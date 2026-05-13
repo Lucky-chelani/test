@@ -6,7 +6,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import { 
   FiUsers, FiMap, FiUserCheck, FiTag, FiShield, 
-  FiLogOut, FiActivity, FiChevronRight, FiBriefcase 
+  FiLogOut, FiActivity, FiChevronRight, FiBriefcase, FiBookmark 
 } from 'react-icons/fi';
 
 /* ==========================================================================
@@ -14,22 +14,19 @@ import {
    ========================================================================== */
 const GlobalStyle = createGlobalStyle`
   body { 
-    background-color: #f8fafc; /* Very light slate */
-    color: #0f172a; /* Deep slate text */
+    background-color: #f8fafc; 
+    color: #0f172a; 
     font-family: 'Inter', -apple-system, sans-serif; 
     -webkit-font-smoothing: antialiased; 
     margin: 0;
   }
 `;
 
-const fadeInUp = keyframes`from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); }`;
-
 /* ==========================================================================
    STYLED COMPONENTS
    ========================================================================== */
 const AdminLayout = styled.div`
   max-width: 1200px; margin: 0 auto; padding: 80px 24px; min-height: 100vh;
-  /* Subtle mesh gradient background for premium feel */
   background-image: radial-gradient(at 0% 0%, rgba(224, 231, 255, 0.3) 0, transparent 50%), 
                     radial-gradient(at 50% 0%, rgba(245, 243, 255, 0.3) 0, transparent 50%);
 `;
@@ -102,15 +99,23 @@ const CardLinkText = styled.div`
 `;
 
 /* ==========================================================================
-   MENU DATA
+   MENU DATA (Added Bookings)
    ========================================================================== */
 const MENU_ITEMS = [
+  {
+    path: '/admin/bookings',
+    title: 'Booking Registry',
+    desc: 'Monitor incoming reservations, track payment status, and assign participants to organizers.',
+    icon: <FiBookmark />,
+    color: '#0ea5e9', // Cyan/Light Blue
+    bg: '#f0f9ff'
+  },
   {
     path: '/admin/communities',
     title: 'Communities',
     desc: 'Moderate community deployments, toggle featured status, and oversee social hubs.',
     icon: <FiUsers />,
-    color: '#10b981', // Emerald
+    color: '#10b981',
     bg: '#ecfdf5'
   },
   {
@@ -118,7 +123,7 @@ const MENU_ITEMS = [
     title: 'Trek Assets',
     desc: 'Curate experience protocols, update itinerary mapping, and manage gallery assets.',
     icon: <FiMap />,
-    color: '#f59e0b', // Amber
+    color: '#f59e0b',
     bg: '#fffbeb'
   },
   {
@@ -126,7 +131,7 @@ const MENU_ITEMS = [
     title: 'Internships',
     desc: 'Manage role deployments, track applicant status, and update career listings.',
     icon: <FiBriefcase />,
-    color: '#ec4899', // Pink
+    color: '#ec4899', 
     bg: '#fdf2f8'
   },
   {
@@ -134,7 +139,7 @@ const MENU_ITEMS = [
     title: 'User Management',
     desc: 'Assign administrative roles, control system permissions, and verify accounts.',
     icon: <FiUserCheck />,
-    color: '#3b82f6', // Blue
+    color: '#3b82f6', 
     bg: '#eff6ff'
   },
   {
@@ -142,7 +147,7 @@ const MENU_ITEMS = [
     title: 'Pricing Logic',
     desc: 'Deploy discount strategies, track usage metrics, and manage promotional codes.',
     icon: <FiTag />,
-    color: '#8b5cf6', // Violet
+    color: '#8b5cf6',
     bg: '#f5f3ff'
   }
 ];
@@ -199,7 +204,7 @@ const SimpleAdmin = () => {
       </DashboardGrid>
 
       <footer style={{ marginTop: '100px', textAlign: 'center', borderTop: '1px solid rgba(0,0,0,0.05)', paddingTop: '40px' }}>
-        <FiShield size={20} style={{ color: '#94a3b8', marginBottom: '12px' }} />
+        <FiShield size={20} style={{ color: '#94a3b8', margin: '0 auto 12px' }} />
         <p style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.2em' }}>
           Secure Administrative Layer v4.1.0
         </p>

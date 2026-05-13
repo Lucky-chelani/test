@@ -100,7 +100,6 @@ const FormWrapper = styled(motion.div)`
     height: 3px;
     background: linear-gradient(90deg, transparent, ${tokens.colors.primary}60, ${tokens.colors.primaryLight}, ${tokens.colors.primary}60, transparent);
     background-size: 200% 100%;
-    animation: ${shimmer} 3s linear infinite;
   }
 
   &::after {

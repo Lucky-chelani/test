@@ -54,6 +54,8 @@ import CertificateAdmin from './Interns/CertificateAdmin';
 import InternshipJoin from './intern_join'; 
 import Support from "./pages/SupportPage";
 import BookingPage from './components/BookingPage';
+import AdminBookings from './components/AdminBookings'; // The new admin bookings table
+import AdminBookingDetail from './components/AdminBookingDetail';
 
 // ─────────────────────────────────────────────
 // PAGE TRANSITION
@@ -227,6 +229,20 @@ function App() {
                 <PageTransition>
                   <AccessControl requiredRole="admin">
                     <SimpleAdmin />
+                  </AccessControl>
+                </PageTransition>
+              } />
+              <Route path="/admin/bookings" element={
+                <PageTransition>
+                  <AccessControl requiredRole="admin">
+                    <AdminBookings />
+                  </AccessControl>
+                </PageTransition>
+              } />
+              <Route path="/admin/bookings/:id" element={
+                <PageTransition>
+                  <AccessControl requiredRole="admin">
+                    <AdminBookingDetail />
                   </AccessControl>
                 </PageTransition>
               } />

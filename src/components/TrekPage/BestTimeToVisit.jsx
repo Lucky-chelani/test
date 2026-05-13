@@ -131,7 +131,7 @@ const SectionCard = styled.section`
   transition: ${tokens.transition.base};
   position: relative;
   overflow: hidden;
-
+  margin-bottom: 2rem;
   &::before {
     content: "";
     position: absolute;
@@ -148,7 +148,6 @@ const SectionCard = styled.section`
       transparent
     );
     background-size: 200% 100%;
-    animation: ${shimmer} 3s linear infinite;
   }
 
   &:hover {

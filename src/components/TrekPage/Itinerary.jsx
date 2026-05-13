@@ -103,14 +103,16 @@ const modalSlideIn = keyframes`
   }
 `;
 
+// CHANGED: We animate margin-bottom instead of transform 
+// so it doesn't conflict with our dynamic left/right alignments
 const tooltipSlideUp = keyframes`
   from {
     opacity: 0;
-    transform: translate(-50%, 8px);
+    margin-bottom: -10px;
   }
   to {
     opacity: 1;
-    transform: translate(-50%, 0);
+    margin-bottom: 0;
   }
 `;
 
@@ -704,12 +706,10 @@ const PinLabel = styled.div`
   }
 `;
 
-/* ── HOVER TOOLTIP ── */
+/* ── CHANGED: SMART HOVER TOOLTIP ── */
 const HoverTooltip = styled.div`
   position: absolute;
   bottom: calc(100% + 12px);
-  left: 50%;
-  transform: translate(-50%, 0);
   min-width: 280px;
   max-width: 320px;
   background: linear-gradient(
@@ -729,13 +729,45 @@ const HoverTooltip = styled.div`
   animation: ${tooltipSlideUp} 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   z-index: 100;
 
-  /* Arrow */
+  /* Dynamically position based on whether the pin is on the left, right, or center */
+  ${({ $align }) => {
+    if ($align === "left") {
+      return css`
+        left: -28px;
+        &::after,
+        &::before {
+          left: 28px;
+          transform: translateX(-50%);
+        }
+      `;
+    }
+    if ($align === "right") {
+      return css`
+        right: -28px;
+        &::after,
+        &::before {
+          left: auto;
+          right: 28px;
+          transform: translateX(50%);
+        }
+      `;
+    }
+    return css`
+      left: 50%;
+      transform: translateX(-50%);
+      &::after,
+      &::before {
+        left: 50%;
+        transform: translateX(-50%);
+      }
+    `;
+  }}
+
+  /* Arrow setup */
   &::after {
     content: "";
     position: absolute;
     top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
     border: 8px solid transparent;
     border-top-color: ${tokens.colors.primaryBorder};
   }
@@ -744,8 +776,6 @@ const HoverTooltip = styled.div`
     content: "";
     position: absolute;
     top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
     border: 7px solid transparent;
     border-top-color: rgba(17, 17, 17, 0.98);
     margin-top: -1px;
@@ -753,11 +783,12 @@ const HoverTooltip = styled.div`
   }
 
   @media (max-width: 600px) {
-    min-width: 220px;
-    max-width: 260px;
+    min-width: 170px;
+    max-width: 200px;
     padding: 0.875rem 1rem;
     font-size: 0.875rem;
     bottom: calc(100% + 8px);
+    margin-left: 1.5rem;
   }
 `;
 
@@ -1495,6 +1526,10 @@ export default function Itinerary({ itinerary = [] }) {
           const coord =
             visibleCoords[i] || visibleCoords[visibleCoords.length - 1];
           const isHovered = hoveredDay === i;
+          
+          // CHANGED: Added dynamic logic to prevent tooltip from overflowing the screen boundaries
+          const cxNum = parseFloat(coord.cx);
+          const tooltipAlign = cxNum < 30 ? "left" : cxNum > 70 ? "right" : "center";
 
           return (
             <MapPin
@@ -1515,7 +1550,7 @@ export default function Itinerary({ itinerary = [] }) {
               <PinDot $delay={`${i * 0.12}s`} />
 
               {isHovered && (
-                <HoverTooltip>
+                <HoverTooltip $align={tooltipAlign}>
                   <TooltipPreview>
                     {getPreviewText(day.description)}
                   </TooltipPreview>
