@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
-import { FiArrowUpRight, FiHeart, FiArrowLeft } from "react-icons/fi";
-import { FaCompass, FaHeart, FaMountain, FaCalendarAlt, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { FaMountain, FaCalendarAlt, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { FiMapPin, FiTrendingUp } from "react-icons/fi";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -24,7 +23,7 @@ const tokens = {
     btnOrange: "#f97316", 
     iconOrange: "#f97316", 
   },
-  radius: { pill: "100px", card: "20px", button: "14px" }, // Refined button radius
+  radius: { pill: "100px", card: "20px", button: "14px" },
   transition: { 
     base: "all 0.3s ease", 
     spring: "all 0.35s cubic-bezier(0.34,1.56,0.64,1)" 
@@ -53,16 +52,6 @@ const pulse = keyframes`
 const crossFadeIn = keyframes`
   from { opacity: 0; transform: scale(1.06); }
   to { opacity: 1; transform: scale(1.04); }
-`;
-
-const mImgReveal = keyframes`
-  from { opacity: 0; transform: scale(1.06); }
-  to { opacity: 1; transform: scale(1); }
-`;
-
-const mFadeUp = keyframes`
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
 `;
 
 // =============================================================================
@@ -284,46 +273,12 @@ const CarouselArrow = styled.button`
   transition: ${tokens.transition.spring};
 `;
 
-const SlideCounter = styled.div`
+const ScrollDarkenOverlay = styled.div`
   position: absolute;
-  top: 2rem;
-  right: 3rem;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.8rem;
-  color: rgba(255,255,255,0.6);
-  animation: ${fadeIn} 1s ease 0.5s both;
-`;
-
-const SlideCurrentNum = styled.span`
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: white;
-`;
-
-const ScrollHint = styled.div`
-  position: absolute;
-  bottom: 5rem;
-  right: 3rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.4rem;
-  color: ${tokens.color.muted};
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  z-index: 10;
-`;
-
-const ScrollLine = styled.div`
-  width: 1px;
-  height: 42px;
-  background: linear-gradient(to bottom, ${tokens.color.primary}, transparent);
-  animation: ${pulse} 2s ease-in-out infinite;
+  inset: 0;
+  z-index: 50; 
+  pointer-events: none; 
+  background-color: rgba(0, 0, 0, 0); 
 `;
 
 // =============================================================================
@@ -358,8 +313,7 @@ const MBackgroundImage = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
-  z-index: 0;
-  animation: ${mImgReveal} 0.8s ease forwards;
+  transition: opacity 1.2s ease-in-out, transform 8s ease-out;
 `;
 
 const MContentOverlay = styled.div`
@@ -367,42 +321,6 @@ const MContentOverlay = styled.div`
   inset: 0;
   z-index: 1;
   background: linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.9) 100%);
-`;
-
-const MTopBar = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: calc(env(safe-area-inset-top, 0px) + 16px) 20px 16px;
-  background: transparent;
-  pointer-events: none;
-`;
-
-const MIconBtn = styled.button`
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: ${({ $liked }) => ($liked ? tokens.color.primary : "white")};
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: ${tokens.transition.spring};
-  pointer-events: auto;
-
-  svg {
-    pointer-events: none;
-    font-size: 18px;
-  }
 `;
 
 const MContentWrapper = styled.div`
@@ -438,7 +356,7 @@ const MLocationTag = styled.div`
 
 const MTitle = styled.h1`
   font-family: ${tokens.font.display};
-  font-size: clamp(2.4rem, 8vw, 3rem); /* Slightly larger */
+  font-size: clamp(2.4rem, 8vw, 3rem); 
   font-weight: 700;
   color: white;
   line-height: 1.15;
@@ -467,12 +385,12 @@ const MInfoPill = styled.div`
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1.25rem; /* Adjusted proportions */
-  background: rgba(255,255,255,0.06); /* Frosted aesthetic */
-  border: 1px solid rgba(255,255,255,0.25); /* Fine crisp border */
+  padding: 0.5rem 1.25rem; 
+  background: rgba(255,255,255,0.06); 
+  border: 1px solid rgba(255,255,255,0.25); 
   border-radius: ${tokens.radius.pill};
   font-size: 0.9rem;
-  font-weight: 400; /* Lighter weight for pills */
+  font-weight: 400; 
   color: white;
   backdrop-filter: blur(12px);
 
@@ -484,13 +402,26 @@ const MInfoPill = styled.div`
 
 const MDescription = styled.p`
   color: rgba(255,255,255,0.9);
-  font-size: 1rem; /* Slightly larger, more readable */
-  line-height: 1.65;
-  margin: 0 0 2.8rem;
-  max-width: 90%;
-  font-weight: 400; /* Lighter weight for text */
+  font-size: 0.95rem; 
+  line-height: 1.5;
+  margin: 0 0 2.2rem;
+  max-width: 95%;
+  font-weight: 400; 
   text-shadow: 0 2px 6px rgba(0,0,0,0.5);
   animation: ${fadeUp} 1s ease 0.6s both;
+
+  /* Limits to exactly 3 lines */
+  display: -webkit-box;
+  -webkit-line-clamp: 3; 
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  
+  /* Guarantee it fits on small phones */
+  @media (max-height: 700px) {
+    -webkit-line-clamp: 2; 
+    margin: 0 0 1.5rem;
+  }
 `;
 
 const MBottomBtnWrapper = styled.div`
@@ -502,15 +433,15 @@ const MBottomBtnWrapper = styled.div`
 
 const MBookBtn = styled.button`
   width: 100%;
-  max-width: 340px; /* Wider button */
-  height: 56px; /* Taller, better tap target */
+  max-width: 340px; 
+  height: 56px; 
   background: ${tokens.color.btnOrange};
   border: none;
   border-radius: ${tokens.radius.button};
   color: white; 
   font-family: ${tokens.font.body};
   font-size: 1.1rem;
-  font-weight: 800; /* Bold CTA */
+  font-weight: 800; 
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -529,24 +460,12 @@ const MBookBtn = styled.button`
   }
 `;
 
-const ScrollDarkenOverlay = styled.div`
-  position: absolute;
-  inset: 0;
-  z-index: 50; 
-  pointer-events: none; 
-  background-color: rgba(0, 0, 0, 0); 
-`;
-
 // =============================================================================
-// FALLBACK DATA
+// FALLBACK DATA (Only used if the Organizer uploaded absolutely 0 images)
 // =============================================================================
 const FALLBACK_IMAGES = [
   "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?w=1600&q=80",
   "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=80",
-];
-
-const DEFAULT_AVATARS = [
-  { color: "#f97316", initials: "JD" },
 ];
 
 const CAROUSEL_INTERVAL = 5000; 
@@ -555,46 +474,34 @@ const CAROUSEL_INTERVAL = 5000;
 // COMPONENT
 // =============================================================================
 export default function Hero({
-  // Desktop & Shared props
   title = "Annapurna Base Camp Trek",
-  tourName = "Magic Himalayan Tour",
-  tourDate = "24 July 2024",
-  description = "Journey to the heart of the Annapurna Sanctuary with breathtaking views of the Himalayas, lush rhododendron forests, and diverse local culture during this 4-5 hour trek to this picturesque settlement at 1940 meters.",
+  description = "Journey to the heart of the Annapurna Sanctuary with breathtaking views of the Himalayas.",
   heroImage = null,
   carouselImages = null,
-  avatars = DEFAULT_AVATARS,
-  peopleCount = 32,
   onBookNow = () => {},
-
-  // Mobile & Dynamic structural props
   price = "₹15,999",
-  rating = 4.8,
-  reviewCount = 120,
   days = 7,
   location = "Nepal",
   country = "Himalayas",
   difficulty = "Moderate",
   altitude = "4,130m",
 }) {
-  const navigate = useNavigate();
-
   // ── Carousel State ─────────────────────────────────────────────────────────
   const [activeSlide, setActiveSlide] = useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [isAutoPlaying] = useState(true);
   const intervalRef = useRef(null);
-
-  // ── UI State ───────────────────────────────────────────────────────────────
-  const [liked, setLiked] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   
   // ── REFS for Scroll Animation ──────────────────────────────────────────────
   const desktopOverlayRef = useRef(null);
   const mobileOverlayRef = useRef(null);
 
-  // ── Build image array ──────────────────────────────────────────────────────
+  // ── Build image array (STRICT FIREBASE PRIORITY) ───────────────────────────
   const slideImages = (() => {
+    // 1. If organizer uploaded a gallery, use the gallery!
     if (carouselImages && carouselImages.length > 0) return carouselImages;
-    if (heroImage) return [heroImage, ...FALLBACK_IMAGES.slice(1)];
+    // 2. If they only uploaded a primary cover, use that!
+    if (heroImage) return [heroImage];
+    // 3. If they uploaded absolutely nothing, use fallbacks.
     return FALLBACK_IMAGES;
   })();
 
@@ -603,8 +510,6 @@ export default function Hero({
     let ticking = false;
 
     const handleScroll = () => {
-      setScrolled(window.scrollY > 40);
-
       if (!ticking) {
         window.requestAnimationFrame(() => {
           const scrollY = window.scrollY;
@@ -651,13 +556,6 @@ export default function Hero({
   const goNext = () => goToSlide((activeSlide + 1) % slideImages.length);
   const goPrev = () => goToSlide((activeSlide - 1 + slideImages.length) % slideImages.length);
 
-  const handleBack = () => {
-    if (window.history.length > 1) navigate(-1);
-    else navigate("/");
-  };
-
-  const toggleLike = () => setLiked((prev) => !prev);
-
   return (
     <>
       {/* ====================================================================
@@ -692,22 +590,22 @@ export default function Hero({
           </BookNowBtn>
         </Body>
 
-        <CarouselControls>
-          <CarouselArrow onClick={goPrev}><FaChevronLeft /></CarouselArrow>
-          <CarouselDots>
-            {slideImages.map((_, index) => (
-              <CarouselDot
-                key={index}
-                $active={index === activeSlide}
-                $duration={CAROUSEL_INTERVAL}
-                onClick={() => goToSlide(index)}
-              />
-            ))}
-          </CarouselDots>
-          <CarouselArrow onClick={goNext}><FaChevronRight /></CarouselArrow>
-        </CarouselControls>
-
-        
+        {slideImages.length > 1 && (
+          <CarouselControls>
+            <CarouselArrow onClick={goPrev}><FaChevronLeft /></CarouselArrow>
+            <CarouselDots>
+              {slideImages.map((_, index) => (
+                <CarouselDot
+                  key={index}
+                  $active={index === activeSlide}
+                  $duration={CAROUSEL_INTERVAL}
+                  onClick={() => goToSlide(index)}
+                />
+              ))}
+            </CarouselDots>
+            <CarouselArrow onClick={goNext}><FaChevronRight /></CarouselArrow>
+          </CarouselControls>
+        )}
 
         <ScrollDarkenOverlay ref={desktopOverlayRef} />
       </Root>
@@ -716,10 +614,20 @@ export default function Hero({
           MOBILE LAYOUT
       ==================================================================== */}
       <MRoot>
-        
-
         <MHero>
-          <MBackgroundImage src={slideImages[0]} alt={title} />
+          {/* MOBILE NOW CYCLES THROUGH ALL FIREBASE IMAGES */}
+          {slideImages.map((src, index) => (
+            <MBackgroundImage 
+              key={index}
+              src={src} 
+              alt={`${title} - slide ${index + 1}`}
+              style={{
+                opacity: index === activeSlide ? 1 : 0,
+                zIndex: index === activeSlide ? 1 : 0,
+                transform: index === activeSlide ? 'scale(1)' : 'scale(1.06)'
+              }}
+            />
+          ))}
           <MContentOverlay />
 
           <MContentWrapper>

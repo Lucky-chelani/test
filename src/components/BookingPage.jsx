@@ -257,9 +257,11 @@ const HeaderTitle = styled.h1`font-family: 'Sora', sans-serif; font-size: 1.2rem
 const StepTrack = styled.div`
   display: flex; align-items: center; gap: 0;
   margin-bottom: 15px;
-  margin-left: 20px;
-  @media (max-width: 480px) { justify-content: center; transform: scale(0.85); transform-origin: center center; margin: -4px 0 -8px 0; }
-  @media (max-width: 360px) { transform: scale(0.75); margin: -6px 0 -10px 0; }
+  margin-left: 25px;
+  justify-content: center;
+  transform: scale(1.2);
+  @media (max-width: 480px) { justify-content: center;  transform-origin: center center; margin: 12px 0 20px 0; }
+  @media (max-width: 360px) { margin: 7px 0 15px 0; }
 `;
 const StepItem = styled.div`display: flex; flex-direction: column; align-items: center; gap: 0.3rem; position: relative;`;
 const StepDot = styled.div`
@@ -308,7 +310,7 @@ const Input = styled.input`
   &:focus { border-color: ${theme.primary}; box-shadow: 0 0 0 3px ${theme.primaryGlow}; }
   &:hover:not(:focus):not(:disabled) { border-color: rgba(255, 107, 53, 0.4); }
   &:disabled { background: ${theme.cardBg}; color: ${theme.darkGray}; opacity: 0.6; }
-  @media (max-width: 480px) { padding: 0.7rem 0.85rem; font-size: 0.85rem; border-radius: 8px; }
+  @media (max-width: 480px) { padding: 0.7rem 0.85rem; font-size: 16px; border-radius: 8px; }
 `;
 const Textarea = styled(Input).attrs({ as: 'textarea' })`resize: vertical; min-height: 80px; @media (max-width: 480px) { min-height: 60px; }`;
 const TwoCardRow = styled.div`display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; @media (max-width: 600px) { grid-template-columns: 1fr; gap: 0.75rem; }`;

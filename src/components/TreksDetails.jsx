@@ -1,5 +1,5 @@
 // TrekDetails.jsx - Integrated with central theme
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense, lazy } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import styled, { createGlobalStyle, keyframes } from "styled-components";
 import { motion } from "framer-motion";
@@ -20,25 +20,23 @@ import { saveBooking } from "../utils/bookingService";
 // ✅ Import central theme instead of local tokens
 import { T as tokens } from '../theme.js';
 
-// Import modular components
+// 🚀 FAST LOADING: Keep above-the-fold components synchronous
 import Header from "./TrekPage/Header";
 import Hero from "./TrekPage/Hero";
 import Stats from "./TrekPage/Stats";
-import Description from "./TrekPage/Description";
-import Highlights from "./TrekPage/Highlights";
-import Itinerary from "./TrekPage/Itinerary";
-import IncludedExcluded from "./TrekPage/IncludedExcluded";
-import BestTimeToVisit from "./TrekPage/BestTimeToVisit";
-import MeetOrganizer from "./TrekPage/MeetOrganizer";
 import BookingCard from "./TrekPage/BookingCard";
-import PhotoGallery from "./TrekPage/PhotoGallery";
-import GalleryModal from "./TrekPage/GalleryModal";
-import ReviewsSection from "./TrekPage/ReviewsSection";
-import WhatsAppButton from "./TrekPage/WhatsAppButton";
 
-
-
-
+// 🚀 FAST LOADING: Lazy-load below-the-fold components
+const Description = lazy(() => import("./TrekPage/Description"));
+const Highlights = lazy(() => import("./TrekPage/Highlights"));
+const Itinerary = lazy(() => import("./TrekPage/Itinerary"));
+const IncludedExcluded = lazy(() => import("./TrekPage/IncludedExcluded"));
+const BestTimeToVisit = lazy(() => import("./TrekPage/BestTimeToVisit"));
+const MeetOrganizer = lazy(() => import("./TrekPage/MeetOrganizer"));
+const PhotoGallery = lazy(() => import("./TrekPage/PhotoGallery"));
+const GalleryModal = lazy(() => import("./TrekPage/GalleryModal"));
+const ReviewsSection = lazy(() => import("./TrekPage/ReviewsSection"));
+const WhatsAppButton = lazy(() => import("./TrekPage/WhatsAppButton"));
 
 // ============================================================
 // GLOBAL STYLES
@@ -79,7 +77,6 @@ const GlobalStyles = createGlobalStyle`
     color: #fb923c;
   }
 `;
-
 
 // ============================================================
 // ANIMATIONS
@@ -624,7 +621,6 @@ export default function TrekDetails() {
   // Booking floating button
   const bookingCardRef = useRef(null);
 
-
   // Section refs for navigation
   const sectionRefs = useRef({
     overview: null,
@@ -649,7 +645,16 @@ export default function TrekDetails() {
 
   // ── Scroll listener ──────────────────────────────────────
   useEffect(() => {
-    const handler = () => setNavScrolled(window.scrollY > 60);
+    let ticking = false;
+    const handler = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setNavScrolled(window.scrollY > 60);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
     window.addEventListener("scroll", handler, { passive: true });
     return () => window.removeEventListener("scroll", handler);
   }, []);
@@ -750,7 +755,7 @@ export default function TrekDetails() {
     return () => clearTimeout(t);
   }, [trek]);
 
-  // ── Data fetch ───────────────────────────────────────────
+  // 🚀 CRITICAL OPTIMIZATION: PARALLEL DATA FETCH & FAULT TOLERANCE
   useEffect(() => {
     let mounted = true;
 
@@ -771,51 +776,53 @@ export default function TrekDetails() {
         reviews: 64,
         capacity: 12,
         altitude: "4,200m",
-        reviewsData: generateReviews(name),
       };
     };
 
     const load = async () => {
       try {
-        const ref = doc(db, "treks", id);
-        const snap = await getDoc(ref);
+        // Fire both network requests at the exact same time using Promise.allSettled
+        const trekRef = doc(db, "treks", id);
+        const reviewsQ = query(collection(db, "reviews"), where("trekId", "==", id));
+
+        const [trekSnapRes, reviewsSnapRes] = await Promise.allSettled([
+          getDoc(trekRef),
+          getDocs(reviewsQ)
+        ]);
 
         if (!mounted) return;
 
-        let data;
+        let data = null;
 
-        if (snap.exists()) {
-          data = { id: snap.id, ...snap.data() };
+        // Process Trek Data
+        if (trekSnapRes.status === 'fulfilled' && trekSnapRes.value.exists()) {
+          data = { id: trekSnapRes.value.id, ...trekSnapRes.value.data() };
         } else {
+          // Fallback 1: Query by ID field
           const q = query(collection(db, "treks"), where("id", "==", id));
-          const qs = await getDocs(q);
-          if (!qs.empty) {
+          const qs = await getDocs(q).catch(() => null);
+          if (qs && !qs.empty) {
             data = { id: qs.docs[0].id, ...qs.docs[0].data() };
           } else {
-            const all = await getDocs(collection(db, "treks"));
-            all.forEach((d) => {
-              const ddata = d.data();
-              if (
-                !data &&
-                (d.id === id ||
-                  ddata.id === id ||
-                  (ddata.title && ddata.title.toLowerCase().replace(/\s+/g, "-") === id.toLowerCase()))
-              ) {
-                data = { id: d.id, ...ddata };
-              }
-            });
+            // Fallback 2: Check all treks (Existing functionality preserved safely)
+            const all = await getDocs(collection(db, "treks")).catch(() => null);
+            if (all) {
+              all.forEach((d) => {
+                const ddata = d.data();
+                if (!data && (d.id === id || ddata.id === id || (ddata.title && ddata.title.toLowerCase().replace(/\s+/g, "-") === id.toLowerCase()))) {
+                  data = { id: d.id, ...ddata };
+                }
+              });
+            }
           }
         }
 
         if (!data) data = fallback();
 
-        try {
-          const rq = query(collection(db, "reviews"), where("trekId", "==", id));
-          const rs = await getDocs(rq);
-          data.reviewsData = rs.empty
-            ? generateReviews(data.title)
-            : rs.docs.map((d) => ({ id: d.id, ...d.data() }));
-        } catch {
+        // Process Reviews Data
+        if (reviewsSnapRes.status === 'fulfilled' && !reviewsSnapRes.value.empty) {
+          data.reviewsData = reviewsSnapRes.value.docs.map((d) => ({ id: d.id, ...d.data() }));
+        } else {
           data.reviewsData = generateReviews(data.title);
         }
 
@@ -824,7 +831,7 @@ export default function TrekDetails() {
           setLoading(false);
         }
       } catch (err) {
-        console.error(err);
+        console.error("Error loading trek:", err);
         if (mounted) {
           setTrek(fallback());
           setLoading(false);
@@ -991,11 +998,9 @@ export default function TrekDetails() {
           onBook={handleBook}
         />
 
-
         <Hero
           title={title}
           description={description}
-          // Pass trek images for carousel (desktop auto-sliding background)
           carouselImages={images.length >= 2 ? images : undefined}
           heroImage={image}
           location={trekLocation}
@@ -1053,21 +1058,24 @@ export default function TrekDetails() {
           <Container>
             <ContentGrid>
               <MainCol>
-                <div ref={(el) => (sectionRefs.current.overview = el)} data-section="overview">
-                  <Description description={description} detailedDescription={detailedDesc} />
-                </div>
+                {/* 🚀 FAST LOADING: Wrap lazy-loaded components in Suspense */}
+                <Suspense fallback={<div style={{padding: '2rem 0'}}><SkeletonBar $h="200px"/></div>}>
+                  <div ref={(el) => (sectionRefs.current.overview = el)} data-section="overview">
+                    <Description description={description} detailedDescription={detailedDesc} />
+                  </div>
 
-                <div ref={(el) => (sectionRefs.current.highlights = el)} data-section="highlights">
-                  <Highlights highlights={highlights} />
-                </div>
+                  <div ref={(el) => (sectionRefs.current.highlights = el)} data-section="highlights">
+                    <Highlights highlights={highlights} />
+                  </div>
 
-                <div ref={(el) => (sectionRefs.current.itinerary = el)} data-section="itinerary">
-                  <Itinerary itinerary={itinerary} />
-                </div>
+                  <div ref={(el) => (sectionRefs.current.itinerary = el)} data-section="itinerary">
+                    <Itinerary itinerary={itinerary} />
+                  </div>
 
-                <div ref={(el) => (sectionRefs.current.besttime = el)} data-section="besttime">
-                  <BestTimeToVisit season={season} availableMonths={availableMonths} />
-                </div>
+                  <div ref={(el) => (sectionRefs.current.besttime = el)} data-section="besttime">
+                    <BestTimeToVisit season={season} availableMonths={availableMonths} />
+                  </div>
+                </Suspense>
               </MainCol>
 
               <SideCol>
@@ -1092,44 +1100,53 @@ export default function TrekDetails() {
           </Container>
 
           <Container>
-            <div ref={(el) => (sectionRefs.current.organizer = el)} data-section="organizer">
-              <MeetOrganizer
-                organizerName={organizerName}
-                organizerId={organizerId}
-                organizerVerified={trek?.organizerVerified}
-                organizerTrekCount={trek?.organizerTrekCount}
-                organizerExperience={trek?.organizerExperience}
-                organizerDescription={trek?.organizerDescription}
-              />
-            </div>
+            <Suspense fallback={<div style={{padding: '2rem 0'}}><SkeletonBar $h="150px"/></div>}>
+              <div ref={(el) => (sectionRefs.current.organizer = el)} data-section="organizer">
+                <MeetOrganizer
+                  organizerName={organizerName}
+                  organizerId={organizerId}
+                  organizerVerified={trek?.organizerVerified}
+                  organizerTrekCount={trek?.organizerTrekCount}
+                  organizerExperience={trek?.organizerExperience}
+                  organizerDescription={trek?.organizerDescription}
+                />
+              </div>
+            </Suspense>
           </Container>
 
           <Container>
-            <div ref={(el) => (sectionRefs.current.included = el)} data-section="included">
-              <IncludedExcluded included={included} excluded={excluded} />
-            </div>
+            <Suspense fallback={<div style={{padding: '2rem 0'}}><SkeletonBar $h="150px"/></div>}>
+              <div ref={(el) => (sectionRefs.current.included = el)} data-section="included">
+                <IncludedExcluded included={included} excluded={excluded} />
+              </div>
+            </Suspense>
           </Container>
         </MainLayout>
 
-        <div ref={(el) => (sectionRefs.current.gallery = el)} data-section="gallery">
-          <PhotoGallery
-            images={images}
-            title={title}
-            onImageClick={(idx) => {
-              setGalleryIdx(idx);
-              setGalleryOpen(true);
-            }}
-          />
-        </div>
-        <Container>
-          <div ref={(el) => (sectionRefs.current.reviews = el)} data-section="reviews">
-            <ReviewsSection
-              reviews={reviews}
-              rating={rating}
-              trekId={id}          /* ← ADD THIS - critical for saving */
-              trekTitle={title}    /* ← ADD THIS */
+        <Suspense fallback={<div style={{padding: '2rem 0'}}><SkeletonBar $h="300px"/></div>}>
+          <div ref={(el) => (sectionRefs.current.gallery = el)} data-section="gallery">
+            <PhotoGallery
+              images={images}
+              title={title}
+              onImageClick={(idx) => {
+                setGalleryIdx(idx);
+                setGalleryOpen(true);
+              }}
             />
           </div>
+        </Suspense>
+
+        <Container>
+          <Suspense fallback={<div style={{padding: '2rem 0'}}><SkeletonBar $h="200px"/></div>}>
+            <div ref={(el) => (sectionRefs.current.reviews = el)} data-section="reviews">
+              <ReviewsSection
+                reviews={reviews}
+                rating={rating}
+                trekId={id}          
+                trekTitle={title}    
+              />
+            </div>
+          </Suspense>
         </Container>
 
         <MobileBar
@@ -1147,16 +1164,17 @@ export default function TrekDetails() {
           <PrimaryBtn onClick={handleBook}>Book Now →</PrimaryBtn>
         </MobileBar>
 
-        <GalleryModal
-          isOpen={galleryOpen}
-          images={images}
-          currentIndex={galleryIdx}
-          onClose={() => setGalleryOpen(false)}
-          onNavigate={handleGalleryNavigate}
-          title={title}
-        />
-
-        <WhatsAppButton href={waHref} />
+        <Suspense fallback={null}>
+          <GalleryModal
+            isOpen={galleryOpen}
+            images={images}
+            currentIndex={galleryIdx}
+            onClose={() => setGalleryOpen(false)}
+            onNavigate={handleGalleryNavigate}
+            title={title}
+          />
+          <WhatsAppButton href={waHref} />
+        </Suspense>
       </PageWrapper>
     </>
   );
