@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled, { keyframes, createGlobalStyle } from "styled-components";
 import { db, auth } from "../firebase";
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, setDoc, query, where, getDoc } from "firebase/firestore";
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, where, getDoc } from "firebase/firestore";
 import { initializeTreks } from "../utils/initializeTreks";
 import { 
   FiTrash2, FiEdit3, FiSave, FiX, FiPlus, FiLogIn, FiUploadCloud, 
   FiImage, FiCalendar, FiMapPin, FiRefreshCw, FiAlertTriangle, 
-  FiCheckCircle, FiShield, FiMoreVertical
+  FiCheckCircle, FiShield 
 } from 'react-icons/fi';
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
 import { uploadImage, deleteImage, getTrekImagePath, getValidImageUrl, uploadMultipleImages } from "../utils/images";
@@ -23,35 +23,35 @@ import { useNavigate } from 'react-router-dom';
    GLOBAL STYLES & ANIMATIONS
    ========================================================================== */
 const GlobalStyle = createGlobalStyle`
-  body { background: #02040a; color: #e2e8f0; font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background: #020617; color: #f8fafc; font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
   ::-webkit-scrollbar { width: 8px; }
   ::-webkit-scrollbar-track { background: #0f172a; }
   ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
 `;
 
-const fadeInUp = keyframes`from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); }`;
+const fadeInUp = keyframes`from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); }`;
 
 /* ==========================================================================
    STYLED COMPONENTS - LAYOUT
    ========================================================================== */
 const AdminLayout = styled.div`
   max-width: 1280px; margin: 40px auto; padding: 0 24px;
-  animation: ${fadeInUp} 0.5s ease-out;
+  animation: ${fadeInUp} 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 `;
 
 const Header = styled.div`
   display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px;
-  border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 24px;
   
   @media (max-width: 768px) { flex-direction: column; align-items: flex-start; gap: 24px; }
   
-  h1 { font-size: 2.5rem; font-weight: 900; margin: 10px 0 5px 0; background: linear-gradient(135deg, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  h1 { font-size: 2.5rem; font-weight: 900; margin: 12px 0 6px 0; background: linear-gradient(135deg, #ffffff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.5px; }
   p { color: #64748b; margin: 0; font-weight: 500; font-size: 1.05rem; }
 `;
 
 const SecurityBadge = styled.div`
   display: inline-flex; align-items: center; gap: 8px; background: rgba(16, 185, 129, 0.1); color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.2); padding: 6px 14px; border-radius: 50px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px;
+  border: 1px solid rgba(16, 185, 129, 0.2); padding: 6px 14px; border-radius: 50px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; box-shadow: 0 0 15px rgba(16,185,129,0.05);
 `;
 
 const ButtonGroup = styled.div`
@@ -60,33 +60,38 @@ const ButtonGroup = styled.div`
 `;
 
 const ActionBtn = styled.button`
-  background: ${props => props.$primary ? '#fff' : 'rgba(255,255,255,0.03)'};
+  background: ${props => props.$primary ? '#ffffff' : 'rgba(255,255,255,0.03)'};
   color: ${props => props.$primary ? '#0f172a' : '#f8fafc'};
-  border: 1px solid ${props => props.$primary ? '#fff' : 'rgba(255,255,255,0.1)'};
-  padding: 12px 20px; border-radius: 10px; font-weight: 700; font-size: 0.9rem;
-  display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: 0.2s; white-space: nowrap;
-  &:hover:not(:disabled) { transform: translateY(-2px); background: ${props => props.$primary ? '#f1f5f9' : 'rgba(255,255,255,0.08)'}; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  border: 1px solid ${props => props.$primary ? '#ffffff' : 'rgba(255,255,255,0.1)'};
+  padding: 12px 20px; border-radius: 12px; font-weight: 700; font-size: 0.9rem;
+  display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); white-space: nowrap;
+  
+  &:hover:not(:disabled) { 
+    transform: translateY(-2px); 
+    background: ${props => props.$primary ? '#f1f5f9' : 'rgba(255,255,255,0.08)'}; 
+    box-shadow: ${props => props.$primary ? '0 10px 25px rgba(255,255,255,0.15)' : '0 10px 20px rgba(0,0,0,0.2)'}; 
+  }
+  &:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 `;
 
 /* ==========================================================================
    STYLED COMPONENTS - DATA GRID
    ========================================================================== */
 const DataGrid = styled.div`
-  background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; overflow: hidden;
+  background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
 `;
 
 const GridHeader = styled.div`
   display: grid; grid-template-columns: 80px 2fr 1fr 1fr 1fr 100px;
-  padding: 16px 24px; background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding: 18px 24px; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.05);
   color: #64748b; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
   @media (max-width: 900px) { display: none; }
 `;
 
 const GridRow = styled(motion.div)`
   display: grid; grid-template-columns: 80px 2fr 1fr 1fr 1fr 100px;
-  padding: 16px 24px; border-bottom: 1px solid rgba(255,255,255,0.02); align-items: center; transition: 0.2s;
-  &:hover { background: rgba(255,255,255,0.03); }
+  padding: 16px 24px; border-bottom: 1px solid rgba(255,255,255,0.03); align-items: center; transition: background 0.2s ease;
+  &:hover { background: rgba(255,255,255,0.04); }
   @media (max-width: 900px) { 
     grid-template-columns: 80px 1fr; gap: 15px; padding: 20px;
     .desktop-only { display: none; }
@@ -95,12 +100,12 @@ const GridRow = styled(motion.div)`
 `;
 
 const ImageThumbnail = styled.div`
-  width: 60px; height: 60px; border-radius: 10px; background-size: cover; background-position: center; background-color: #1e293b; border: 1px solid rgba(255,255,255,0.1);
+  width: 64px; height: 64px; border-radius: 12px; background-size: cover; background-position: center; background-color: #1e293b; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 `;
 
 const TitleCell = styled.div`
-  h3 { margin: 0 0 4px 0; font-size: 1.05rem; color: #f8fafc; font-weight: 700; }
-  span { font-size: 0.8rem; color: #64748b; display: flex; align-items: center; gap: 4px; }
+  h3 { margin: 0 0 6px 0; font-size: 1.1rem; color: #f8fafc; font-weight: 700; }
+  span { font-size: 0.8rem; color: #94a3b8; display: flex; align-items: center; gap: 4px; }
 `;
 
 const Badge = styled.span`
@@ -111,22 +116,22 @@ const Badge = styled.span`
 `;
 
 const IconButton = styled.button`
-  width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; transition: 0.2s;
-  ${props => props.$variant === 'edit' && `background: rgba(255,255,255,0.05); color: #cbd5e1; &:hover { background: rgba(255,255,255,0.1); color: white; }`}
-  ${props => props.$variant === 'delete' && `background: rgba(239, 68, 68, 0.1); color: #ef4444; &:hover { background: rgba(239, 68, 68, 0.2); }`}
+  width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; transition: 0.2s;
+  ${props => props.$variant === 'edit' && `background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.05); &:hover { background: rgba(255,255,255,0.1); color: white; border-color: rgba(255,255,255,0.1); }`}
+  ${props => props.$variant === 'delete' && `background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.1); &:hover { background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.2); }`}
 `;
 
 /* ==========================================================================
    STYLED COMPONENTS - MODAL FORM & TOASTS
    ========================================================================== */
 const FormOverlay = styled(motion.div)`
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(12px);
   z-index: 1000; overflow-y: auto; padding: 40px 20px; display: flex; justify-content: center;
 `;
 
 const FormPanel = styled(motion.div)`
   background: #0f172a; border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; width: 100%; max-width: 900px;
-  padding: 40px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); height: fit-content;
+  padding: 40px; box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05); height: fit-content;
   @media (max-width: 768px) { padding: 24px; }
 `;
 
@@ -137,17 +142,22 @@ const Grid2Col = styled.div`
 
 const FormGroup = styled.div`
   margin-bottom: 24px;
-  label { display: block; margin-bottom: 8px; color: #94a3b8; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  label { display: block; margin-bottom: 8px; color: #cbd5e1; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
   input, select, textarea { 
-    width: 100%; padding: 14px 16px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-family: 'Inter', sans-serif; transition: 0.2s;
-    &:focus { outline: none; border-color: #8b5cf6; background: rgba(139,92,246,0.05); box-shadow: 0 0 0 3px rgba(139,92,246,0.1); }
+    width: 100%; padding: 14px 16px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-family: 'Inter', sans-serif; transition: all 0.2s;
+    font-size: 0.95rem;
+    &:focus { outline: none; border-color: #8b5cf6; background: rgba(139,92,246,0.05); box-shadow: 0 0 0 4px rgba(139,92,246,0.15); }
+    /* PREVENT iOS AUTO-ZOOM */
+    @media (max-width: 768px) { font-size: 16px; }
   }
   textarea { min-height: 120px; resize: vertical; }
+  select option { background: #0f172a; color: white; }
 `;
 
 const ModuleContainer = styled.div`
-  background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 24px; margin-bottom: 24px;
-  .module-title { display: flex; align-items: center; gap: 8px; color: #f8fafc; font-weight: 700; margin-bottom: 20px; font-size: 1.1rem; }
+  background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 24px; margin-bottom: 24px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+  .module-title { display: flex; align-items: center; gap: 8px; color: #f8fafc; font-weight: 700; margin-bottom: 20px; font-size: 1.1rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px; }
 `;
 
 const Toast = styled(motion.div)`
@@ -156,10 +166,10 @@ const Toast = styled(motion.div)`
 `;
 
 /* ==========================================================================
-   LOGIN COMPONENT (Dark Mode)
+   LOGIN COMPONENT
    ========================================================================== */
 const LoginWrapper = styled.div`
-  max-width: 400px; margin: 100px auto; padding: 40px; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+  max-width: 400px; margin: 100px auto; padding: 40px; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; box-shadow: 0 25px 50px rgba(0,0,0,0.5);
   h2 { text-align: center; margin-bottom: 30px; color: white; }
 `;
 
@@ -173,7 +183,7 @@ const AdminLogin = ({ onLogin, loading, error }) => {
       <form onSubmit={(e) => { e.preventDefault(); onLogin(email, password); }}>
         <FormGroup><label>Authorized Email</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} required /></FormGroup>
         <FormGroup><label>Passphrase</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} required /></FormGroup>
-        <ActionBtn $primary type="submit" disabled={loading} style={{width: '100%', padding: '14px'}}>{loading ? 'Authenticating...' : <><FiLogIn /> Access Console</>}</ActionBtn>
+        <ActionBtn $primary type="submit" disabled={loading} style={{width: '100%', padding: '14px', marginTop: '10px'}}>{loading ? 'Authenticating...' : <><FiLogIn /> Access Console</>}</ActionBtn>
       </form>
     </LoginWrapper>
   );
@@ -202,24 +212,30 @@ const TrekAdmin = () => {
 
   const ADMIN_EMAILS = ['luckychelani950@gmail.com', 'harsh68968@gmail.com', 'ayushmanpatel13@gmail.com'];
 
-  // Auth & Initialization
+  // Auth & Fast Initialization
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setAuthLoading(false);
       if (currentUser) {
-        const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-        if (ADMIN_EMAILS.includes(currentUser.email) || (userDoc.exists() && userDoc.data().role === 'admin')) {
-          setUser(currentUser);
-          fetchTreks();
-          fetchOrganizers();
-        } else {
-          setUser(null);
-          setLoginError("Access denied: You do not have 'admin' clearance.");
+        try {
+          const userDoc = await getDoc(doc(db, "users", currentUser.uid)).catch(() => null);
+          const isAuthorized = ADMIN_EMAILS.includes(currentUser.email) || (userDoc && userDoc.exists() && userDoc.data().role === 'admin');
+
+          if (isAuthorized) {
+            setUser(currentUser);
+            fetchAllData(); 
+          } else {
+            setUser(null);
+            setLoginError("Access denied: You do not have 'admin' clearance.");
+          }
+        } catch (err) {
+          setLoginError("Verification failed. Please try again.");
         }
-      } else { setUser(null); }
+      } else {
+        setUser(null);
+      }
+      setAuthLoading(false);
     });
     return () => unsubscribe();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const showNotification = (text, error = false) => {
@@ -235,27 +251,40 @@ const TrekAdmin = () => {
     } catch (error) { setLoginError(error.message); setAuthLoading(false); }
   };
 
-  const fetchOrganizers = async () => {
-    try {
-      const q = query(collection(db, "users"), where("role", "in", ["organizer", "admin"]));
-      const snap = await getDocs(q);
-      setOrganizers(snap.docs.map(d => ({ id: d.id, name: d.data().name, org: d.data().organizationDetails?.name || d.data().name, role: d.data().role })));
-    } catch (error) { console.error('Error fetching organizers:', error); }
-  };
-  
-  const fetchTreks = async () => {
+  const fetchAllData = async () => {
     setLoading(true);
     try {
-      const snap = await getDocs(collection(db, "treks"));
-      setTreks(snap.docs.map(doc => ({ docId: doc.id, ...doc.data() })));
-    } catch (err) { showNotification(`Sync Error: ${err.message}`, true); } finally { setLoading(false); }
+      const [treksRes, orgsRes] = await Promise.allSettled([
+        getDocs(collection(db, "treks")),
+        getDocs(query(collection(db, "users"), where("role", "in", ["organizer", "admin"])))
+      ]);
+
+      if (treksRes.status === 'fulfilled') {
+        setTreks(treksRes.value.docs.map(doc => ({ docId: doc.id, ...doc.data() })));
+      } else {
+        showNotification("Failed to load trek database.", true);
+      }
+
+      if (orgsRes.status === 'fulfilled') {
+        setOrganizers(orgsRes.value.docs.map(d => ({ 
+          id: d.id, 
+          name: d.data().name, 
+          org: d.data().organizationDetails?.name || d.data().name, 
+          role: d.data().role 
+        })));
+      }
+    } catch (err) {
+      showNotification(`Sync Error: ${err.message}`, true);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Form Handlers
   const resetForm = () => {
     setFormData({
       id: '', title: '', country: 'India', location: '', difficulty: 'Easy', days: 1, price: '', season: '', rating: 5.0, reviews: 0,
-      image: '', imageUrls: [], coverIndex: 0, description: '', detailedDescription: '', itinerary: [], availableMonths: [], availableDates: [], organizerId: '', organizerName: ''
+      image: '', imageUrls: [], coverIndex: 0, description: '', detailedDescription: '', itinerary: [], availableMonths: [], availableDates: [], organizerId: '', organizerName: '',
+      highlights: '', included: '', excluded: '' 
     });
     setEditingTrek(null); setImageFile(null); setUploadProgress(0); setIsUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -269,18 +298,26 @@ const TrekAdmin = () => {
       imageUrls: Array.isArray(trek.imageUrls) ? trek.imageUrls : [],
       itinerary: Array.isArray(trek.itinerary) ? trek.itinerary : [],
       availableMonths: Array.isArray(trek.availableMonths) ? trek.availableMonths : [],
-      availableDates: Array.isArray(trek.availableDates) ? trek.availableDates : []
+      availableDates: Array.isArray(trek.availableDates) ? trek.availableDates : [],
+      highlights: Array.isArray(trek.highlights) ? trek.highlights.join('\n') : (trek.highlights || ''),
+      included: Array.isArray(trek.included) ? trek.included.join('\n') : (trek.included || ''),
+      excluded: Array.isArray(trek.excluded) ? trek.excluded.join('\n') : (trek.excluded || '')
     });
     setEditingTrek(trek.docId); setShowForm(true);
   };
 
-  const handleInputChange = (e) => { setFormData(prev => ({ ...prev, [name]: value })); const { name, value } = e.target; setFormData(prev => ({ ...prev, [name]: value })); };
+  // Safe input mapping
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    if (name) {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
 
-  // --- FAULT TOLERANT SAVE LOGIC (Strict Sanitization & Two-Phase Commit) ---
+  // Strict Sanitization & Two-Phase Commit
   const handleSafeSave = async (e) => {
-    e.preventDefault(); // Intercept form submission
+    e.preventDefault(); 
 
-    // 1. Strict Validation
     if (!formData.title?.trim() || !formData.organizerId) {
       return showNotification("Title and Assigned Organizer are strictly required.", true);
     }
@@ -293,7 +330,6 @@ const TrekAdmin = () => {
     let finalImageUrls = Array.isArray(formData.imageUrls) ? [...formData.imageUrls] : [];
 
     try {
-      // 2. PHASE ONE: Upload Images to Storage
       if (imageFile) {
         setIsUploading(true);
         newPrimaryImageUrl = await uploadImage(imageFile, getTrekImagePath(trekId), setUploadProgress);
@@ -311,20 +347,28 @@ const TrekAdmin = () => {
         });
       }
 
-      // 3. Strict Data Sanitization (Fault Tolerance against bad user input)
+      // Safe Array Parsing Function
+      const parseTextToArray = (text) => {
+        if (!text) return [];
+        return text.split('\n').map(i => i.trim()).filter(i => i !== '');
+      };
+
       const safeData = {
         ...formData,
         id: trekId,
-        days: Math.max(1, parseInt(formData.days, 10) || 1), // Minimum 1 day
-        price: Math.max(0, parseFloat(formData.price) || 0), // Strip text, default 0
-        rating: Math.min(5, Math.max(0, parseFloat(formData.rating) || 5.0)), // Cap at 5.0
+        days: Math.max(1, parseInt(formData.days, 10) || 1), 
+        price: Math.max(0, parseFloat(formData.price) || 0), 
+        rating: Math.min(5, Math.max(0, parseFloat(formData.rating) || 5.0)), 
         reviews: Math.max(0, parseInt(formData.reviews, 10) || 0),
-        image: newPrimaryImageUrl || formData.image,
+        image: newPrimaryImageUrl || formData.image || '',
         imageUrls: finalImageUrls,
+        coverIndex: formData.coverIndex !== undefined ? formData.coverIndex : 0, 
+        highlights: parseTextToArray(formData.highlights),
+        included: parseTextToArray(formData.included),
+        excluded: parseTextToArray(formData.excluded),
         updatedAt: new Date().toISOString()
       };
 
-      // 4. PHASE TWO: Save to Database
       if (editingTrek) {
         await updateDoc(doc(db, "treks", editingTrek), safeData);
         showNotification("Trek parameters updated successfully.");
@@ -333,12 +377,11 @@ const TrekAdmin = () => {
         showNotification("New trek deployed to database.");
       }
 
-      fetchTreks();
+      fetchAllData();
       resetForm();
       setShowForm(false);
 
     } catch (error) {
-      // 5. ROLLBACK: Database failed, so delete the images we just uploaded
       console.error("Database save failed. Rolling back images...");
       if (newPrimaryImageUrl) await deleteImage(newPrimaryImageUrl).catch(e => console.error(e));
       if (newGalleryUrls.length > 0) await Promise.all(newGalleryUrls.map(url => deleteImage(url).catch(e => console.error(e))));
@@ -352,14 +395,14 @@ const TrekAdmin = () => {
   
   const executeDelete = async (docId) => {
     if (window.confirm("WARNING: This will permanently delete this trek from the database. Proceed?")) {
-      try { setLoading(true); await deleteDoc(doc(db, "treks", docId)); fetchTreks(); showNotification("Trek record erased."); } 
+      try { setLoading(true); await deleteDoc(doc(db, "treks", docId)); fetchAllData(); showNotification("Trek record erased."); } 
       catch (err) { showNotification(`Deletion failed: ${err.message}`, true); } 
       finally { setLoading(false); }
     }
   };
 
   const handleInitSamples = async () => {
-    try { setLoading(true); const res = await initializeTreks(user); if (res.success) { showNotification("Sample treks deployed."); fetchTreks(); } else { showNotification(res.message, true); } } 
+    try { setLoading(true); const res = await initializeTreks(user); if (res.success) { showNotification("Sample treks deployed."); fetchAllData(); } else { showNotification(res.message, true); } } 
     catch (err) { showNotification(err.message, true); } finally { setLoading(false); }
   };
 
@@ -389,7 +432,7 @@ const TrekAdmin = () => {
           <div>Asset</div><div>Trek Identity</div><div>Difficulty</div><div>Duration</div><div>Base Price</div><div>Actions</div>
         </GridHeader>
         
-        {loading ? <p style={{padding: '24px', textAlign: 'center', color: '#64748b'}}>Syncing with database...</p> : treks.length === 0 ? <p style={{padding: '24px', textAlign: 'center', color: '#64748b'}}>No records found. Deploy a new trek to begin.</p> : (
+        {loading ? <p style={{padding: '30px', textAlign: 'center', color: '#64748b'}}>Syncing with database...</p> : treks.length === 0 ? <p style={{padding: '30px', textAlign: 'center', color: '#64748b'}}>No records found. Deploy a new trek to begin.</p> : (
           treks.map((trek) => (
             <GridRow key={trek.docId}>
               <div>
@@ -400,7 +443,7 @@ const TrekAdmin = () => {
                 </TitleCell>
                 <div className="desktop-only"><Badge $level={trek.difficulty}>{trek.difficulty}</Badge></div>
                 <div className="desktop-only" style={{color: '#94a3b8'}}>{trek.days} Days</div>
-                <div className="desktop-only" style={{fontFamily: 'Space Mono', color: '#cbd5e1'}}>₹{trek.price}</div>
+                <div className="desktop-only" style={{fontFamily: 'Space Mono', color: '#cbd5e1', fontWeight: 'bold'}}>₹{trek.price}</div>
                 <div className="action-cell" style={{ display: 'flex', gap: '8px' }}>
                   <IconButton $variant="edit" onClick={() => handleEditTrek(trek)} title="Modify Data"><FiEdit3 /></IconButton>
                   <IconButton $variant="delete" onClick={() => executeDelete(trek.docId)} title="Erase Record"><FiTrash2 /></IconButton>
@@ -413,15 +456,15 @@ const TrekAdmin = () => {
       <AnimatePresence>
         {showForm && (
           <FormOverlay initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <FormPanel initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px', alignItems: 'center' }}>
-                <h2 style={{ margin: 0, color: 'white' }}>{editingTrek ? 'Modify Trek Parameters' : 'Initialize New Trek'}</h2>
-                <button type="button" onClick={() => setShowForm(false)} style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '1.5rem' }}><FiX /></button>
+            <FormPanel initial={{ y: 50, opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: 50, opacity: 0, scale: 0.95 }} transition={{ duration: 0.3, ease: "easeOut" }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '35px', alignItems: 'center' }}>
+                <h2 style={{ margin: 0, color: 'white', fontSize: '1.8rem', letterSpacing: '-0.5px' }}>{editingTrek ? 'Modify Trek Parameters' : 'Initialize New Trek'}</h2>
+                <button type="button" onClick={() => setShowForm(false)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#cbd5e1', cursor: 'pointer', fontSize: '1.5rem', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'; e.currentTarget.style.color = '#ef4444'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#cbd5e1'; }}><FiX /></button>
               </div>
 
               <form onSubmit={handleSafeSave}>
                 <Grid2Col>
-                  <FormGroup><label>Trek Title *</label><input type="text" name="title" value={formData.title} onChange={handleInputChange} required /></FormGroup>
+                  <FormGroup><label>Trek Title *</label><input type="text" name="title" value={formData.title} onChange={handleInputChange} required placeholder="e.g. Everest Base Camp" /></FormGroup>
                   <FormGroup><label>URL Slug (Optional)</label><input type="text" name="id" value={formData.id} onChange={handleInputChange} placeholder="auto-generated-from-title" /></FormGroup>
                 </Grid2Col>
                 
@@ -464,41 +507,84 @@ const TrekAdmin = () => {
 
                 <FormGroup>
                   <label>Primary Database Image</label>
-                  <div style={{ display: 'flex', gap: '20px', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <ImageThumbnail style={{ width: '100px', height: '100px', position: 'relative', backgroundImage: formData.image || imageFile ? `url(${imageFile ? URL.createObjectURL(imageFile) : getValidImageUrl(formData.image)})` : 'none' }}>
-                      {!formData.image && !imageFile && <FiImage size={30} style={{margin: '35px', color: '#64748b'}} />}
+                  {/* BEAUTIFUL DRAG AND DROP PRIMARY UPLOADER */}
+                  <div 
+                    onClick={() => { if(fileInputRef.current) fileInputRef.current.click(); }}
+                    style={{ 
+                      display: 'flex', gap: '24px', alignItems: 'center', background: 'rgba(0,0,0,0.25)', 
+                      padding: '24px', borderRadius: '20px', border: '2px dashed rgba(255,255,255,0.1)', 
+                      cursor: 'pointer', transition: 'all 0.3s ease',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#8b5cf6'; e.currentTarget.style.background = 'rgba(139, 92, 246, 0.05)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.background = 'rgba(0,0,0,0.25)'; }}
+                  >
+                    <ImageThumbnail style={{ width: '120px', height: '120px', position: 'relative', backgroundImage: formData.image || imageFile ? `url(${imageFile ? URL.createObjectURL(imageFile) : getValidImageUrl(formData.image)})` : 'none', borderRadius: '16px', border: 'none', boxShadow: '0 8px 20px rgba(0,0,0,0.4)' }}>
+                      {!formData.image && !imageFile && <FiImage size={40} style={{margin: '40px', color: '#64748b'}} />}
                       
-                      {/* The Restored Trash Button */}
                       {(formData.image || imageFile) && (
                         <button 
                           type="button" 
-                          onClick={() => { setImageFile(null); setFormData(p => ({...p, image: ''})); }}
-                          style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}
+                          onClick={(e) => { e.stopPropagation(); setImageFile(null); setFormData(p => ({...p, image: ''})); }}
+                          style={{ position: 'absolute', top: '-10px', right: '-10px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(239,68,68,0.4)', transition: '0.2s' }}
+                          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
+                          onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                         >
-                          <FiX size={14} />
+                          <FiX size={18} />
                         </button>
                       )}
                     </ImageThumbnail>
                     <div style={{flex: 1}}>
-                      <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#8b5cf6', color: 'white', padding: '12px 20px', borderRadius: '10px', cursor: 'pointer', fontWeight: 700, transition: '0.2s' }}>
-                        <FiUploadCloud /> {isUploading ? 'Uploading to Server...' : 'Select Cover Image'}
-                        <input type="file" style={{ display: 'none' }} accept="image/*" onChange={(e) => {
-                           if(e.target.files[0] && e.target.files[0].size <= 5*1024*1024) setImageFile(e.target.files[0]);
-                           else showNotification("File exceeds 5MB limit.", true);
-                        }} />
-                      </label>
-                      <p style={{margin: '10px 0 0 0', fontSize: '0.8rem', color: '#64748b'}}>Max 5MB. JPG or PNG.</p>
-                      {isUploading && <div style={{width: '100%', height: '4px', background: '#1e293b', marginTop: '10px', borderRadius: '4px', overflow: 'hidden'}}><div style={{width: `${uploadProgress}%`, height: '100%', background: '#10b981', transition: '0.3s'}}/></div>}
+                      <h3 style={{ margin: '0 0 8px 0', color: '#f8fafc', fontSize: '1.1rem' }}>
+                        {isUploading ? 'Uploading to Server...' : 'Click to select Primary Image'}
+                      </h3>
+                      <p style={{margin: 0, fontSize: '0.85rem', color: '#94a3b8', fontWeight: 500}}>Max 10MB limit. High resolution JPG or PNG recommended.</p>
+                      
+                      {/* Hidden Input managed safely by the div click handler */}
+                      <input 
+                        type="file" 
+                        ref={fileInputRef}
+                        style={{ display: 'none' }} 
+                        accept="image/*" 
+                        onChange={(e) => {
+                           if(e.target.files[0] && e.target.files[0].size <= 10*1024*1024) setImageFile(e.target.files[0]);
+                           else showNotification("File exceeds 10MB limit.", true);
+                        }} 
+                      />
+                      
+                      {isUploading && (
+                        <div style={{width: '100%', height: '6px', background: '#1e293b', marginTop: '16px', borderRadius: '6px', overflow: 'hidden'}}>
+                          <div style={{width: `${uploadProgress}%`, height: '100%', background: '#10b981', transition: 'width 0.3s ease'}}/>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </FormGroup>
                 
-                <FormGroup><label>Brief Summary</label><textarea name="description" value={formData.description} onChange={handleInputChange} required /></FormGroup>
+                <FormGroup><label>Brief Summary</label><textarea name="description" value={formData.description} onChange={handleInputChange} required placeholder="A short, catchy overview of the trek..." /></FormGroup>
                 <FormGroup><label>Detailed Description</label><textarea name="detailedDescription" value={formData.detailedDescription} onChange={handleInputChange} style={{minHeight: '200px'}} placeholder="Full HTML or Markdown supported description..." /></FormGroup>
+
+                <ModuleContainer>
+                  <div className="module-title">Key Information (Enter 1 item per line)</div>
+                  <Grid2Col>
+                    <FormGroup>
+                      <label>Highlights</label>
+                      <textarea name="highlights" value={formData.highlights || ''} onChange={handleInputChange} placeholder="Breathtaking mountain views&#10;Expert local guides&#10;Comfortable basecamps..." style={{minHeight: '120px'}} />
+                    </FormGroup>
+                    <FormGroup>
+                      <label>What's Included</label>
+                      <textarea name="included" value={formData.included || ''} onChange={handleInputChange} placeholder="All meals (Breakfast, Lunch, Dinner)&#10;Tents and sleeping bags&#10;Permits..." style={{minHeight: '120px'}} />
+                    </FormGroup>
+                  </Grid2Col>
+                  <FormGroup style={{marginBottom: 0}}>
+                    <label>What's Excluded</label>
+                    <textarea name="excluded" value={formData.excluded || ''} onChange={handleInputChange} placeholder="Personal trekking gear&#10;Travel insurance&#10;Flights..." style={{minHeight: '80px'}} />
+                  </FormGroup>
+                </ModuleContainer>
                 
                 <ModuleContainer>
                   <div className="module-title"><FiImage /> Digital Asset Gallery</div>
-                  <MultipleImagesUploader onImagesChange={(imgs, idx) => setFormData(p => ({...p, imageUrls: imgs, coverIndex: idx}))} initialImages={formData.imageUrls} initialCoverIndex={formData.coverIndex} maxFiles={10} maxSize={5} />
+                  {/* 10MB LIMIT APPLIED TO GALLERY */}
+                  <MultipleImagesUploader onImagesChange={(imgs, idx) => setFormData(p => ({...p, imageUrls: imgs, coverIndex: idx}))} initialImages={formData.imageUrls} initialCoverIndex={formData.coverIndex} maxFiles={10} maxSize={10} />
                 </ModuleContainer>
                 
                 <Grid2Col>
@@ -517,7 +603,7 @@ const TrekAdmin = () => {
                   <ItineraryManager itinerary={formData.itinerary} onChange={i => setFormData(p => ({...p, itinerary: i}))} />
                 </ModuleContainer>
                 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '15px', marginTop: '40px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '15px', marginTop: '40px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '24px' }}>
                   <ActionBtn type="button" onClick={() => setShowForm(false)}>Abort Deployment</ActionBtn>
                   <ActionBtn type="submit" $primary disabled={loading || isUploading}>
                     <FiSave /> {loading || isUploading ? 'Processing...' : (editingTrek ? 'Update Trek Data' : 'Commit to Database')}

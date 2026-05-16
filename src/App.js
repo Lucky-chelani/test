@@ -1,5 +1,5 @@
 import React, { useEffect , useLayoutEffect} from 'react';
-import './App.css';
+
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion'; 
 import Banner from './components/Banner/Banner';
@@ -102,17 +102,24 @@ const ConditionalBottomNav = () => {
 const ScrollToTop = () => {
   const { pathname } = useLocation();
 
-  // ★ Handle initial page load (before paint)
   useLayoutEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+    // This tells the browser window to instantly snap to the top (0,0)
+    // every single time the 'pathname' (the URL) changes.
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'instant' 
+    });
+  }, [pathname]); // <--- The dependency array watches the URL!
 
-  // ★ Handle every route change
+  return null; // This component doesn't render any UI
 };
 
 // ─────────────────────────────────────────────
 // APP
 // ─────────────────────────────────────────────
+
+
 function App() {
   useEffect(() => {
     const performCleanup = async () => {
