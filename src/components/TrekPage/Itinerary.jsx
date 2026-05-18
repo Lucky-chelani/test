@@ -621,8 +621,6 @@ const Tooltip = styled.div`
     content: "";
     position: absolute;
     top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
     border: 8px solid transparent;
     border-top-color: ${T.primaryBorder};
   }
@@ -630,8 +628,6 @@ const Tooltip = styled.div`
     content: "";
     position: absolute;
     top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
     border: 7px solid transparent;
     border-top-color: rgba(17, 17, 17, 0.98);
     margin-top: -1px;

@@ -1,5 +1,5 @@
 import React, { useEffect , useLayoutEffect} from 'react';
-import './App.css';
+
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion'; 
 import Banner from './components/Banner/Banner';
@@ -54,6 +54,8 @@ import CertificateAdmin from './Interns/CertificateAdmin';
 import InternshipJoin from './intern_join'; 
 import Support from "./pages/SupportPage";
 import BookingPage from './components/BookingPage';
+import AdminBookings from './components/AdminBookings'; // The new admin bookings table
+import AdminBookingDetail from './components/AdminBookingDetail';
 
 // ─────────────────────────────────────────────
 // PAGE TRANSITION
@@ -100,17 +102,24 @@ const ConditionalBottomNav = () => {
 const ScrollToTop = () => {
   const { pathname } = useLocation();
 
-  // ★ Handle initial page load (before paint)
   useLayoutEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+    // This tells the browser window to instantly snap to the top (0,0)
+    // every single time the 'pathname' (the URL) changes.
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'instant' 
+    });
+  }, [pathname]); // <--- The dependency array watches the URL!
 
-  // ★ Handle every route change
+  return null; // This component doesn't render any UI
 };
 
 // ─────────────────────────────────────────────
 // APP
 // ─────────────────────────────────────────────
+
+
 function App() {
   useEffect(() => {
     const performCleanup = async () => {
@@ -227,6 +236,20 @@ function App() {
                 <PageTransition>
                   <AccessControl requiredRole="admin">
                     <SimpleAdmin />
+                  </AccessControl>
+                </PageTransition>
+              } />
+              <Route path="/admin/bookings" element={
+                <PageTransition>
+                  <AccessControl requiredRole="admin">
+                    <AdminBookings />
+                  </AccessControl>
+                </PageTransition>
+              } />
+              <Route path="/admin/bookings/:id" element={
+                <PageTransition>
+                  <AccessControl requiredRole="admin">
+                    <AdminBookingDetail />
                   </AccessControl>
                 </PageTransition>
               } />

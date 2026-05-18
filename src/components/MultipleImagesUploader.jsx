@@ -1,94 +1,123 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
-import { FiUpload, FiImage, FiX, FiStar, FiCheck, FiAlertTriangle } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiUploadCloud, FiImage, FiX, FiStar, FiCheck, FiAlertTriangle } from 'react-icons/fi';
 
+/* ==========================================================================
+   STYLED COMPONENTS (Premium Modern UI)
+   ========================================================================== */
 const Container = styled.div`
-  margin-bottom: 20px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 `;
 
 const UploaderHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
 `;
 
 const Title = styled.h3`
   margin: 0;
-  font-size: 1.1rem;
-  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.05rem;
+  color: #f8fafc;
   display: flex;
   align-items: center;
   gap: 8px;
+  font-weight: 700;
 `;
 
 const UploadArea = styled.div`
-  border: 2px dashed rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
-  padding: 30px;
+  border: 2px dashed ${props => props.$isDragging ? '#10b981' : 'rgba(255, 255, 255, 0.2)'};
+  background: ${props => props.$isDragging ? 'rgba(16, 185, 129, 0.05)' : 'rgba(0, 0, 0, 0.25)'};
+  border-radius: 16px;
+  padding: 32px 20px;
   text-align: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
   
   &:hover {
-    border-color: rgba(255, 255, 255, 0.5);
-    background-color: rgba(255, 255, 255, 0.05);
+    border-color: #8b5cf6;
+    background: rgba(139, 92, 246, 0.05);
   }
 `;
 
 const UploadIcon = styled.div`
-  font-size: 2.5rem;
-  color: rgba(255, 255, 255, 0.6);
-  margin-bottom: 15px;
+  font-size: 3rem;
+  color: ${props => props.$isDragging ? '#10b981' : '#8b5cf6'};
+  margin-bottom: 12px;
+  transition: color 0.3s ease;
 `;
 
 const UploadText = styled.p`
-  margin: 0;
-  color: rgba(255, 255, 255, 0.8);
+  margin: 0 0 8px 0;
+  color: #f8fafc;
+  font-size: 1.1rem;
+  font-weight: 700;
 `;
 
 const UploadSubtext = styled.p`
-  margin: 5px 0 0;
-  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+  color: #94a3b8;
   font-size: 0.85rem;
+  font-weight: 500;
+`;
+
+const SelectButton = styled.button`
+  margin-top: 16px;
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+  }
 `;
 
 const FileInput = styled.input`
   display: none;
-  position: absolute;
-  width: 0.1px;
-  height: 0.1px;
-  opacity: 0;
-  overflow: hidden;
-  z-index: -1;
 `;
 
 const ImagePreviewsContainer = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 15px;
-  margin-top: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+  margin-top: 10px;
 `;
 
-const ImagePreviewWrapper = styled.div`
+const ImagePreviewWrapper = styled(motion.div)`
   position: relative;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  aspect-ratio: 3/2;
-  background-color: #2a3446;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  aspect-ratio: 1 / 1;
+  background-color: #1e293b;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  border: 2px solid ${props => props.$isCover ? '#10b981' : 'transparent'};
   
-  ${props => props.isCover && `
-    border: 3px solid #4cc9f0;
-    transform: scale(1.02);
+  ${props => props.$isCover && `
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
   `}
-`;
 
-const ImagePreview = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s ease;
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
 `;
 
 const ImageOverlay = styled.div`
@@ -97,359 +126,243 @@ const ImageOverlay = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(2px);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  
-  /* DEFAULT: Hidden (for desktop mouse users) */
+  gap: 8px;
   opacity: 0; 
-  transition: opacity 0.3s ease;
+  transition: opacity 0.2s ease;
   
-  /* SHOW ON HOVER (Mouse) */
   ${ImagePreviewWrapper}:hover & {
     opacity: 1;
   }
 
-  /* CRITICAL FIX: SHOW ALWAYS ON TOUCH DEVICES */
   @media (hover: none) {
     opacity: 1;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 40%);
-    justify-content: flex-start; /* Move buttons to top so image is visible */
+    background: linear-gradient(to bottom, rgba(15,23,42,0.8) 0%, transparent 50%);
+    justify-content: flex-start;
     padding-top: 10px;
   }
 `;
 
-const ImageActions = styled.div`
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  display: flex;
-  gap: 5px;
-`;
-
 const CoverBadge = styled.div`
   position: absolute;
-  top: 10px;
-  left: 10px;
-  background-color: #4cc9f0;
+  top: 8px;
+  left: 8px;
+  background-color: #10b981;
   color: white;
-  font-size: 0.75rem;
-  font-weight: bold;
+  font-size: 0.65rem;
+  font-weight: 800;
   padding: 4px 8px;
-  border-radius: 4px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   gap: 4px;
+  z-index: 10;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
 `;
 
 const ActionButton = styled.button`
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.6);
+  background: ${props => props.$danger ? '#ef4444' : 'rgba(255, 255, 255, 0.15)'};
   color: white;
-  border: none;
-  cursor: pointer;
+  border: 1px solid ${props => props.$danger ? '#ef4444' : 'rgba(255, 255, 255, 0.2)'};
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
+  gap: 6px;
+  cursor: pointer;
+  transition: 0.2s;
   
   &:hover {
-    background: ${props => props.danger ? 'rgba(220, 38, 38, 0.8)' : props.primary ? 'rgba(79, 70, 229, 0.8)' : 'rgba(0, 0, 0, 0.8)'};
-    transform: scale(1.1);
+    background: ${props => props.$danger ? '#dc2626' : '#8b5cf6'};
+    border-color: ${props => props.$danger ? '#dc2626' : '#8b5cf6'};
+    transform: scale(1.05);
   }
 
-  @media (max-width: 768px) {
-    width: 36px;
-    height: 36px;
+  @media (hover: none) {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    justify-content: center;
+    span { display: none; } /* Hide text on mobile to save space */
   }
-
 `;
 
-const ProgressContainer = styled.div`
-  margin-top: 20px;
-`;
-
-const ProgressBar = styled.div`
-  height: 4px;
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: 2px;
-  overflow: hidden;
-`;
-
-const ProgressFill = styled.div`
-  height: 100%;
-  background: linear-gradient(to right, #4cc9f0, #7209b7);
-  width: ${props => props.progress || 0}%;
-  transition: width 0.3s ease;
-`;
-
-const ErrorMessage = styled.div`
-  color: #f87171;
-  margin-top: 10px;
+const Notification = styled(motion.div)`
+  color: ${props => props.$type === 'error' ? '#ef4444' : '#10b981'};
+  background: ${props => props.$type === 'error' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)'};
+  border: 1px solid ${props => props.$type === 'error' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)'};
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-top: 12px;
 `;
 
-const StatusMessage = styled.div`
-  color: ${props => props.type === 'success' ? '#10b981' : '#f87171'};
-  margin-top: 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-/**
- * Multiple Images Uploader Component
- * @param {Object} props - Component props
- * @param {Function} props.onImagesChange - Callback when images are added, removed, or cover is changed
- * @param {Array<Object>} props.initialImages - Initial images list (optional)
- * @param {string} props.maxSize - Maximum file size in MB (default: "5")
- * @param {number} props.maxFiles - Maximum number of files allowed (default: 10)
- */
+/* ==========================================================================
+   MAIN COMPONENT LOGIC
+   ========================================================================== */
 const MultipleImagesUploader = ({ 
   onImagesChange,
   initialImages = [],
-  maxSize = 5,
+  initialCoverIndex = 0,
+  maxSize = 10, // INCREAED TO 10MB
   maxFiles = 10
 }) => {
-  const [images, setImages] = useState(initialImages);
-  const [coverIndex, setCoverIndex] = useState(0);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isUploading, setIsUploading] = useState(false);
-  const [error, setError] = useState('');
-  const [status, setStatus] = useState('');
+  const [images, setImages] = useState([]);
+  const [coverIndex, setCoverIndex] = useState(initialCoverIndex || 0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [notification, setNotification] = useState({ message: '', type: '' });
   
   const fileInputRef = useRef(null);
-  
-  // Handle file selection
-  const handleFileSelect = (e) => {
-    console.log("File selection triggered", e);
-    
-    // Prevent any accidental form submission
-    if (e && e.preventDefault) {
-      e.preventDefault();
+
+  // Initialize perfectly on mount
+  useEffect(() => {
+    if (initialImages && initialImages.length > 0) {
+      const formattedImages = initialImages.map((img, idx) => ({
+        id: `init-${idx}-${Date.now()}`,
+        file: typeof img === 'string' ? null : img,
+        url: typeof img === 'string' ? img : URL.createObjectURL(img)
+      }));
+      setImages(formattedImages);
     }
+  }, []);
+
+  const triggerNotify = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification({ message: '', type: '' }), 4000);
+  };
+
+  // Safe callback to parent (Fixes the object vs array bug!)
+  const notifyParent = (newImagesList, newCoverIdx) => {
+    // Extract back to just strings or Files for TrekAdmin.jsx
+    const rawFilesOrUrls = newImagesList.map(item => item.file ? item.file : item.url);
+    // Send exact two arguments: (imagesArray, coverIndex)
+    onImagesChange(rawFilesOrUrls, newCoverIdx);
+  };
+
+  const processFiles = (filesList) => {
+    const newFiles = Array.from(filesList);
+    let validCount = 0;
+    const currentCount = images.length;
     
-    if (!e || !e.target || !e.target.files) {
-      setError("No files were selected or the browser doesn't support the File API");
-      return;
+    if (currentCount >= maxFiles) {
+      return triggerNotify(`Maximum of ${maxFiles} images reached.`, 'error');
     }
-    
-    const files = Array.from(e.target.files);
-    console.log(`${files.length} files selected`, files);
-    
-    if (!files.length) {
-      console.log("No files in selection");
-      return;
-    }
-    
-    if (images.length + files.length > maxFiles) {
-      setError(`You can only upload up to ${maxFiles} images. Please select fewer files.`);
-      return;
-    }
-    
-    setError('');
-    setStatus('Processing images...');
-    
-    const newImages = [];
-    const maxSizeBytes = maxSize * 1024 * 1024;
-    
-    // Process each file
-    files.forEach(file => {
-      // Validate file type
-      if (!file.type.match('image.*')) {
-        setError('One or more files are not valid images. Please select only JPG, PNG, or WEBP files.');
-        return;
+
+    const processedImages = [];
+    const maxBytes = maxSize * 1024 * 1024;
+
+    for (let file of newFiles) {
+      if (currentCount + validCount >= maxFiles) break;
+
+      if (!file.type.startsWith('image/')) {
+        triggerNotify('Only image files (JPG, PNG, WEBP) are allowed.', 'error');
+        continue;
       }
-      
-      // Validate file size
-      if (file.size > maxSizeBytes) {
-        setError(`One or more files exceed the maximum size limit of ${maxSize}MB.`);
-        return;
+
+      if (file.size > maxBytes) {
+        triggerNotify(`File "${file.name}" exceeds the ${maxSize}MB limit.`, 'error');
+        continue;
       }
-      
-      // Create preview URL
-      const imageUrl = URL.createObjectURL(file);
-      
-      newImages.push({
-        file,
-        preview: imageUrl,
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        uploadProgress: 0,
-        id: Date.now() + Math.random().toString(36).substr(2, 9)
+
+      processedImages.push({
+        id: `new-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+        file: file,
+        url: URL.createObjectURL(file)
       });
-    });
-    
-    // Add new images to state
-    const updatedImages = [...images, ...newImages];
-    setImages(updatedImages);
-    
-    // If this is the first image, set it as cover
-    if (images.length === 0 && newImages.length > 0) {
-      setCoverIndex(0);
+      validCount++;
     }
-    
-    // Extract the files in the format needed by the parent component
-    const imageFilesForParent = updatedImages.map(img => {
-      // If it's just a string URL, return it directly
-      if (typeof img === 'string') return img;
-      // If it's a file object wrapped in our preview object, return the file
-      if (img.file instanceof File) return img.file;
-      // Otherwise return the original object
-      return img;
-    });
-    
-    console.log("Images to pass to parent:", updatedImages);
-    
-    // Notify parent component
-    onImagesChange({
-      images: updatedImages,
-      coverIndex: images.length === 0 ? 0 : coverIndex
-    });
-    
-    // Set success status
-    if (newImages.length > 0) {
-      setStatus(`${newImages.length} image${newImages.length > 1 ? 's' : ''} added successfully`);
-      setTimeout(() => setStatus(''), 3000);
-    }
-    
-    // Clear input value to allow selecting the same file again
-    if (e.target && e.target.value !== undefined) {
-      e.target.value = '';
-    }
-  };
-  
-  // Remove an image by index
-  const removeImage = (indexToRemove) => {
-    // Revoke preview URL to prevent memory leak
-    if (images[indexToRemove]?.preview) {
-      URL.revokeObjectURL(images[indexToRemove].preview);
-    }
-    
-    // Remove the image
-    const updatedImages = images.filter((_, index) => index !== indexToRemove);
-    setImages(updatedImages);
-    
-    // Update cover index if needed
-    if (coverIndex === indexToRemove) {
-      // Set the first image as cover if exists, otherwise reset to 0
-      const newCoverIndex = updatedImages.length > 0 ? 0 : 0;
+
+    if (processedImages.length > 0) {
+      const updatedImages = [...images, ...processedImages];
+      const newCoverIndex = updatedImages.length === processedImages.length ? 0 : coverIndex;
+      
+      setImages(updatedImages);
       setCoverIndex(newCoverIndex);
-    } else if (coverIndex > indexToRemove) {
-      // Adjust cover index when removing an image before the cover
-      setCoverIndex(coverIndex - 1);
+      notifyParent(updatedImages, newCoverIndex);
+      
+      triggerNotify(`${processedImages.length} image(s) added successfully.`);
     }
-    
-    // Extract the files in the format needed by the parent component
-    const imageFilesForParent = updatedImages.map(img => {
-      // If it's just a string URL, return it directly
-      if (typeof img === 'string') return img;
-      // If it's a file object wrapped in our preview object, return the file
-      if (img.file instanceof File) return img.file;
-      // Otherwise return the original object
-      return img;
-    });
-    
-    console.log("Images after removal:", imageFilesForParent);
-    
-    // Notify parent component with the new cover index logic
-    const newCoverIndex = updatedImages.length > 0 
-      ? (coverIndex >= indexToRemove ? Math.max(0, coverIndex - 1) : coverIndex) 
-      : 0;
-    
-    onImagesChange({
-      images: updatedImages,
-      coverIndex: newCoverIndex
-    });
   };
-  
-  // Set an image as cover
-  const setAsCover = (index) => {
-    setCoverIndex(index);
-    
-    // Extract the files in the format needed by the parent component
-    const imageFilesForParent = images.map(img => {
-      // If it's just a string URL, return it directly
-      if (typeof img === 'string') return img;
-      // If it's a file object wrapped in our preview object, return the file
-      if (img.file instanceof File) return img.file;
-      // Otherwise return the original object
-      return img;
-    });
-    
-    console.log("Images after setting cover:", imageFilesForParent);
-    
-    // Notify parent component
-    onImagesChange({
-      images: images,
-      coverIndex: index
-    });
-    
-    setStatus('Cover image updated');
-    setTimeout(() => setStatus(''), 2000);
-  };
-  
-  // Handle drag events
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-  
-  // Handle file drop
+
+  // Drag and Drop Handlers
+  const handleDragOver = (e) => { e.preventDefault(); setIsDragging(true); };
+  const handleDragLeave = (e) => { e.preventDefault(); setIsDragging(false); };
   const handleDrop = (e) => {
     e.preventDefault();
-    e.stopPropagation();
-    
+    setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const dataTransfer = new DataTransfer();
-      for (let i = 0; i < e.dataTransfer.files.length; i++) {
-        dataTransfer.items.add(e.dataTransfer.files[i]);
-      }
-      
-      // Create a fake event object to reuse handleFileSelect
-      const fakeEvent = { target: { files: dataTransfer.files } };
-      handleFileSelect(fakeEvent);
+      processFiles(e.dataTransfer.files);
     }
   };
-  
-  // Function to trigger file selection dialog
+
+  // Safe file select (No .focus() crash)
+  const handleFileSelect = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      processFiles(e.target.files);
+    }
+    // Clear input so same file can be uploaded again if deleted
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  // Safe click trigger (Fault Tolerant against null refs)
   const triggerFileSelect = (e) => {
-    if (e) {
-      e.preventDefault(); // Prevent default behavior
-      e.stopPropagation(); // Stop event propagation to parent elements
-    }
-    
-    // Log for debugging
-    console.log("Upload area clicked, triggering file select");
-    
-    // Ensure the ref exists before trying to use it
-    if (fileInputRef && fileInputRef.current) {
-      // Direct click approach
-      fileInputRef.current.click();
-      
-      // Secondary focus+click approach as fallback
-      setTimeout(() => {
-        fileInputRef.current.focus();
-        fileInputRef.current.click();
-      }, 50);
+    e.preventDefault();
+    e.stopPropagation();
+    if (fileInputRef.current) {
+      fileInputRef.current.click(); // Only click, NEVER focus()
     } else {
-      console.error("File input reference is not available");
+      triggerNotify("File uploader is initializing, please try again.", 'error');
     }
+  };
+
+  const removeImage = (e, indexToRemove) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Revoke memory
+    if (images[indexToRemove].file) {
+      URL.revokeObjectURL(images[indexToRemove].url);
+    }
+
+    const updatedImages = images.filter((_, idx) => idx !== indexToRemove);
+    let newCoverIndex = coverIndex;
+
+    // Shift cover index safely
+    if (coverIndex === indexToRemove) {
+      newCoverIndex = 0;
+    } else if (coverIndex > indexToRemove) {
+      newCoverIndex = coverIndex - 1;
+    }
+
+    setImages(updatedImages);
+    setCoverIndex(newCoverIndex);
+    notifyParent(updatedImages, newCoverIndex);
+  };
+
+  const setAsCover = (e, index) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCoverIndex(index);
+    notifyParent(images, index);
   };
 
   return (
     <Container>
       <UploaderHeader>
         <Title>
-          <FiImage />
-          Trek Images ({images.length}/{maxFiles})
+          <FiImage color="#8b5cf6" />
+          Gallery Assets ({images.length}/{maxFiles})
         </Title>
       </UploaderHeader>
       
@@ -457,108 +370,75 @@ const MultipleImagesUploader = ({
         <UploadArea 
           onClick={triggerFileSelect}
           onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
           onDrop={handleDrop}
+          $isDragging={isDragging}
         >
-          <UploadIcon>
-            <FiUpload />
+          <UploadIcon $isDragging={isDragging}>
+            <FiUploadCloud />
           </UploadIcon>
-          <UploadText>Click or drop images here to upload</UploadText>
-          <UploadSubtext>
-            JPG, PNG, or WEBP (max. {maxSize}MB per file)
-          </UploadSubtext>
-          <button 
-            onClick={triggerFileSelect}
-            style={{
-              marginTop: '15px',
-              background: '#4cc9f0',
-              border: 'none',
-              borderRadius: '4px',
-              padding: '8px 16px',
-              color: 'white',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            Select Images
-          </button>
+          <UploadText>Click or drop images here</UploadText>
+          <UploadSubtext>JPG, PNG, or WEBP (max. {maxSize}MB per file)</UploadSubtext>
+          
+          <SelectButton type="button" onClick={triggerFileSelect}>
+            Select Files
+          </SelectButton>
+          
           <FileInput
             ref={fileInputRef}
             type="file"
             accept="image/jpeg,image/png,image/webp"
             multiple
             onChange={handleFileSelect}
-            name="trek-images"
-            id="trek-images-upload"
-            tabIndex="-1"
           />
         </UploadArea>
       )}
-      
-      {isUploading && (
-        <ProgressContainer>
-          <ProgressBar>
-            <ProgressFill progress={uploadProgress} />
-          </ProgressBar>
-          <UploadSubtext>Uploading {Math.round(uploadProgress)}%</UploadSubtext>
-        </ProgressContainer>
-      )}
-      
-      {error && (
-        <ErrorMessage>
-          <FiAlertTriangle />
-          {error}
-        </ErrorMessage>
-      )}
-      
-      {status && (
-        <StatusMessage type="success">
-          <FiCheck />
-          {status}
-        </StatusMessage>
-      )}
+
+      <AnimatePresence>
+        {notification.message && (
+          <Notification 
+            $type={notification.type}
+            initial={{ opacity: 0, y: -10 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            exit={{ opacity: 0, scale: 0.95 }}
+          >
+            {notification.type === 'error' ? <FiAlertTriangle /> : <FiCheck />}
+            {notification.message}
+          </Notification>
+        )}
+      </AnimatePresence>
       
       {images.length > 0 && (
         <ImagePreviewsContainer>
-          {images.map((image, index) => (
-            <ImagePreviewWrapper 
-              key={image.id || index}
-              isCover={index === coverIndex}
-            >
-              <ImagePreview 
-                src={image.preview || image.url} 
-                alt={`Trek image ${index + 1}`} 
-              />
-              
-              {index === coverIndex && (
-                <CoverBadge>
-                  <FiStar size={12} />
-                  Cover
-                </CoverBadge>
-              )}
-              
-              <ImageOverlay>
-                <ImageActions>
+          <AnimatePresence>
+            {images.map((image, index) => (
+              <ImagePreviewWrapper 
+                key={image.id}
+                $isCover={index === coverIndex}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.5 }}
+                transition={{ duration: 0.2 }}
+              >
+                {index === coverIndex && (
+                  <CoverBadge><FiStar size={12} /> Cover</CoverBadge>
+                )}
+                
+                <img src={image.url} alt={`Gallery Asset ${index + 1}`} />
+                
+                <ImageOverlay>
                   {index !== coverIndex && (
-                    <ActionButton 
-                      onClick={() => setAsCover(index)}
-                      title="Set as cover image"
-                      primary
-                    >
-                      <FiStar size={14} />
+                    <ActionButton type="button" onClick={(e) => setAsCover(e, index)}>
+                      <FiStar size={14} /> <span>Make Cover</span>
                     </ActionButton>
                   )}
-                  <ActionButton 
-                    onClick={() => removeImage(index)} 
-                    danger
-                    title="Remove image"
-                  >
-                    <FiX size={14} />
+                  <ActionButton type="button" $danger onClick={(e) => removeImage(e, index)}>
+                    <FiX size={14} /> <span>Remove</span>
                   </ActionButton>
-                </ImageActions>
-              </ImageOverlay>
-            </ImagePreviewWrapper>
-          ))}
+                </ImageOverlay>
+              </ImagePreviewWrapper>
+            ))}
+          </AnimatePresence>
         </ImagePreviewsContainer>
       )}
     </Container>
