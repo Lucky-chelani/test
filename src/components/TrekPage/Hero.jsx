@@ -270,21 +270,39 @@ const BadgePill = styled.span`
 
 const TitleBlock = styled.div`
   text-align: center;
-  padding: 6.5rem 1rem;
+  padding: 3rem 1rem 0;
   animation: ${fadeUp} 0.8s ease 0.35s both;
+  display: flex;
+  justify-content: center;
+
+  @media (max-width: 1024px) {
+    padding: 2.5rem 1rem 0;
+  }
+
+  @media (max-width: 640px) {
+    padding: 2rem 1rem 0;
+  }
 `;
 
 const MainTitle = styled.h1`
   font-family: ${tokens.font.display};
-  font-size: clamp(4rem, 5vw, 3.8rem);
+  font-size: clamp(2rem, 5vw, 3.8rem);
   font-weight: 700;
   color: white;
-  line-height: 1.15;
+  line-height: 1.2;
   letter-spacing: -0.015em;
   margin: 0;
+  max-width: 700px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+
+  @media (max-width: 1024px) {
+    max-width: 600px;
+  }
 
   @media (max-width: 640px) {
     font-size: clamp(1.75rem, 7vw, 2.4rem);
+    max-width: 90%;
   }
 `;
 
@@ -377,6 +395,13 @@ const Description = styled.p`
   line-height: 1.6;
   margin: 0 0 1.25rem;
   max-width: 260px;
+  
+  /* Add these lines to truncate long text */
+  display: -webkit-box;
+  -webkit-line-clamp: 4; /* Show only 4 lines */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const BookNowBtn = styled.button`
@@ -580,7 +605,12 @@ const MContentWrapper = styled.div`
 const MTitleArea = styled.div`
   text-align: center;
   margin-bottom: 20px;
+  padding-top: 2rem;
   width: 100%;
+
+  @media (max-width: 380px) {
+    padding-top: 1.5rem;
+  }
 `;
 
 const MTrekName = styled.h1`
@@ -590,9 +620,17 @@ const MTrekName = styled.h1`
   color: white;
   line-height: 1.2;
   letter-spacing: -0.015em;
-  margin: 0 0 8px;
-  text-shadow: 0 3px 20px rgba(0,0,0,0.8);
+  margin: 0 auto 8px;
+  text-shadow: 0 3px 20px rgba(0, 0, 0, 0.8);
   text-align: center;
+  max-width: 340px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+
+  @media (max-width: 380px) {
+    max-width: 280px;
+    font-size: clamp(1.5rem, 6.5vw, 2rem);
+  }
 `;
 
 const MRating = styled.div`

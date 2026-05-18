@@ -122,26 +122,164 @@ const CalendarWrapper = styled.div`
     background: ${theme.cardBg};
   }
   .react-datepicker__month-container { width: 100%; float: none; }
-  .react-datepicker__header { background: linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryDark} 100%); border-bottom: none; padding: 1rem 1rem 0.75rem; }
-  .react-datepicker__current-month { color: white; font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
-  .react-datepicker__navigation { top: 1rem; }
+  .react-datepicker__header {
+    background: linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryDark} 100%);
+    border-bottom: none;
+    padding: 0.75rem 0.75rem 0.5rem;
+  }
+  .react-datepicker__current-month {
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+  }
+  .react-datepicker__navigation { top: 0.75rem; }
   .react-datepicker__navigation-icon::before { border-color: white; }
   .react-datepicker__navigation:hover .react-datepicker__navigation-icon::before { border-color: rgba(255,255,255,0.7); }
-  .react-datepicker__day-names { background: rgba(255,255,255,0.15); margin: 0; padding: 0.25rem 0; display: flex; justify-content: space-around; }
-  .react-datepicker__day-name { color: rgba(255,255,255,0.9); font-size: 0.75rem; font-weight: 600; width: 2.2rem; line-height: 1.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
-  .react-datepicker__month { margin: 0; padding: 0.75rem; background: ${theme.cardBg}; }
-  .react-datepicker__week { display: flex; justify-content: space-around; margin-bottom: 0.25rem; }
-  .react-datepicker__day { width: 2.2rem; height: 2.2rem; line-height: 2.2rem; border-radius: 50%; font-size: 0.875rem; font-weight: 500; color: ${theme.textDark}; transition: all 0.2s ease; position: relative; margin: 0.1rem; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; &:hover { background: rgba(255, 107, 53, 0.2); border-radius: 50%; color: ${theme.primary}; } }
-  .react-datepicker__day--selected { background: linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryDark} 100%) !important; color: white !important; border-radius: 50% !important; font-weight: 700 !important; box-shadow: 0 4px 12px ${theme.primaryGlow} !important; &:hover { background: ${theme.primaryDark} !important; } }
-  .react-datepicker__day--today { font-weight: 700; border: 2px solid ${theme.primary}; border-radius: 50%; color: ${theme.primary}; }
-  .react-datepicker__day--disabled { color: #555 !important; cursor: not-allowed !important; &:hover { background: transparent !important; color: #555 !important; } }
-  .react-datepicker__day--keyboard-selected { background: rgba(255, 107, 53, 0.15); border-radius: 50%; color: ${theme.primary}; }
-  @media (max-width: 480px) { .react-datepicker__day-name, .react-datepicker__day { width: 2rem; height: 2rem; line-height: 2rem; font-size: 0.8rem; } }
+  .react-datepicker__day-names {
+    background: rgba(255,255,255,0.15);
+    margin: 0;
+    padding: 0.15rem 0;
+    display: flex;
+    justify-content: space-around;
+  }
+  .react-datepicker__day-name {
+    color: rgba(255,255,255,0.9);
+    font-size: 0.65rem;
+    font-weight: 600;
+    width: 2rem;
+    line-height: 1.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .react-datepicker__month {
+    margin: 0;
+    padding: 0.375rem;
+    background: ${theme.cardBg};
+  }
+  .react-datepicker__week {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 0.125rem;
+  }
+  .react-datepicker__day {
+    width: 2rem;
+    height: 2rem;
+    line-height: 2rem;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: ${theme.textDark};
+    transition: all 0.2s ease;
+    position: relative;
+    margin: 0.05rem;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(255, 107, 53, 0.2);
+      border-radius: 50%;
+      color: ${theme.primary};
+    }
+  }
+  .react-datepicker__day--selected {
+    background: linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryDark} 100%) !important;
+    color: white !important;
+    border-radius: 50% !important;
+    font-weight: 700 !important;
+    box-shadow: 0 3px 10px ${theme.primaryGlow} !important;
+    &:hover { background: ${theme.primaryDark} !important; }
+  }
+  .react-datepicker__day--today {
+    font-weight: 700;
+    border: 2px solid ${theme.primary};
+    border-radius: 50%;
+    color: ${theme.primary};
+  }
+  .react-datepicker__day--disabled {
+    color: #555 !important;
+    cursor: not-allowed !important;
+    &:hover { background: transparent !important; color: #555 !important; }
+  }
+  .react-datepicker__day--keyboard-selected {
+    background: rgba(255, 107, 53, 0.15);
+    border-radius: 50%;
+    color: ${theme.primary};
+  }
+
+  @media (max-width: 480px) {
+    .react-datepicker {
+      border-radius: 12px;
+    }
+    .react-datepicker__header {
+      padding: 0.5rem 0.5rem 0.35rem;
+    }
+    .react-datepicker__current-month {
+      font-size: 0.8rem;
+      margin-bottom: 0.25rem;
+    }
+    .react-datepicker__navigation {
+      top: 0.5rem;
+    }
+    .react-datepicker__day-name {
+      width: 1.75rem;
+      font-size: 0.6rem;
+      line-height: 1.4rem;
+    }
+    .react-datepicker__month {
+      padding: 0.25rem;
+    }
+    .react-datepicker__week {
+      margin-bottom: 0.05rem;
+    }
+    .react-datepicker__day {
+      width: 1.75rem;
+      height: 1.75rem;
+      line-height: 1.75rem;
+      font-size: 0.72rem;
+      margin: 0.025rem;
+    }
+  }
+
+  @media (max-width: 360px) {
+    .react-datepicker__day-name,
+    .react-datepicker__day {
+      width: 1.6rem;
+      height: 1.6rem;
+      line-height: 1.6rem;
+      font-size: 0.68rem;
+    }
+  }
 `;
 
 const DayWithDot = styled.div`display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; gap: 1px;`;
-const DayNumber = styled.span`line-height: 1; font-size: 0.875rem;`;
-const DayDot = styled.span`width: 5px; height: 5px; border-radius: 50%; background: ${props => props.available ? '#4CAF50' : '#EF5350'}; display: block; flex-shrink: 0;`;
+const DayNumber = styled.span`
+  line-height: 1;
+  font-size: 0.875rem;
+
+  @media (max-width: 480px) {
+    font-size: 0.72rem;
+  }
+
+  @media (max-width: 360px) {
+    font-size: 0.68rem;
+  }
+`;
+const DayDot = styled.span`
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: ${props => props.available ? '#4CAF50' : '#EF5350'};
+  display: block;
+  flex-shrink: 0;
+
+  @media (max-width: 480px) {
+    width: 3px;
+    height: 3px;
+  }
+`;
 
 // ============================================
 // PAGE LAYOUT
@@ -155,10 +293,12 @@ const PageWrapper = styled.div`
   padding: 1.5rem;
   position: relative;
   overflow: hidden;
-  margin-bottom: calc(-90px - env(safe-area-inset-bottom));
-  @media (max-width: 768px) { margin-bottom: calc(-75px - env(safe-area-inset-bottom)); }
-  @media (max-width: 480px) { padding: 0; align-items: flex-start; height: 100dvh; overflow: hidden; margin-bottom: calc(-70px - env(safe-area-inset-bottom)); }
-  @media (max-height: 600px) { margin-bottom: calc(-65px - env(safe-area-inset-bottom)); }
+  @media (max-width: 480px) {
+    padding: 0;
+    align-items: flex-start;
+    height: 100dvh;
+    overflow: hidden;
+  }
 `;
 
 const BookingCard = styled.div`
@@ -173,7 +313,23 @@ const BookingCard = styled.div`
   box-shadow: 0 50px 100px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
   position: relative;
   animation: ${scaleIn} 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-  @media (max-width: 900px) { display: flex; flex-direction: column; height: 100dvh; min-height: 100dvh; max-height: 100dvh; max-width: 100%; border-radius: 0; box-shadow: none; animation: none; }
+
+  @media (max-width: 900px) {
+    display: flex;
+    flex-direction: column;
+    position: fixed;         /* ← locks card to screen, nothing can push it */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 100%;
+    max-height: none;
+    max-width: 100%;
+    border-radius: 0;
+    box-shadow: none;
+    animation: none;
+    overflow: hidden;
+  }
 `;
 
 const OrangePanel = styled.div`
@@ -188,35 +344,122 @@ const OrangePanel = styled.div`
   min-height: 100%;
   &::before { content: ''; position: absolute; top: -20%; right: -30%; width: 140%; height: 70%; background: rgba(255, 255, 255, 0.06); border-radius: 0 0 50% 50%; transform: rotate(-8deg); pointer-events: none; }
   &::after { content: ''; position: absolute; bottom: -5%; left: -20%; width: 140%; height: 40%; background: rgba(0, 0, 0, 0.08); border-radius: 50% 50% 0 0; pointer-events: none; }
-  @media (max-width: 900px) { min-height: 250px; height: 250px; flex-shrink: 0; padding: 1rem 1rem 2.2rem; justify-content: space-between; overflow: hidden; &::before { top: -35%; right: -35%; width: 150%; height: 90%; transform: rotate(-6deg); } &::after { display: none; } }
-  @media (max-width: 480px) { min-height: 225px; height: 225px; padding: 0.9rem 0.9rem 2rem; }
+
+  @media (max-width: 900px) {
+    min-height: 180px;
+    height: 180px;
+    flex-shrink: 0;
+    padding: 0.75rem 1rem 1.8rem;
+    justify-content: center;
+    gap: 0.25rem;
+    overflow: hidden;
+    flex-direction: row;
+    align-items: center;
+
+    &::before { top: -35%; right: -35%; width: 150%; height: 90%; transform: rotate(-6deg); }
+    &::after { display: none; }
+  }
+
+  @media (max-width: 480px) {
+    min-height: 155px;
+    height: 155px;
+    padding: 0.6rem 0.875rem 1.5rem;
+    gap: 0.5rem;
+  }
 `;
 
 const FloatingCircle = styled.div`
-  position: absolute; border-radius: 50%; background: rgba(255, 255, 255, ${props => props.opacity || '0.08'}); width: ${props => props.size || '120px'}; height: ${props => props.size || '120px'}; top: ${props => props.top || 'auto'}; left: ${props => props.left || 'auto'}; right: ${props => props.right || 'auto'}; bottom: ${props => props.bottom || 'auto'}; pointer-events: none;
-  @media (max-width: 900px) { width: ${props => `calc(${props.size || '120px'} * 0.5)`}; height: ${props => `calc(${props.size || '120px'} * 0.5)`}; }
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, ${props => props.opacity || '0.08'});
+  width: ${props => props.size || '120px'};
+  height: ${props => props.size || '120px'};
+  top: ${props => props.top || 'auto'};
+  left: ${props => props.left || 'auto'};
+  right: ${props => props.right || 'auto'};
+  bottom: ${props => props.bottom || 'auto'};
+  pointer-events: none;
+
+  @media (max-width: 900px) {
+    display: none;
+  }
 `;
 
 const CurvedDivider = styled.div`
-  position: absolute; right: -10px; top: 0; height: 100%; width: 90px; z-index: 15; pointer-events: none;
+  position: absolute;
+  right: -10px;
+  top: 0;
+  height: 100%;
+  width: 90px;
+  z-index: 15;
+  pointer-events: none;
+
   svg { height: 100%; width: 100%; display: block; }
   .desktop-curve { display: block; }
   .mobile-curve { display: none; }
-  @media (max-width: 900px) { right: 0; top: auto; bottom: -1px; left: 0; width: 100%; height: 40px; .desktop-curve { display: none; } .mobile-curve { display: block; width: 100%; height: 100%; } }
-  @media (max-width: 480px) { height: 34px; }
+
+  @media (max-width: 900px) {
+    right: 0;
+    top: auto;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 28px;
+    .desktop-curve { display: none; }
+    .mobile-curve { display: block; width: 100%; height: 100%; }
+  }
+
+  @media (max-width: 480px) {
+    height: 22px;
+  }
 `;
 
 const FloatingImageContainer = styled.div`
-  position: relative; display: flex; justify-content: center; align-items: center; flex: 1; z-index: 10; padding: 1rem; min-height: 0; overflow: visible; animation: ${imageEntrance} 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
-  @media (max-width: 900px) { flex: 1; padding: 0.25rem 0 0; animation: ${mobileImageEntrance} 0.6s ease-out 0.2s both; }
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  z-index: 10;
+  padding: 1rem;
+  min-height: 0;
+  overflow: visible;
+  animation: ${imageEntrance} 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+
+  @media (max-width: 900px) {
+    flex: 0 0 auto;
+    padding: 0;
+    animation: ${mobileImageEntrance} 0.6s ease-out 0.2s both;
+  }
 `;
 
 const TrekImageCard = styled.div`
-  width: 390px; height: 360px; border-radius: 24px; overflow: hidden; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15); position: relative; flex-shrink: 0; animation: ${imageFloat} 3s ease-in-out infinite;
+  width: 390px;
+  height: 360px;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15);
+  position: relative;
+  flex-shrink: 0;
+  animation: ${imageFloat} 3s ease-in-out infinite;
+
   img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
   &::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 40%, rgba(0, 0, 0, 0.5) 100%); pointer-events: none; }
-  @media (max-width: 900px) { width: 118px; height: 118px; border-radius: 18px; animation: ${mobileImageWave} 3.2s ease-in-out infinite; transform-origin: center center; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(255,255,255,0.12); &::after { background: linear-gradient(to bottom, transparent 58%, rgba(0, 0, 0, 0.28) 100%); } }
-  @media (max-width: 480px) { width: 100px; height: 100px; border-radius: 16px; }
+
+  @media (max-width: 900px) {
+    width: 90px;
+    height: 90px;
+    border-radius: 16px;
+    animation: none;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255,255,255,0.1);
+    &::after { background: linear-gradient(to bottom, transparent 60%, rgba(0, 0, 0, 0.2) 100%); }
+  }
+
+  @media (max-width: 480px) {
+    width: 78px;
+    height: 78px;
+    border-radius: 14px;
+  }
 `;
 
 const ImageBadge = styled.div`
@@ -225,32 +468,145 @@ const ImageBadge = styled.div`
   p { margin: 0; font-size: 0.78rem; opacity: 0.9; display: flex; align-items: center; gap: 0.3rem; }
   @media (max-width: 900px) { display: none; }
 `;
+const OrangePanelInfo = styled.div`
+  position: relative;
+  z-index: 5;
+  flex-shrink: 0;
 
-const OrangePanelInfo = styled.div`position: relative; z-index: 5; flex-shrink: 0; @media (max-width: 900px) { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; }`;
-const PanelTrekName = styled.h2`font-family: 'Sora', sans-serif; font-size: 1.3rem; font-weight: 700; color: white; margin: 0 0 0.35rem; line-height: 1.3; text-shadow: 0 2px 8px rgba(0,0,0,0.15); @media (max-width: 900px) { font-size: 0.98rem; margin: 0 0 0.15rem; max-width: 90%; } @media (max-width: 480px) { font-size: 0.88rem; }`;
-const PanelLocation = styled.p`font-size: 0.85rem; color: rgba(255,255,255,0.85); margin: 0 0 1.25rem; display: flex; align-items: center; gap: 0.3rem; @media (max-width: 900px) { font-size: 0.72rem; margin: 0 0 0.45rem; justify-content: center; } @media (max-width: 480px) { font-size: 0.68rem; }`;
+  @media (max-width: 900px) {
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+    flex: 1;
+    min-width: 0;
+  }
+`;
+const PanelTrekName = styled.h2`
+  font-family: 'Sora', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 0.35rem;
+  line-height: 1.3;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+
+  @media (max-width: 900px) {
+    font-size: 0.95rem;
+    margin: 0 0 0.1rem;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 0.85rem;
+  }
+`;
+const PanelLocation = styled.p`
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.85);
+  margin: 0 0 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+
+  @media (max-width: 900px) {
+    font-size: 0.7rem;
+    margin: 0 0 0.35rem;
+    justify-content: flex-start;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 0.65rem;
+    margin: 0 0 0.25rem;
+  }
+`;
 const PriceTag = styled.div`
-  display: inline-flex; align-items: baseline; gap: 0.25rem; background: rgba(0, 0, 0, 0.25); backdrop-filter: blur(10px); padding: 0.6rem 1.15rem; border-radius: 50px; border: 1px solid rgba(255,255,255,0.15);
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
+  padding: 0.6rem 1.15rem;
+  border-radius: 50px;
+  border: 1px solid rgba(255,255,255,0.15);
+
   .currency { font-size: 0.85rem; color: rgba(255,255,255,0.85); font-weight: 600; }
   .amount { font-size: 1.5rem; font-weight: 800; color: white; font-family: 'Sora', sans-serif; }
   .suffix { font-size: 0.75rem; color: rgba(255,255,255,0.7); }
-  @media (max-width: 900px) { padding: 0.28rem 0.7rem; .amount { font-size: 1rem; } .currency { font-size: 0.7rem; } .suffix { font-size: 0.62rem; } }
-  @media (max-width: 480px) { padding: 0.25rem 0.6rem; .amount { font-size: 0.92rem; } }
+
+  @media (max-width: 900px) {
+    padding: 0.2rem 0.55rem;
+    border-radius: 8px;
+    .amount { font-size: 0.9rem; }
+    .currency { font-size: 0.65rem; }
+    .suffix { font-size: 0.58rem; }
+  }
+
+  @media (max-width: 480px) {
+    padding: 0.18rem 0.45rem;
+    .amount { font-size: 0.82rem; }
+  }
 `;
 
 const DarkFormPanel = styled.div`
-  background: ${theme.secondary}; display: flex; flex-direction: column; overflow-y: auto; max-height: 100%; position: relative; min-height: 0;
-  &::-webkit-scrollbar { width: 4px; } &::-webkit-scrollbar-track { background: transparent; } &::-webkit-scrollbar-thumb { background: ${theme.mediumGray}; border-radius: 4px; }
-  @media (max-width: 900px) { flex: 1; min-height: 0; max-height: none; overflow-y: auto; -webkit-overflow-scrolling: touch; border-top-left-radius: 20px; border-top-right-radius: 20px; margin-top: -1px; }
+  background: ${theme.secondary};
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  min-height: 0;
+  flex: 1;                  /* ← takes remaining space in BookingCard */
+
+  @media (max-width: 900px) {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    overflow: hidden;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    margin-top: -1px;
+  }
 `;
 
 const PanelHeader = styled.div`
-  padding: 1.75rem 2rem 0; position: sticky; top: 0; background: ${theme.secondary}; z-index: 10; border-bottom: 1px solid ${theme.borderLight}; padding-bottom: 1rem;
-  @media (max-width: 900px) { padding: 1.25rem 1.25rem 0; padding-bottom: 0.75rem; }
-  @media (max-width: 480px) { padding: 1rem 1rem 0; padding-bottom: 0.65rem; }
-`;
+  padding: 1.75rem 2rem 0;
+  position: sticky;
+  top: 0;
+  background: ${theme.secondary};
+  z-index: 10;
+  border-bottom: 1px solid ${theme.borderLight};
+  padding-bottom: 1rem;
 
-const HeaderTop = styled.div`display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem; @media (max-width: 900px) { margin-bottom: 1rem; gap: 0.6rem; }`;
+  @media (max-width: 900px) {
+    padding: 0.875rem 1.125rem 0;
+    padding-bottom: 0.625rem;
+  }
+
+  @media (max-width: 480px) {
+    padding: 0.75rem 0.875rem 0;
+    padding-bottom: 0.5rem;
+  }
+`;
+const HeaderTop = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+
+  @media (max-width: 900px) {
+    margin-bottom: 0.625rem;
+    gap: 0.5rem;
+  }
+
+  @media (max-width: 480px) {
+    margin-bottom: 0.5rem;
+  }
+`;
 const BackBtn = styled.button`width: 36px; height: 36px; border-radius: 50%; background: ${theme.cardBg}; border: 1px solid ${theme.borderLight}; cursor: pointer; display: flex; align-items: center; justify-content: center; color: ${theme.textDark}; font-size: 1rem; transition: all 0.2s; flex-shrink: 0; &:hover { background: ${theme.primary}; border-color: ${theme.primary}; color: white; transform: scale(1.08); } @media (max-width: 480px) { width: 32px; height: 32px; font-size: 0.9rem; }`;
 const HeaderTitle = styled.h1`font-family: 'Sora', sans-serif; font-size: 1.2rem; font-weight: 700; color: ${theme.textDark}; margin: 0; span { color: ${theme.primary}; } @media (max-width: 480px) { font-size: 1.05rem; }`;
 
@@ -283,17 +639,54 @@ const StepLabel = styled.span`
 `;
 
 const PanelBody = styled.div`
-  padding: 1.5rem 2rem; flex: 1; display: flex; flex-direction: column; gap: 1.25rem; animation: ${panelSlideIn} 0.4s ease-out;
-  @media (max-width: 900px) { padding: 1.25rem; }
-  @media (max-width: 480px) { padding: 1rem; gap: 1rem; }
+  padding: 1.5rem 2rem;
+  flex: 1;
+  min-height: 0;            /* ← critical for flex overflow scroll */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  animation: ${panelSlideIn} 0.4s ease-out;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: ${theme.mediumGray}; border-radius: 4px; }
+
+  @media (max-width: 900px) {
+    padding: 1rem 1.125rem;
+    gap: 1rem;
+  }
+
+  @media (max-width: 480px) {
+    padding: 0.875rem;
+    gap: 0.875rem;
+  }
 `;
 
 const PanelFooter = styled.div`
-  padding: 1rem 2rem 1em; background: ${theme.secondary}; border-top: 1px solid ${theme.borderLight}; display: flex; justify-content: space-between; align-items: center; gap: 1rem; position: sticky; bottom: 0; z-index: 10;
-  @media (max-width: 900px) { padding: 1rem 1.25rem 1.25rem; }
-  @media (max-width: 480px) { padding: 0.85rem 1rem 1rem; flex-direction: column-reverse; gap: 0.75rem; }
-`;
+  padding: 1rem 2rem;
+  background: ${theme.secondary};
+  border-top: 1px solid ${theme.borderLight};
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;          /* ← never shrink */
+  z-index: 10;
 
+  @media (max-width: 900px) {
+    padding: 0.75rem 1.125rem;
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  @media (max-width: 480px) {
+    padding: 0.625rem 0.875rem;
+    padding-bottom: calc(0.625rem + env(safe-area-inset-bottom, 0px));
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+  }
+`;
 // ============================================
 // FORM COMPONENTS
 // ============================================
@@ -301,25 +694,69 @@ const Form = styled.form`display: flex; flex-direction: column; gap: 1.25rem; @m
 const FormGroup = styled.div`display: flex; flex-direction: column; gap: 0.5rem; position: relative;`;
 const Label = styled.label`font-weight: 600; font-size: 0.82rem; color: ${theme.textLight}; display: flex; align-items: center; gap: 0.5rem; text-transform: uppercase; letter-spacing: 0.06em; font-family: 'Sora', sans-serif; svg { color: ${theme.primary}; font-size: 0.9rem; } @media (max-width: 480px) { font-size: 0.75rem; }`;
 const Input = styled.input`
-  padding: 0.8rem 1rem; border: 1.5px solid ${theme.inputBorder}; border-radius: 10px; font-size: 0.9rem; font-weight: 500; transition: all 0.25s ease; outline: none; background: ${theme.inputBg}; color: ${theme.textDark}; font-family: 'Sora', 'Inter', sans-serif;
+  padding: 0.8rem 1rem;
+  border: 1.5px solid ${theme.inputBorder};
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.25s ease;
+  outline: none;
+  background: ${theme.inputBg};
+  color: ${theme.textDark};
+  font-family: 'Sora', 'Inter', sans-serif;
+
   &::placeholder { color: #5a5e6a; font-weight: 400; }
   &:focus { border-color: ${theme.primary}; box-shadow: 0 0 0 3px ${theme.primaryGlow}; }
   &:hover:not(:focus):not(:disabled) { border-color: rgba(255, 107, 53, 0.4); }
   &:disabled { background: ${theme.cardBg}; color: ${theme.darkGray}; opacity: 0.6; }
-  @media (max-width: 480px) { padding: 0.7rem 0.85rem; font-size: 0.85rem; border-radius: 8px; }
+
+  @media (max-width: 480px) {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.8rem;
+    border-radius: 8px;
+  }
 `;
 const Textarea = styled(Input).attrs({ as: 'textarea' })`resize: vertical; min-height: 80px; @media (max-width: 480px) { min-height: 60px; }`;
 const TwoCardRow = styled.div`display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; @media (max-width: 600px) { grid-template-columns: 1fr; gap: 0.75rem; }`;
+
 const InteractiveCard = styled.div`
-  background: ${props => props.isOpen ? theme.cardBgLight : theme.cardBg}; padding: 1rem 1.1rem; border-radius: 14px;
-  border: 2px solid ${props => props.isOpen ? theme.primary : theme.borderLight}; cursor: pointer; transition: all 0.25s ease;
+  background: ${props => props.isOpen ? theme.cardBgLight : theme.cardBg};
+  padding: 1rem 1.1rem;
+  border-radius: 14px;
+  border: 2px solid ${props => props.isOpen ? theme.primary : theme.borderLight};
+  cursor: pointer;
+  transition: all 0.25s ease;
   box-shadow: ${props => props.isOpen ? `0 4px 20px ${theme.primaryGlow}` : `0 1px 4px rgba(0,0,0,0.2)`};
-  &:hover { border-color: ${theme.primary}; box-shadow: 0 4px 16px ${theme.primaryGlow}; }
-  @media (max-width: 480px) { padding: 0.85rem 1rem; border-radius: 12px; }
+
+  &:hover {
+    border-color: ${theme.primary};
+    box-shadow: 0 4px 16px ${theme.primaryGlow};
+  }
+
+  @media (max-width: 480px) {
+    padding: 0.7rem 0.85rem;
+    border-radius: 10px;
+  }
 `;
 const CardHeader = styled.div`display: flex; justify-content: space-between; align-items: center;`;
 const CardLabel = styled.div`display: flex; align-items: center; gap: 0.45rem; font-size: 0.72rem; font-weight: 700; color: ${theme.textLight}; text-transform: uppercase; letter-spacing: 0.06em; font-family: 'Sora', sans-serif; svg { color: ${theme.primary}; font-size: 0.85rem; }`;
-const CardValue = styled.div`font-size: 0.95rem; font-weight: 700; color: ${theme.textDark}; margin-top: 0.35rem; display: flex; align-items: center; justify-content: space-between; font-family: 'Sora', sans-serif; @media (max-width: 480px) { font-size: 0.88rem; }`;
+
+const CardValue = styled.div`
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: ${theme.textDark};
+  margin-top: 0.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'Sora', sans-serif;
+
+  @media (max-width: 480px) {
+    font-size: 0.82rem;
+    margin-top: 0.25rem;
+  }
+`;
+
 const CardArrow = styled.div`color: ${theme.primary}; font-size: 1rem; transition: transform 0.3s ease; transform: ${props => props.isOpen ? 'rotate(180deg)' : 'rotate(0deg)'};`;
 const CardDropdown = styled.div`max-height: ${props => props.isOpen ? '500px' : '0'}; opacity: ${props => props.isOpen ? '1' : '0'}; overflow: hidden; transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); margin-top: ${props => props.isOpen ? '0.75rem' : '0'}; padding-top: ${props => props.isOpen ? '0.75rem' : '0'}; border-top: ${props => props.isOpen ? `1px solid ${theme.borderLight}` : 'none'};`;
 const SelectedBadge = styled.span`background: linear-gradient(135deg, ${theme.primary}, ${theme.primaryDark}); color: white; padding: 0.2rem 0.5rem; border-radius: 20px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;`;
@@ -339,14 +776,37 @@ const CounterLabel = styled.span`font-size: 0.7rem; color: ${theme.darkGray}; fo
 const CounterInfoRow = styled.div`display: flex; align-items: center; justify-content: space-between; margin-top: 0.6rem; padding: 0.4rem 0.65rem; background: ${theme.cardBg}; border-radius: 8px; font-size: 0.75rem; color: ${theme.darkGray}; font-weight: 500; span { color: ${theme.primary}; font-weight: 700; }`;
 
 const DetailBox = styled.div`
-  background: ${props => props.isExpanded ? theme.cardBgLight : theme.cardBg}; padding: ${props => props.isExpanded ? '1.25rem' : '1rem'}; border-radius: 14px;
-  border: 2px solid ${props => props.isExpanded ? theme.primary : theme.borderLight}; cursor: ${props => props.isExpanded ? 'default' : 'pointer'};
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
+  background: ${props => props.isExpanded ? theme.cardBgLight : theme.cardBg};
+  padding: ${props => props.isExpanded ? '1.25rem' : '1rem'};
+  border-radius: 14px;
+  border: 2px solid ${props => props.isExpanded ? theme.primary : theme.borderLight};
+  cursor: ${props => props.isExpanded ? 'default' : 'pointer'};
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
   box-shadow: ${props => props.isExpanded ? `0 8px 24px ${theme.primaryGlow}` : `0 1px 4px rgba(0,0,0,0.2)`};
-  ${props => props.isExpanded && css`&::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, ${theme.primary}, ${theme.accent}); border-radius: 14px 14px 0 0; }`}
-  &:hover:not([data-expanded="true"]) { border-color: rgba(255, 107, 53, 0.4); transform: translateY(-1px); box-shadow: 0 4px 16px ${theme.primaryGlow}; }
+
+  ${props => props.isExpanded && css`
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, ${theme.primary}, ${theme.accent});
+      border-radius: 14px 14px 0 0;
+    }
+  `}
+
+  &:hover:not([data-expanded="true"]) {
+    border-color: rgba(255, 107, 53, 0.4);
+    transform: translateY(-1px);
+  }
+
   ${props => props.isDisabled && css`opacity: 0.35; pointer-events: none;`}
-  @media (max-width: 480px) { padding: ${props => props.isExpanded ? '1rem' : '0.85rem'}; border-radius: 12px; }
+
+  @media (max-width: 480px) {
+    padding: ${props => props.isExpanded ? '0.875rem' : '0.75rem'};
+    border-radius: 10px;
+  }
 `;
 const DetailBoxHeader = styled.div`display: flex; justify-content: space-between; align-items: center; margin-bottom: ${props => props.isExpanded ? '1rem' : '0'};`;
 const DetailBoxTitle = styled.h3`margin: 0; font-size: 0.9rem; font-weight: 700; color: ${theme.textDark}; display: flex; align-items: center; gap: 0.5rem; font-family: 'Sora', sans-serif; svg { color: ${theme.primary}; } @media (max-width: 480px) { font-size: 0.82rem; gap: 0.4rem; }`;
@@ -903,7 +1363,7 @@ const BookingPage = () => {
                       <SplitAmount>₹{remaining.toLocaleString('en-IN')}</SplitAmount>
                     </SplitItem>
                   </SplitGrid>
-                  <SplitNote><FiInfo size={12} />A small processing fee (~2.5%) applies on the 20% paid via Razorpay. The remaining 80% is settled directly with the organizer on your trek day.</SplitNote>
+                  <SplitNote><FiInfo size={12} />Pay 20% booking charges now . The remaining 80% is settled directly with the organizer on your trek day.</SplitNote>
                 </PaymentSplitCard>
 
                 <PriceSummary>

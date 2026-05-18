@@ -790,7 +790,7 @@ export default function MeetOrganizer({
                       {/* fixed: icon sits beside value, not above it */}
                       <StatIcon>⏱️</StatIcon>
                       <StatContent>
-                        <StatValue>{organizerExperience}</StatValue>
+                        <StatValue>{organizerExperience} Years</StatValue>
                         <StatLabel>Experience</StatLabel>
                       </StatContent>
                     </StatItem>

@@ -81,11 +81,11 @@ const Nav = styled.nav`
   ${({ $scrolled }) =>
     $scrolled
       ? css`
-          background-color: transparent;
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
+          background-color: rgba(10, 10, 10, 0.85);
+          backdrop-filter: blur(24px) saturate(180%);
+          -webkit-backdrop-filter: blur(24px) saturate(180%);
           border-bottom: 1px solid ${tokens.colors.border};
-          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.7);
+          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.8);
 
           &::after {
             content: "";
@@ -109,9 +109,12 @@ const Nav = styled.nav`
       : css`
           background: linear-gradient(
             to bottom,
-            rgba(10, 10, 10, 0.5) 0%,
+            rgba(10, 10, 10, 0.75) 0%,
+            rgba(10, 10, 10, 0.4) 70%,
             transparent 100%
           );
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
         `}
 `;
 

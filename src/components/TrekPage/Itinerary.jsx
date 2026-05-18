@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import styled, { keyframes, css } from "styled-components";
 import {
   FaCalendarAlt,
@@ -9,7 +9,6 @@ import {
   FaCheckCircle,
   FaMountain,
   FaTimes,
-  FaMousePointer,
   FaHandPointer,
 } from "react-icons/fa";
 import {
@@ -18,295 +17,214 @@ import {
   FiTrendingUp,
   FiSun,
   FiMoon,
-  FiChevronDown,
-  FiInfo,
   FiX,
+  FiInfo,
+  FiMapPin,
+  FiCompass,
+  FiArrowRight,
 } from "react-icons/fi";
 
-// ─── Tokens ───────────────────────────────────────────────────────────────────
-const tokens = {
-  colors: {
-    bg: "#0a0a0a",
-    bgCard: "#111111",
-    bgElevated: "#1a1a1a",
-    bgHover: "#1f1f1f",
-    border: "rgba(255,255,255,0.07)",
-    borderHover: "rgba(255,255,255,0.15)",
-    primary: "#f97316",
-    primaryDark: "#ea580c",
-    primaryLight: "#fb923c",
-    primaryGlow: "rgba(249, 115, 22, 0.12)",
-    primaryBorder: "rgba(249, 115, 22, 0.3)",
-    teal: "#14b8a6",
-    tealGlow: "rgba(20, 184, 166, 0.15)",
-    textPrimary: "#F1F5F9",
-    textSecondary: "#94A3B8",
-    textMuted: "#64748b",
-    surface1: "rgba(255,255,255,0.03)",
-    surface2: "rgba(255,255,255,0.06)",
-    success: "#22c55e",
-    successGlow: "rgba(34, 197, 94, 0.12)",
-  },
-  radius: { sm: "8px", md: "12px", lg: "16px", xl: "24px", pill: "100px" },
-  transition: {
-    base: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-    fast: "all 0.15s ease",
-    spring: "all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
-  },
+// ─── Design Tokens ────────────────────────────────────────────────────────────
+const T = {
+  bg: "#0a0a0a",
+  bgCard: "#111111",
+  bgElevated: "#1a1a1a",
+  bgGlass: "rgba(17,17,17,0.92)",
+  border: "rgba(255,255,255,0.07)",
+  borderHover: "rgba(255,255,255,0.15)",
+  primary: "#f97316",
+  primaryDark: "#ea580c",
+  primaryLight: "#fb923c",
+  primaryGlow: "rgba(249, 115, 22, 0.12)",
+  primaryBorder: "rgba(249, 115, 22, 0.3)",
+  primaryBorderStrong: "rgba(249, 115, 22, 0.5)",
+  teal: "#14b8a6",
+  tealGlow: "rgba(20, 184, 166, 0.15)",
+  ink: "#F1F5F9",
+  inkMuted: "#94A3B8",
+  inkFaint: "#64748b",
+  success: "#22c55e",
+  successGlow: "rgba(34, 197, 94, 0.12)",
+  r: { sm: "8px", md: "12px", lg: "16px", xl: "24px", pill: "100px" },
+  ease: "cubic-bezier(0.4, 0, 0.2, 1)",
+  spring: "cubic-bezier(0.34, 1.56, 0.64, 1)",
 };
 
 // ─── Keyframes ────────────────────────────────────────────────────────────────
 const fadeUp = keyframes`
-  from { opacity: 0; transform: translateY(28px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity:0; transform:translateY(22px); }
+  to   { opacity:1; transform:translateY(0); }
 `;
-
-const shimmer = keyframes`
-  0%   { background-position: -200% 0; }
-  100% { background-position:  200% 0; }
-`;
-
-const pulse = keyframes`
-  0%, 100% { box-shadow: 0 0 0 0   rgba(249,115,22,0.4); }
-  50%       { box-shadow: 0 0 0 10px rgba(249,115,22,0);   }
-`;
-
-const glowPulse = keyframes`
-  0%, 100% { 
-    box-shadow: 0 0 20px rgba(249,115,22,0.4),
-                0 0 40px rgba(249,115,22,0.2);
-  }
-  50% { 
-    box-shadow: 0 0 30px rgba(249,115,22,0.6),
-                0 0 60px rgba(249,115,22,0.3);
-  }
-`;
-
 const float = keyframes`
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-4px); }
+  0%,100% { transform:translateY(0); }
+  50%      { transform:translateY(-5px); }
 `;
-
+const pulse = keyframes`
+  0%,100% { box-shadow: 0 0 0 0 rgba(249,115,22,0.45); }
+  50%      { box-shadow: 0 0 0 9px rgba(249,115,22,0); }
+`;
+const shimmer = keyframes`
+  0%   { background-position:-200% 0; }
+  100% { background-position: 200% 0; }
+`;
+const ringExpand = keyframes`
+  0%   { transform:scale(1); opacity:0.6; }
+  100% { transform:scale(2.2); opacity:0; }
+`;
 const fadeIn = keyframes`
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from { opacity:0; }
+  to   { opacity:1; }
 `;
-
-const modalSlideIn = keyframes`
-  from { 
-    opacity: 0; 
-    transform: scale(0.92);
-  }
-  to { 
-    opacity: 1; 
-    transform: scale(1);
-  }
+const slideUp = keyframes`
+  from { opacity:0; transform:translateY(16px) scale(0.97); }
+  to   { opacity:1; transform:translateY(0)    scale(1); }
 `;
-
-const tooltipSlideUp = keyframes`
-  from {
-    opacity: 0;
-    transform: translate(-50%, 8px);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
-`;
-
-const slideDown = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-`;
-
-const tapAnimation = keyframes`
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(0.95);
-  }
-`;
-
-const pointerBounce = keyframes`
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-6px);
-  }
-`;
-
-const tagSlide = keyframes`
-  from { opacity: 0; transform: translateX(-10px); }
-  to   { opacity: 1; transform: translateX(0); }
-`;
-
 const dotPop = keyframes`
-  0%   { transform: scale(0) translate(-50%, -100%); opacity: 0; }
-  70%  { transform: scale(1.3) translate(-38%, -77%); }
-  100% { transform: scale(1) translate(-50%, -100%);   opacity: 1; }
+  0%   { transform:scale(0) translate(-50%,-100%); opacity:0; }
+  70%  { transform:scale(1.25) translate(-40%,-80%); }
+  100% { transform:scale(1) translate(-50%,-100%); opacity:1; }
+`;
+const lineGrow = keyframes`
+  from { stroke-dashoffset:1600; }
+  to   { stroke-dashoffset:0; }
+`;
+const bannerIn = keyframes`
+  from { opacity:0; transform:translateY(-12px); }
+  to   { opacity:1; transform:translateY(0); }
 `;
 
-const fadeSlideIn = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-`;
-
-// ─── Scroll Reveal Hook ───────────────────────────────────────────────────────
-const useFadeIn = (threshold = 0.12) => {
-  const [visible, setVisible] = useState(false);
+// ─── Scroll-Reveal ────────────────────────────────────────────────────────────
+const useFadeIn = () => {
+  const [v, setV] = useState(false);
   const ref = useRef(null);
-
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) setVisible(true);
-      },
-      { threshold },
-    );
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setV(true); }, { threshold: 0.1 });
     obs.observe(el);
     return () => obs.unobserve(el);
-  }, [threshold]);
-
-  return [ref, visible];
+  }, []);
+  return [ref, v];
 };
 
-// ─── FadeInView Wrapper ───────────────────────────────────────────────────────
-const FadeInView = ({ children, delay = "0s", style, className }) => {
-  const [ref, visible] = useFadeIn();
+const Reveal = ({ children, delay = "0s", style }) => {
+  const [ref, v] = useFadeIn();
   return (
-    <div
-      ref={ref}
-      className={className}
-      style={{
-        ...style,
-        opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(24px)",
-        transition: `opacity 0.7s ease-out ${delay}, transform 0.7s ease-out ${delay}`,
-      }}
-    >
+    <div ref={ref} style={{
+      ...style,
+      opacity: v ? 1 : 0,
+      transform: v ? "translateY(0)" : "translateY(20px)",
+      transition: `opacity 0.65s ease-out ${delay}, transform 0.65s ease-out ${delay}`,
+    }}>
       {children}
     </div>
   );
 };
 
-// ─── Helper ───────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 const formatMeals = (meals) => {
   if (!meals) return null;
   if (typeof meals === "string") return meals;
   if (Array.isArray(meals)) return meals.join(", ");
   if (typeof meals === "object") {
-    const list = [];
-    if (meals.breakfast) list.push("Breakfast");
-    if (meals.lunch) list.push("Lunch");
-    if (meals.dinner) list.push("Dinner");
-    if (!list.length) return null;
-    if (list.length === 3) return "All Meals";
-    return list.join(", ");
+    const l = [];
+    if (meals.breakfast) l.push("Breakfast");
+    if (meals.lunch) l.push("Lunch");
+    if (meals.dinner) l.push("Dinner");
+    if (!l.length) return null;
+    return l.length === 3 ? "All Meals" : l.join(", ");
   }
   return null;
 };
 
-// ─── Get first sentence or truncate description ──────────────────────────────
-const getPreviewText = (description) => {
-  if (!description) return "";
-  const firstSentence = description.split(/[.!?]/)[0];
-  if (firstSentence.length > 80) {
-    return firstSentence.substring(0, 77) + "...";
-  }
-  return firstSentence + ".";
+const getPreview = (desc) => {
+  if (!desc) return "";
+  const s = desc.split(/[.!?]/)[0];
+  return (s.length > 90 ? s.slice(0, 87) + "…" : s) + ".";
 };
 
-// ─── Map Coordinates (up to 8 stops) ─────────────────────────────────────────
-const MAP_COORDS = [
-  { cx: "18%", cy: "14%" },
-  { cx: "68%", cy: "24%" },
-  { cx: "28%", cy: "38%" },
-  { cx: "72%", cy: "52%" },
-  { cx: "22%", cy: "66%" },
-  { cx: "65%", cy: "76%" },
-  { cx: "35%", cy: "87%" },
-  { cx: "60%", cy: "95%" },
+// ─── Map coordinates (up to 8 pins) ──────────────────────────────────────────
+const COORDS = [
+  { cx: "18%", cy: "11%" },
+  { cx: "67%", cy: "22%" },
+  { cx: "26%", cy: "36%" },
+  { cx: "73%", cy: "50%" },
+  { cx: "20%", cy: "64%" },
+  { cx: "66%", cy: "75%" },
+  { cx: "33%", cy: "87%" },
+  { cx: "62%", cy: "95%" },
 ];
 
-const TRAIL_D =
-  "M 144 98 C 300 60, 520 168, 544 196 " +
-  "C 580 240, 260 266, 224 308 " +
-  "C 188 350, 560 346, 576 416 " +
-  "C 600 476, 210 447, 176 524 " +
-  "C 150 580, 520 517, 520 601 " +
-  "C 520 651, 280 608, 280 679 " +
-  "C 280 716, 480 679, 480 740";
+const TRAIL =
+  "M 144 83 C 300 44, 520 158, 536 186 " +
+  "C 572 232, 256 258, 208 299 " +
+  "C 172 340, 560 337, 584 400 " +
+  "C 608 464, 200 438, 160 508 " +
+  "C 136 558, 520 504, 528 580 " +
+  "C 536 640, 280 596, 264 660 " +
+  "C 256 700, 480 665, 496 730";
+
+// ─── Compute tooltip alignment from % position ────────────────────────────────
+const getTooltipPos = (coord) => {
+  const x = parseInt(coord.cx);
+  const y = parseInt(coord.cy);
+
+  let horizontal = "center";
+  if (x < 32) horizontal = "left";
+  else if (x > 68) horizontal = "right";
+
+  const vertical = y < 35 ? "below" : "above";
+
+  return { horizontal, vertical };
+};
 
 // ─── Styled Components ────────────────────────────────────────────────────────
 
 const Wrapper = styled.div`
   width: 100%;
-  max-width: 1200px;
+  max-width: 1100px;
   margin: 0 auto;
-  font-family: "Inter", sans-serif;
-  color: ${tokens.colors.textPrimary};
-  * {
-    box-sizing: border-box;
-  }
+  font-family: "Inter", -apple-system, sans-serif;
+  color: ${T.ink};
+  * { box-sizing: border-box; }
 `;
 
-/* ── HERO MAP SECTION ── */
-const MapSection = styled.section`
+/* ── HERO ── */
+const Hero = styled.section`
   position: relative;
-  width: 100%;
-  min-height: 480px;
-  padding: 5rem 1.5rem 4rem;
   overflow: hidden;
+  width: 100%;
+  padding: 6rem 2rem 5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-
-  @media (max-width: 600px) {
-    min-height: auto;
-    padding: 4rem 1rem 3rem;
-  }
+  text-align: center;
 `;
 
-const MapCanvas = styled.div`
+const HeroBg = styled.div`
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  overflow: hidden;
 `;
 
-const GlowOrb = styled.div`
+const Orb = styled.div`
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.12;
-  background: ${({ color }) => color || tokens.colors.primary};
-  width: ${({ size }) => size || "400px"};
-  height: ${({ size }) => size || "400px"};
-  top: ${({ top }) => top || "0"};
-  left: ${({ left }) => left || "auto"};
-  right: ${({ right }) => right || "auto"};
-  animation: ${float} ${({ dur }) => dur || "6s"} ease-in-out infinite;
-  animation-delay: ${({ delay }) => delay || "0s"};
+  filter: blur(90px);
+  opacity: ${({ $op }) => $op || 0.12};
+  background: ${({ $c }) => $c || T.primary};
+  width: ${({ $s }) => $s || "420px"};
+  height: ${({ $s }) => $s || "420px"};
+  top: ${({ $top }) => $top || "auto"};
+  left: ${({ $l }) => $l || "auto"};
+  right: ${({ $r }) => $r || "auto"};
+  bottom: ${({ $b }) => $b || "auto"};
+  animation: ${float} ${({ $dur }) => $dur || "7s"} ease-in-out infinite;
+  animation-delay: ${({ $delay }) => $delay || "0s"};
 `;
 
-const MapGrid = styled.svg`
+const GridSvg = styled.svg`
   position: absolute;
   inset: 0;
   width: 100%;
@@ -314,57 +232,24 @@ const MapGrid = styled.svg`
   opacity: 0.04;
 `;
 
-const TopoLines = styled.svg`
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0.06;
-  pointer-events: none;
-`;
-
-const RiverSvg = styled.svg`
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  opacity: 0.5;
-`;
-
-const MountainSvg = styled.svg`
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  height: 260px;
-  pointer-events: none;
-  opacity: 0.18;
-`;
-
-const HeroCenter = styled.div`
-  position: relative;
-  z-index: 5;
-  text-align: center;
-  margin-bottom: 3rem;
-`;
-
-const Eyebrow = styled.div`
+const HeroLabel = styled.div`
   display: inline-flex;
   align-items: center;
   gap: 0.75rem;
   font-size: 0.65rem;
   letter-spacing: 0.25em;
   text-transform: uppercase;
-  color: ${tokens.colors.teal};
+  color: ${T.teal};
   font-weight: 600;
   margin-bottom: 1rem;
+  position: relative;
+  z-index: 2;
 
-  &::before,
-  &::after {
+  &::before, &::after {
     content: "";
-    height: 1px;
     width: 36px;
-    background: ${tokens.colors.teal};
+    height: 1px;
+    background: ${T.teal};
     opacity: 0.4;
   }
 `;
@@ -379,95 +264,115 @@ const HeroTitle = styled.h2`
   margin: 0 0 1rem;
   line-height: 1.15;
   text-shadow: 0 2px 30px rgba(0, 0, 0, 0.6);
+  position: relative;
+  z-index: 2;
 `;
 
 const HeroSub = styled.p`
   font-size: 0.9375rem;
-  color: ${tokens.colors.textMuted};
-  margin: 0;
+  color: ${T.inkMuted};
+  margin: 0 0 2.5rem;
   letter-spacing: 0.02em;
+  position: relative;
+  z-index: 2;
 `;
 
-const StatsRow = styled.div`
-  position: relative;
-  z-index: 5;
+const StatRow = styled.div`
   display: flex;
   gap: 1rem;
   justify-content: center;
   flex-wrap: wrap;
+  position: relative;
+  z-index: 2;
 `;
 
-const StatPillBase = styled.div`
+const StatPill = styled.div`
   display: inline-flex;
   align-items: center;
   gap: 0.625rem;
   padding: 0.625rem 1.25rem;
   background: rgba(17, 17, 17, 0.85);
   backdrop-filter: blur(12px);
-  border: 1px solid ${tokens.colors.border};
-  border-radius: ${tokens.radius.pill};
+  border: 1px solid ${T.border};
+  border-radius: ${T.r.pill};
   font-size: 0.8125rem;
   font-weight: 600;
-  color: ${tokens.colors.textSecondary};
-  transition: ${tokens.transition.base};
+  color: ${T.inkMuted};
+  transition: all 0.3s ${T.ease};
 
-  svg {
-    color: ${tokens.colors.primary};
-    font-size: 0.875rem;
+  svg { 
+    color: ${T.primary}; 
+    font-size: 0.875rem; 
   }
 
   &:hover {
-    border-color: ${tokens.colors.primaryBorder};
-    color: ${tokens.colors.textPrimary};
+    border-color: ${T.primaryBorder};
+    color: ${T.ink};
     background: rgba(30, 30, 30, 0.9);
     transform: translateY(-3px);
   }
 `;
 
-/* ── INLINE MAP (desktop & mobile) ── */
-const InlineMapWrapper = styled.div`
+/* ── DIVIDER ── */
+const Divider = styled.div`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0 2rem;
+  margin: 0 0 1rem;
+
+  span {
+    color: ${T.primary};
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  &::before, &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, ${T.primaryBorder}, transparent);
+  }
+`;
+
+/* ── MAP WRAPPER ── */
+const MapWrap = styled.div`
   position: relative;
   width: 100%;
-  max-width: 900px;
-  margin: 3rem auto 5rem;
-  padding: 0 1rem;
+  max-width: 860px;
+  margin: 0 auto 5rem;
+  padding: 0 1.5rem;
 
   @media (max-width: 600px) {
-    margin: 2rem auto 3rem;
+    margin-bottom: 3rem;
+    padding: 0 0.75rem;
   }
 `;
 
-const InlineMapSvgBg = styled.svg`
-  width: 100%;
-  height: 760px;
-  display: block;
-
-  @media (max-width: 600px) {
-    height: 600px;
-  }
-`;
-
-/* ── MOBILE INSTRUCTION BANNER ── */
-const MobileInstructionBanner = styled.div`
+/* ── MOBILE BANNER ── */
+const Banner = styled.div`
   display: none;
 
   @media (max-width: 768px) {
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 0.875rem;
-    margin-bottom: 1.5rem;
-    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    padding: 0.875rem 1.125rem;
     background: linear-gradient(
       135deg,
       rgba(249, 115, 22, 0.08) 0%,
       rgba(249, 115, 22, 0.12) 100%
     );
-    border: 1px solid ${tokens.colors.primaryBorder};
-    border-radius: ${tokens.radius.lg};
+    border: 1px solid ${T.primaryBorder};
+    border-radius: ${T.r.lg};
     backdrop-filter: blur(12px);
     box-shadow: 0 8px 24px rgba(249, 115, 22, 0.15);
-    animation: ${slideDown} 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation: ${bannerIn} 0.6s ${T.spring} both;
     animation-delay: 0.8s;
     position: relative;
     overflow: hidden;
@@ -490,37 +395,37 @@ const MobileInstructionBanner = styled.div`
   }
 `;
 
-const InstructionIconWrapper = styled.div`
-  position: relative;
+const BannerIcon = styled.div`
   width: 40px;
   height: 40px;
+  border-radius: ${T.r.md};
   background: linear-gradient(
     135deg,
-    ${tokens.colors.primary},
-    ${tokens.colors.primaryDark}
+    ${T.primary},
+    ${T.primaryDark}
   );
-  border-radius: ${tokens.radius.md};
+  border: 1px solid ${T.primaryBorder};
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 16px rgba(249, 115, 22, 0.3);
+  color: white;
+  font-size: 1.125rem;
   flex-shrink: 0;
 
   svg {
-    font-size: 1.125rem;
-    color: white;
-    animation: ${pointerBounce} 2s ease-in-out infinite;
+    animation: ${float} 2.5s ease-in-out infinite;
   }
 
   &::after {
     content: "";
     position: absolute;
     inset: -2px;
-    border-radius: ${tokens.radius.md};
+    border-radius: ${T.r.md};
     background: linear-gradient(
       135deg,
-      ${tokens.colors.primary},
-      ${tokens.colors.primaryLight}
+      ${T.primary},
+      ${T.primaryLight}
     );
     opacity: 0.3;
     z-index: -1;
@@ -528,63 +433,57 @@ const InstructionIconWrapper = styled.div`
   }
 `;
 
-const InstructionTextWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+const BannerText = styled.div`
   flex: 1;
-`;
-
-const InstructionTitle = styled.div`
   font-size: 0.8125rem;
-  font-weight: 700;
-  color: ${tokens.colors.textPrimary};
+  color: ${T.inkMuted};
+  font-weight: 500;
   letter-spacing: 0.02em;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 
-  span.highlight {
-    color: ${tokens.colors.primary};
-    font-weight: 800;
+  strong {
+    color: ${T.primary};
+    font-weight: 700;
   }
 `;
 
-const InstructionSubtext = styled.div`
-  font-size: 0.6875rem;
-  color: ${tokens.colors.textMuted};
-  letter-spacing: 0.01em;
-`;
-
-const DismissButton = styled.button`
+const BannerClose = styled.button`
   width: 32px;
   height: 32px;
-  border-radius: ${tokens.radius.sm};
+  border-radius: ${T.r.sm};
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid ${tokens.colors.border};
+  border: 1px solid ${T.border};
   display: flex;
   align-items: center;
   justify-content: center;
-  color: ${tokens.colors.textMuted};
+  color: ${T.inkFaint};
   cursor: pointer;
-  transition: ${tokens.transition.fast};
   flex-shrink: 0;
   -webkit-tap-highlight-color: transparent;
+  transition: all 0.2s;
 
-  svg {
-    font-size: 0.875rem;
-  }
-
-  &:hover,
-  &:active {
+  &:hover, &:active {
     background: rgba(255, 255, 255, 0.08);
-    border-color: ${tokens.colors.borderHover};
-    color: ${tokens.colors.textPrimary};
+    border-color: ${T.borderHover};
+    color: ${T.inkMuted};
     transform: scale(0.95);
   }
 `;
 
-const MapPin = styled.div`
+/* ── MAP SVG BG ── */
+const MapSvg = styled.svg`
+  width: 100%;
+  height: 760px;
+  display: block;
+  border-radius: ${T.r.xl};
+  overflow: hidden;
+
+  @media (max-width: 600px) { 
+    height: 620px; 
+  }
+`;
+
+/* ── PIN ── */
+const Pin = styled.div`
   position: absolute;
   transform: translate(-50%, -100%);
   display: flex;
@@ -592,48 +491,91 @@ const MapPin = styled.div`
   align-items: center;
   cursor: pointer;
   z-index: 10;
-  transition: ${tokens.transition.spring};
-  animation: ${css`
-      ${dotPop}`} 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-  animation-delay: ${({ $delay }) => $delay || "0s"};
+  transition: z-index 0s;
+  animation: ${css`${dotPop}`} 0.5s ${T.spring} both;
+  animation-delay: ${({ $d }) => $d || "0s"};
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 
-  &:hover {
-    z-index: 20;
-  }
-
-  &.active {
-    z-index: 20;
-  }
+  &.active, &:hover { z-index: 30; }
 
   @media (max-width: 600px) {
     transform: translate(-50%, -100%) scale(0.9);
   }
 `;
 
-const PinDot = styled.div`
+const PinBubble = styled.div`
+  background: ${T.bgGlass};
+  backdrop-filter: blur(14px);
+  border: 1px solid ${T.primaryBorder};
+  border-radius: ${T.r.md};
+  padding: 0.45rem 0.75rem;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ${T.spring};
+
+  .num {
+    display: block;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: ${T.primary};
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+
+  .name {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: ${T.ink};
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  ${Pin}:hover &, ${Pin}.active & {
+    transform: translateY(-4px);
+    background: rgba(249, 115, 22, 0.15);
+    border-color: ${T.primary};
+    box-shadow: 0 12px 32px rgba(249, 115, 22, 0.3);
+  }
+
+  @media (max-width: 600px) {
+    padding: 0.4rem 0.65rem;
+    .num { font-size: 0.55rem; }
+    .name { font-size: 0.7rem; max-width: 100px; }
+  }
+`;
+
+const Dot = styled.div`
+  position: relative;
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: linear-gradient(
-    135deg,
-    ${tokens.colors.primary},
-    ${tokens.colors.primaryDark}
-  );
+  background: linear-gradient(135deg, ${T.primary}, ${T.primaryDark});
   border: 3px solid rgba(249, 115, 22, 0.4);
   box-shadow: 0 0 0 6px rgba(249, 115, 22, 0.12);
-  transition: ${tokens.transition.spring};
-  animation: ${css`
-      ${pulse}`} 2.5s ease-in-out infinite;
-  animation-delay: ${({ $delay }) => $delay || "0s"};
+  animation: ${css`${pulse}`} 2.5s ease-in-out infinite;
+  animation-delay: ${({ $d }) => $d || "0s"};
+  transition: all 0.3s ${T.spring};
 
-  ${MapPin}:hover &,
-  ${MapPin}.active & {
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 1px solid rgba(249, 115, 22, 0.25);
+    animation: ${css`${ringExpand}`} 2.5s ease-out infinite;
+    animation-delay: ${({ $d }) => $d || "0s"};
+  }
+
+  ${Pin}:hover &, ${Pin}.active & {
     transform: scale(1.5);
-    background: linear-gradient(135deg, #fbbf24, ${tokens.colors.primary});
-    animation: ${glowPulse} 1.5s ease-in-out infinite;
+    background: linear-gradient(135deg, #fbbf24, ${T.primary});
     border-width: 4px;
+    box-shadow: 0 0 0 6px rgba(249, 115, 22, 0.2);
   }
 
   @media (max-width: 600px) {
@@ -641,95 +583,40 @@ const PinDot = styled.div`
     height: 16px;
     border-width: 2.5px;
 
-    ${MapPin}:hover &,
-    ${MapPin}.active & {
+    ${Pin}:hover &, ${Pin}.active & {
       transform: scale(1.4);
       border-width: 3px;
     }
   }
 `;
 
-const PinLabel = styled.div`
-  background: rgba(17, 17, 17, 0.92);
-  backdrop-filter: blur(10px);
-  border: 1px solid ${tokens.colors.primaryBorder};
-  border-radius: ${tokens.radius.md};
-  padding: 0.45rem 0.75rem;
-  margin-bottom: 4px;
-  text-align: center;
-  pointer-events: none;
-  white-space: nowrap;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  transition: ${tokens.transition.spring};
-
-  span.day-num {
-    display: block;
-    font-size: 0.6rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: ${tokens.colors.primary};
-    font-weight: 700;
-    margin-bottom: 2px;
-  }
-
-  span.day-title {
-    display: block;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: ${tokens.colors.textPrimary};
-    max-width: 120px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  ${MapPin}:hover &,
-  ${MapPin}.active & {
-    transform: translateY(-4px);
-    background: rgba(249, 115, 22, 0.15);
-    border-color: ${tokens.colors.primary};
-    box-shadow: 0 12px 32px rgba(249, 115, 22, 0.3);
-  }
-
-  @media (max-width: 600px) {
-    padding: 0.4rem 0.65rem;
-
-    span.day-num {
-      font-size: 0.55rem;
-    }
-
-    span.day-title {
-      font-size: 0.7rem;
-      max-width: 100px;
-    }
-  }
-`;
-
-/* ── HOVER TOOLTIP ── */
-const HoverTooltip = styled.div`
+/* ── TOOLTIP ── */
+const Tooltip = styled.div`
   position: absolute;
-  bottom: calc(100% + 12px);
-  left: 50%;
-  transform: translate(-50%, 0);
-  min-width: 280px;
-  max-width: 320px;
+  z-index: 100;
+  pointer-events: none;
+  min-width: 240px;
+  max-width: 290px;
   background: linear-gradient(
     135deg,
     rgba(17, 17, 17, 0.98),
     rgba(26, 26, 26, 0.98)
   );
-  backdrop-filter: blur(16px);
-  border: 1px solid ${tokens.colors.primaryBorder};
-  border-radius: ${tokens.radius.lg};
+  backdrop-filter: blur(18px);
+  border: 1px solid ${T.primaryBorder};
+  border-radius: ${T.r.lg};
   padding: 1rem 1.25rem;
-  box-shadow:
-    0 16px 48px rgba(0, 0, 0, 0.6),
+  box-shadow: 
+    0 16px 48px rgba(0, 0, 0, 0.6), 
     0 0 0 1px rgba(249, 115, 22, 0.2);
-  pointer-events: none;
-  opacity: 0;
-  animation: ${tooltipSlideUp} 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-  z-index: 100;
+  animation: ${slideUp} 0.25s ${T.spring} both;
 
-  /* Arrow */
+  /* Default: above pin, centered */
+  bottom: calc(100% + 14px);
+  left: 50%;
+  transform: translateX(-50%);
+
+  /* Arrow below (pointing down to pin) */
   &::after {
     content: "";
     position: absolute;
@@ -737,9 +624,8 @@ const HoverTooltip = styled.div`
     left: 50%;
     transform: translateX(-50%);
     border: 8px solid transparent;
-    border-top-color: ${tokens.colors.primaryBorder};
+    border-top-color: ${T.primaryBorder};
   }
-
   &::before {
     content: "";
     position: absolute;
@@ -752,54 +638,98 @@ const HoverTooltip = styled.div`
     z-index: 1;
   }
 
+  /* ─── VERTICAL: below ─── */
+  &[data-v="below"] {
+    bottom: auto;
+    top: calc(100% + 14px);
+    left: 50%;
+    transform: translateX(-50%);
+
+    /* Arrow above (pointing up to pin) */
+    &::after {
+      top: auto;
+      bottom: 100%;
+      border-top-color: transparent;
+      border-bottom-color: ${T.primaryBorder};
+    }
+    &::before {
+      top: auto;
+      bottom: 100%;
+      margin-top: 0;
+      margin-bottom: -1px;
+      border-top-color: transparent;
+      border-bottom-color: rgba(17, 17, 17, 0.98);
+    }
+  }
+
+  /* ─── HORIZONTAL: left-pinned ─── */
+  &[data-h="left"] {
+    left: 0;
+    transform: translateX(0);
+
+    &::after  { left: 20px; transform: translateX(0); }
+    &::before { left: 20px; transform: translateX(0); }
+  }
+
+  /* ─── HORIZONTAL: right-pinned ─── */
+  &[data-h="right"] {
+    left: auto;
+    right: 0;
+    transform: translateX(0);
+
+    &::after  { left: auto; right: 20px; transform: translateX(0); }
+    &::before { left: auto; right: 20px; transform: translateX(0); }
+  }
+
   @media (max-width: 600px) {
-    min-width: 220px;
-    max-width: 260px;
-    padding: 0.875rem 1rem;
-    font-size: 0.875rem;
-    bottom: calc(100% + 8px);
+    min-width: 160px;
+    max-width: 180px;
+    padding: 0.75rem 0.875rem;
+    font-size: 0.8125rem;
   }
 `;
 
-const TooltipPreview = styled.p`
+const TipBody = styled.p`
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: ${tokens.colors.textSecondary};
+  color: ${T.inkMuted};
   margin: 0 0 0.75rem;
 
   @media (max-width: 600px) {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
+    line-height: 1.45;
     margin-bottom: 0.625rem;
   }
 `;
 
-const TooltipCTA = styled.div`
+const TipCta = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
   font-size: 0.75rem;
   font-weight: 600;
-  color: ${tokens.colors.primary};
+  color: ${T.primary};
   padding-top: 0.625rem;
   border-top: 1px solid rgba(249, 115, 22, 0.2);
 
-  svg {
-    font-size: 0.875rem;
-    animation: ${float} 2s ease-in-out infinite;
+  svg { 
+    font-size: 0.875rem; 
+    animation: ${float} 2s ease-in-out infinite; 
   }
 
   @media (max-width: 600px) {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     padding-top: 0.5rem;
+    gap: 0.375rem;
 
     svg {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
     }
   }
 `;
 
-/* ── MODAL POPUP (OPTIMIZED) ── */
-const ModalOverlay = styled.div`
+/* ── MODAL ── */
+const Overlay = styled.div`
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.85);
@@ -814,68 +744,66 @@ const ModalOverlay = styled.div`
   -webkit-overflow-scrolling: touch;
 `;
 
-const ModalContent = styled.div`
+const Modal = styled.div`
   position: relative;
   width: 100%;
   max-width: 680px;
-  background: ${tokens.colors.bgCard};
-  border: 1px solid ${tokens.colors.primaryBorder};
-  border-radius: ${tokens.radius.xl};
+  background: ${T.bgCard};
+  border: 1px solid ${T.primaryBorder};
+  border-radius: ${T.r.xl};
   padding: 2rem;
   max-height: 90vh;
   overflow-y: auto;
-  animation: ${modalSlideIn} 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  box-shadow:
-    0 24px 60px rgba(0, 0, 0, 0.7),
+  animation: ${slideUp} 0.25s ${T.ease} both;
+  box-shadow: 
+    0 24px 60px rgba(0, 0, 0, 0.7), 
     0 0 0 1px rgba(249, 115, 22, 0.1);
   will-change: transform, opacity;
 
   scrollbar-width: thin;
-  scrollbar-color: ${tokens.colors.primary} ${tokens.colors.bgElevated};
+  scrollbar-color: ${T.primary} ${T.bgElevated};
 
-  &::-webkit-scrollbar {
-    width: 6px;
+  &::-webkit-scrollbar { 
+    width: 6px; 
   }
-
-  &::-webkit-scrollbar-track {
-    background: transparent;
+  &::-webkit-scrollbar-track { 
+    background: transparent; 
   }
-
-  &::-webkit-scrollbar-thumb {
-    background: ${tokens.colors.primary};
-    border-radius: 3px;
+  &::-webkit-scrollbar-thumb { 
+    background: ${T.primary}; 
+    border-radius: 3px; 
   }
 
   @media (max-width: 600px) {
     padding: 1.5rem;
     max-height: 92vh;
-    border-radius: ${tokens.radius.lg};
+    border-radius: ${T.r.lg};
   }
 `;
 
-const ModalClose = styled.button`
+const CloseBtn = styled.button`
   position: absolute;
   top: 1.25rem;
   right: 1.25rem;
   width: 36px;
   height: 36px;
-  border-radius: ${tokens.radius.md};
-  background: ${tokens.colors.surface1};
-  border: 1px solid ${tokens.colors.border};
-  color: ${tokens.colors.textMuted};
+  border-radius: ${T.r.md};
+  background: ${T.bgElevated};
+  border: 1px solid ${T.border};
+  color: ${T.inkMuted};
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: ${tokens.transition.fast};
+  transition: all 0.2s;
   font-size: 1.1rem;
   z-index: 10;
   -webkit-tap-highlight-color: transparent;
 
   &:hover {
     background: rgba(249, 115, 22, 0.15);
-    border-color: ${tokens.colors.primaryBorder};
-    color: ${tokens.colors.primary};
+    border-color: ${T.primaryBorder};
+    color: ${T.primary};
     transform: rotate(90deg);
   }
 
@@ -892,7 +820,7 @@ const ModalClose = styled.button`
   }
 `;
 
-const ModalHeader = styled.div`
+const MHead = styled.div`
   display: flex;
   align-items: flex-start;
   gap: 1rem;
@@ -906,17 +834,17 @@ const ModalHeader = styled.div`
   }
 `;
 
-const ModalDayBadge = styled.div`
+const MBadge = styled.div`
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  border-radius: ${tokens.radius.pill};
+  border-radius: ${T.r.pill};
   background: linear-gradient(
     135deg,
-    ${tokens.colors.primary},
-    ${tokens.colors.primaryDark}
+    ${T.primary},
+    ${T.primaryDark}
   );
   border: 1px solid rgba(249, 115, 22, 0.5);
   font-size: 0.75rem;
@@ -926,22 +854,22 @@ const ModalDayBadge = styled.div`
   letter-spacing: 0.05em;
   box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
 
-  svg {
-    font-size: 0.7rem;
+  svg { 
+    font-size: 0.7rem; 
   }
 `;
 
-const ModalTitleWrap = styled.div`
+const MTitleWrap = styled.div`
   flex: 1;
   min-width: 0;
 `;
 
-const ModalTitle = styled.h3`
+const MTitle = styled.h3`
   font-family: "Playfair Display", Georgia, serif;
   font-size: 1.65rem;
   font-weight: 700;
   font-style: italic;
-  color: ${tokens.colors.textPrimary};
+  color: ${T.ink};
   margin: 0 0 0.5rem;
   line-height: 1.25;
 
@@ -950,65 +878,64 @@ const ModalTitle = styled.h3`
   }
 `;
 
-const ModalMeta = styled.div`
+const MMeta = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
   font-size: 0.8rem;
-  color: ${tokens.colors.textMuted};
+  color: ${T.inkMuted};
   flex-wrap: wrap;
 
-  span {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
+  span { 
+    display: flex; 
+    align-items: center; 
+    gap: 0.35rem; 
   }
-
-  svg {
-    color: ${tokens.colors.primary};
-    font-size: 0.75rem;
+  svg { 
+    color: ${T.primary}; 
+    font-size: 0.75rem; 
   }
 `;
 
-const ModalHighlights = styled.div`
+const MHighlights = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-bottom: 1.5rem;
 `;
 
-const ModalHighlightTag = styled.span`
+const MTag = styled.span`
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
   padding: 0.45rem 0.875rem;
-  background: ${tokens.colors.successGlow};
+  background: ${T.successGlow};
   border: 1px solid rgba(34, 197, 94, 0.28);
-  border-radius: ${tokens.radius.pill};
+  border-radius: ${T.r.pill};
   font-size: 0.75rem;
   font-weight: 500;
-  color: ${tokens.colors.success};
-  transition: ${tokens.transition.fast};
+  color: ${T.success};
+  transition: all 0.2s;
 
-  &:hover {
-    background: rgba(34, 197, 94, 0.22);
-    transform: translateY(-2px);
+  svg { 
+    font-size: 0.65rem; 
   }
-
-  svg {
-    font-size: 0.65rem;
+  
+  &:hover { 
+    background: rgba(34, 197, 94, 0.22); 
+    transform: translateY(-2px); 
   }
 `;
 
-const ModalDescription = styled.p`
+const MDesc = styled.p`
   font-size: 0.9375rem;
-  color: ${tokens.colors.textSecondary};
+  color: ${T.inkMuted};
   line-height: 1.75;
   margin: 0 0 1.75rem;
   padding: 1rem 1.25rem;
-  background: ${tokens.colors.surface1};
-  border-left: 3px solid ${tokens.colors.primaryBorder};
-  border-radius: ${tokens.radius.md};
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 3px solid ${T.primaryBorder};
+  border-radius: ${T.r.md};
 
   @media (max-width: 600px) {
     font-size: 0.875rem;
@@ -1017,7 +944,7 @@ const ModalDescription = styled.p`
   }
 `;
 
-const ModalDetailsGrid = styled.div`
+const MGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 0.875rem;
@@ -1028,53 +955,53 @@ const ModalDetailsGrid = styled.div`
   }
 `;
 
-const ModalDetailCard = styled.div`
+const MCard = styled.div`
   display: flex;
   align-items: center;
   gap: 0.875rem;
   padding: 1rem;
-  background: ${tokens.colors.surface1};
-  border: 1px solid ${tokens.colors.border};
-  border-radius: ${tokens.radius.md};
-  transition: ${tokens.transition.base};
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid ${T.border};
+  border-radius: ${T.r.md};
+  transition: all 0.3s ${T.ease};
 
   &:hover {
     background: rgba(249, 115, 22, 0.08);
-    border-color: ${tokens.colors.primaryBorder};
+    border-color: ${T.primaryBorder};
     transform: translateY(-2px);
   }
 `;
 
-const ModalDetailIcon = styled.div`
+const MIcon = styled.div`
   width: 44px;
   height: 44px;
-  border-radius: ${tokens.radius.md};
+  border-radius: ${T.r.md};
   background: linear-gradient(
     135deg,
-    ${tokens.colors.primaryGlow},
+    ${T.primaryGlow},
     rgba(249, 115, 22, 0.22)
   );
-  border: 1px solid ${tokens.colors.primaryBorder};
+  border: 1px solid ${T.primaryBorder};
   display: flex;
   align-items: center;
   justify-content: center;
-  color: ${tokens.colors.primary};
+  color: ${T.primary};
   font-size: 1rem;
   flex-shrink: 0;
-  transition: ${tokens.transition.spring};
+  transition: all 0.25s ${T.spring};
 
-  ${ModalDetailCard}:hover & {
+  ${MCard}:hover & {
     transform: scale(1.1);
     background: linear-gradient(
       135deg,
-      ${tokens.colors.primary},
-      ${tokens.colors.primaryDark}
+      ${T.primary},
+      ${T.primaryDark}
     );
     color: #fff;
   }
 `;
 
-const ModalDetailContent = styled.div`
+const MInfo = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
@@ -1082,563 +1009,266 @@ const ModalDetailContent = styled.div`
   flex: 1;
 `;
 
-const ModalDetailLabel = styled.span`
+const MLabel = styled.span`
   font-size: 0.68rem;
-  color: ${tokens.colors.textMuted};
+  color: ${T.inkFaint};
   text-transform: uppercase;
   letter-spacing: 0.07em;
   font-weight: 500;
 `;
 
-const ModalDetailValue = styled.span`
+const MValue = styled.span`
   font-size: 0.9rem;
   font-weight: 600;
-  color: ${tokens.colors.textPrimary};
+  color: ${T.ink};
   overflow: hidden;
   text-overflow: ellipsis;
 `;
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function Itinerary({ itinerary = [] }) {
-  const [selectedDay, setSelectedDay] = useState(null);
-  const [hoveredDay, setHoveredDay] = useState(null);
-  const [touchTimer, setTouchTimer] = useState(null);
-  const [showInstruction, setShowInstruction] = useState(true);
+  const [selected, setSelected] = useState(null);
+  const [hovered, setHovered] = useState(null);
+  const [banner, setBanner] = useState(true);
+  const touchRef = useRef(null);
 
   useEffect(() => {
-    const handleEsc = (e) => {
-      if (e.key === "Escape") setSelectedDay(null);
-    };
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
+    const onKey = (e) => { if (e.key === "Escape") setSelected(null); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, []);
 
   useEffect(() => {
-    if (selectedDay !== null) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [selectedDay]);
+    document.body.style.overflow = selected !== null ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [selected]);
 
   useEffect(() => {
-    return () => {
-      if (touchTimer) clearTimeout(touchTimer);
-    };
-  }, [touchTimer]);
+    if (selected !== null || hovered !== null) setBanner(false);
+  }, [selected, hovered]);
 
-  // Auto-hide instruction after first interaction
-  useEffect(() => {
-    if (selectedDay !== null || hoveredDay !== null) {
-      setShowInstruction(false);
-    }
-  }, [selectedDay, hoveredDay]);
+  if (!itinerary?.length) return null;
 
-  if (!itinerary || itinerary.length === 0) return null;
+  const coords = COORDS.slice(0, itinerary.length);
+  const day = selected !== null ? itinerary[selected] : null;
 
-  const visibleCoords = MAP_COORDS.slice(0, itinerary.length);
+  const open = (i) => { setSelected(i); setHovered(null); };
+  const close = () => setSelected(null);
 
-  const openDayModal = (dayIndex) => {
-    setSelectedDay(dayIndex);
-    setHoveredDay(null);
+  const onTouchStart = (i) => {
+    touchRef.current = setTimeout(() => setHovered(i), 180);
   };
-
-  const closeDayModal = () => {
-    setSelectedDay(null);
+  const onTouchEnd = (i) => {
+    clearTimeout(touchRef.current);
+    if (hovered === i) setHovered(null);
+    else open(i);
   };
-
-  const handleTouchStart = (dayIndex) => {
-    const timer = setTimeout(() => {
-      setHoveredDay(dayIndex);
-    }, 200);
-    setTouchTimer(timer);
+  const onTouchCancel = () => {
+    clearTimeout(touchRef.current);
+    setHovered(null);
   };
-
-  const handleTouchEnd = (dayIndex) => {
-    if (touchTimer) {
-      clearTimeout(touchTimer);
-      setTouchTimer(null);
-    }
-
-    if (hoveredDay === dayIndex) {
-      setHoveredDay(null);
-    } else {
-      openDayModal(dayIndex);
-    }
-  };
-
-  const handleTouchCancel = () => {
-    if (touchTimer) {
-      clearTimeout(touchTimer);
-      setTouchTimer(null);
-    }
-    setHoveredDay(null);
-  };
-
-  const currentDay = selectedDay !== null ? itinerary[selectedDay] : null;
 
   return (
     <Wrapper>
-      {/* ── HERO MAP HEADER ── */}
-      <MapSection>
-        <MapCanvas>
-          <GlowOrb
-            color={tokens.colors.primary}
-            size="500px"
-            top="-10%"
-            left="-8%"
-            dur="7s"
-            delay="0s"
-          />
-          <GlowOrb
-            color={tokens.colors.teal}
-            size="350px"
-            top="30%"
-            right="-5%"
-            dur="9s"
-            delay="2s"
-          />
-          <GlowOrb
-            color={tokens.colors.primary}
-            size="280px"
-            top="65%"
-            left="20%"
-            dur="8s"
-            delay="4s"
-          />
-
-          <MapGrid>
+      {/* ── HERO ── */}
+      <Hero>
+        <HeroBg>
+          <Orb $c={T.primary} $s="500px" $top="-10%" $l="-8%" $dur="7s" $delay="0s" />
+          <Orb $c={T.teal} $s="350px" $top="30%" $r="-5%" $dur="9s" $delay="2s" $op={0.08} />
+          <Orb $c={T.primary} $s="280px" $top="65%" $l="20%" $dur="8s" $delay="4s" />
+          <GridSvg>
             <defs>
-              <pattern
-                id="grid"
-                width="40"
-                height="40"
-                patternUnits="userSpaceOnUse"
-              >
-                <path
-                  d="M 40 0 L 0 0 0 40"
-                  fill="none"
-                  stroke="white"
-                  strokeWidth="0.6"
-                />
+              <pattern id="hg" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="0.6" />
               </pattern>
             </defs>
-            <rect width="100%" height="100%" fill="url(#grid)" />
-          </MapGrid>
+            <rect width="100%" height="100%" fill="url(#hg)" />
+          </GridSvg>
+        </HeroBg>
 
-          <TopoLines
-            viewBox="0 0 1000 600"
-            preserveAspectRatio="xMidYMid slice"
-          >
-            {[80, 140, 200, 260, 320].map((r, i) => (
-              <ellipse
-                key={i}
-                cx="200"
-                cy="180"
-                rx={r}
-                ry={r * 0.55}
-                fill="none"
-                stroke={tokens.colors.teal}
-                strokeWidth="1"
-                opacity={0.7 - i * 0.1}
-              />
-            ))}
-            {[60, 110, 160, 210].map((r, i) => (
-              <ellipse
-                key={`b${i}`}
-                cx="780"
-                cy="380"
-                rx={r}
-                ry={r * 0.5}
-                fill="none"
-                stroke={tokens.colors.primary}
-                strokeWidth="0.8"
-                opacity={0.6 - i * 0.1}
-              />
-            ))}
-          </TopoLines>
+        <Reveal delay="0s">
+          <HeroLabel>The Journey</HeroLabel>
+          <HeroTitle>A Trip to Remember</HeroTitle>
+          <HeroSub>{itinerary.length} days of curated adventure</HeroSub>
+        </Reveal>
 
-          <RiverSvg viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice">
-            <path
-              d="M -50 200 C 200 150, 400 350, 600 250 C 800 150, 900 400, 1100 300"
-              fill="none"
-              stroke="#162438"
-              strokeWidth="28"
-              strokeLinecap="round"
-            />
-            <path
-              d="M -50 202 C 200 152, 400 352, 600 252 C 800 152, 900 402, 1100 302"
-              fill="none"
-              stroke="#0f172a"
-              strokeWidth="5"
-              strokeLinecap="round"
-              opacity="0.6"
-            />
-          </RiverSvg>
+        <Reveal delay="0.1s">
+          <StatRow>
+            <StatPill><FaCalendarAlt />{itinerary.length} Days</StatPill>
+            <StatPill><FaMapMarkerAlt />{itinerary.length} Destinations</StatPill>
+            <StatPill><FaMountain />Full Itinerary</StatPill>
+          </StatRow>
+        </Reveal>
+      </Hero>
 
-          <MountainSvg viewBox="0 0 1200 260" preserveAspectRatio="none">
-            <path
-              d="M0 260 L120 80 L200 160 L320 40 L430 180 L560 60 L670 200 L780 30 L890 170 L1000 90 L1100 210 L1200 100 L1200 260 Z"
-              fill="#2c323f"
-            />
-            <path
-              d="M0 260 L130 90 L210 170 L330 50 L440 190 L570 70 L680 210 L790 40 L900 180 L1010 100 L1110 220 L1200 110 L1200 260 Z"
-              fill="#1e222b"
-            />
-            {[
-              "M320 40 L305 72 L325 65 L340 75 Z",
-              "M560 60 L548 88 L565 80 L578 90 Z",
-              "M780 30 L762 68 L784 58 L800 70 Z",
-            ].map((d, i) => (
-              <path key={i} d={d} fill="#cad0dd" opacity="0.75" />
-            ))}
-          </MountainSvg>
-        </MapCanvas>
-
-        <HeroCenter>
-          <FadeInView delay="0s">
-            <Eyebrow>The Journey</Eyebrow>
-            <HeroTitle>A Trip to Remember</HeroTitle>
-            <HeroSub>{itinerary.length} days of curated adventure</HeroSub>
-          </FadeInView>
-        </HeroCenter>
-
-        <StatsRow>
-          <FadeInView delay="0.1s">
-            <StatPillBase>
-              <FaCalendarAlt /> {itinerary.length} Days
-            </StatPillBase>
-          </FadeInView>
-          <FadeInView delay="0.2s">
-            <StatPillBase>
-              <FaMapMarkerAlt /> {itinerary.length} Destinations
-            </StatPillBase>
-          </FadeInView>
-          <FadeInView delay="0.3s">
-            <StatPillBase>
-              <FaMountain /> Full Itinerary
-            </StatPillBase>
-          </FadeInView>
-        </StatsRow>
-      </MapSection>
+      <Divider><span>Your Route</span></Divider>
 
       {/* ── INTERACTIVE MAP ── */}
-      <InlineMapWrapper>
-        {/* Mobile Instruction Banner */}
-        {showInstruction && (
-          <MobileInstructionBanner>
-            <InstructionIconWrapper>
-              <FaHandPointer />
-            </InstructionIconWrapper>
-            <InstructionTextWrapper>
-              <InstructionTitle>
-                <span className="highlight">Tap</span> any marker to explore
-              </InstructionTitle>
-              <InstructionSubtext>
-                Discover daily highlights & activities
-              </InstructionSubtext>
-            </InstructionTextWrapper>
-            <DismissButton
-              onClick={() => setShowInstruction(false)}
-              aria-label="Dismiss instruction"
-            >
-              <FiX />
-            </DismissButton>
-          </MobileInstructionBanner>
+      <MapWrap>
+        {banner && (
+          <Banner>
+            <BannerIcon><FaHandPointer /></BannerIcon>
+            <BannerText><strong>Tap</strong> any marker to explore</BannerText>
+            <BannerClose onClick={() => setBanner(false)}><FiX size={13} /></BannerClose>
+          </Banner>
         )}
 
-        <InlineMapSvgBg viewBox="0 0 800 760" preserveAspectRatio="none">
+        <MapSvg viewBox="0 0 800 760" preserveAspectRatio="none">
           <rect x="0" y="0" width="800" height="760" rx="20" fill="#111111" />
-          <rect
-            x="0"
-            y="0"
-            width="800"
-            height="760"
-            rx="20"
-            fill="none"
-            stroke="rgba(255,255,255,0.06)"
-            strokeWidth="1"
-          />
+          <rect x="0" y="0" width="800" height="760" rx="20" fill="none"
+            stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+
           <defs>
-            <pattern
-              id="mapgrid"
-              width="40"
-              height="40"
-              patternUnits="userSpaceOnUse"
-            >
-              <path
-                d="M 40 0 L 0 0 0 40"
-                fill="none"
-                stroke="rgba(255,255,255,0.025)"
-                strokeWidth="1"
-              />
+            <pattern id="mg" width="40" height="40" patternUnits="userSpaceOnUse">
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.025)" strokeWidth="1" />
             </pattern>
           </defs>
-          <rect
-            x="0"
-            y="0"
-            width="800"
-            height="760"
-            rx="20"
-            fill="url(#mapgrid)"
-          />
+          <rect x="0" y="0" width="800" height="760" rx="20" fill="url(#mg)" />
 
-          <ellipse
-            cx="160"
-            cy="150"
-            rx="100"
-            ry="60"
-            fill="none"
-            stroke={tokens.colors.teal}
-            strokeWidth="0.8"
-            opacity="0.08"
-          />
-          <ellipse
-            cx="160"
-            cy="150"
-            rx="60"
-            ry="36"
-            fill="none"
-            stroke={tokens.colors.teal}
-            strokeWidth="0.8"
-            opacity="0.12"
-          />
-          <ellipse
-            cx="640"
-            cy="560"
-            rx="120"
-            ry="70"
-            fill="none"
-            stroke={tokens.colors.primary}
-            strokeWidth="0.8"
-            opacity="0.08"
-          />
-          <ellipse
-            cx="640"
-            cy="560"
-            rx="70"
-            ry="42"
-            fill="none"
-            stroke={tokens.colors.primary}
-            strokeWidth="0.8"
-            opacity="0.1"
-          />
+          {/* Topo rings */}
+          <ellipse cx="160" cy="150" rx="100" ry="60" fill="none" stroke={T.teal} strokeWidth="0.8" opacity="0.08" />
+          <ellipse cx="160" cy="150" rx="60" ry="36" fill="none" stroke={T.teal} strokeWidth="0.8" opacity="0.12" />
+          <ellipse cx="640" cy="560" rx="120" ry="70" fill="none" stroke={T.primary} strokeWidth="0.8" opacity="0.08" />
+          <ellipse cx="640" cy="560" rx="70" ry="42" fill="none" stroke={T.primary} strokeWidth="0.8" opacity="0.1" />
 
+          {/* River */}
           <path
             d="M 260 -20 C 50 150, 700 350, 450 650 C 360 750, 120 720, 0 960"
-            fill="none"
-            stroke="#162438"
-            strokeWidth="28"
-            strokeLinecap="round"
-            opacity="0.5"
-          />
+            fill="none" stroke="#162438" strokeWidth="28" strokeLinecap="round" opacity="0.5" />
           <path
             d="M 255 -20 C 45 150, 695 350, 445 650 C 355 750, 115 720, -5 960"
-            fill="none"
-            stroke="#0f172a"
-            strokeWidth="5"
-            strokeLinecap="round"
-            opacity="0.4"
-          />
+            fill="none" stroke="#0f172a" strokeWidth="5" strokeLinecap="round" opacity="0.4" />
 
+          {/* Mountains */}
           <path
             d="M 400 760 L 480 600 L 520 670 L 570 550 L 620 650 L 680 530 L 730 610 L 800 470 L 800 760 Z"
-            fill="#1e222b"
-            opacity="0.6"
-          />
-          <path
-            d="M 570 550 L 552 582 L 572 572 L 585 580 Z"
-            fill="#cad0dd"
-            opacity="0.5"
-          />
-          <path
-            d="M 680 530 L 665 560 L 682 552 L 695 560 Z"
-            fill="#cad0dd"
-            opacity="0.4"
-          />
+            fill="#1e222b" opacity="0.6" />
+          <path d="M 570 550 L 552 582 L 572 572 L 585 580 Z" fill="#cad0dd" opacity="0.5" />
+          <path d="M 680 530 L 665 560 L 682 552 L 695 560 Z" fill="#cad0dd" opacity="0.4" />
 
-          <text x="90" y="340" fontSize="18" opacity="0.3">
-            🌲🌲
-          </text>
-          <text x="680" y="220" fontSize="14" opacity="0.25">
-            🌲🌲🌲
-          </text>
-          <text x="330" y="490" fontSize="16" opacity="0.28">
-            🌲🌲
-          </text>
-          <text x="550" y="690" fontSize="14" opacity="0.25">
-            🌲🌲🌲
-          </text>
+          {/* Trees */}
+          <text x="90" y="340" fontSize="18" opacity="0.3">🌲🌲</text>
+          <text x="680" y="220" fontSize="14" opacity="0.25">🌲🌲🌲</text>
+          <text x="330" y="490" fontSize="16" opacity="0.28">🌲🌲</text>
+          <text x="550" y="690" fontSize="14" opacity="0.25">🌲🌲🌲</text>
 
-          <path
-            d={TRAIL_D}
-            fill="none"
-            stroke="rgba(249,115,22,0.15)"
-            strokeWidth="10"
-            strokeLinecap="round"
-          />
-          <path
-            d={TRAIL_D}
-            fill="none"
-            stroke="rgba(249,115,22,0.35)"
-            strokeWidth="2.5"
-            strokeDasharray="8 10"
-            strokeLinecap="round"
-          />
-        </InlineMapSvgBg>
+          {/* Trail */}
+          <path d={TRAIL} fill="none" stroke="rgba(249,115,22,0.15)"
+            strokeWidth="10" strokeLinecap="round" />
+          <path d={TRAIL} fill="none" stroke="rgba(249,115,22,0.35)"
+            strokeWidth="2.5" strokeDasharray="8 10" strokeLinecap="round" />
+        </MapSvg>
 
-        {/* Waypoint pins */}
-        {itinerary.map((day, i) => {
-          const coord =
-            visibleCoords[i] || visibleCoords[visibleCoords.length - 1];
-          const isHovered = hoveredDay === i;
+        {/* Pins */}
+        {itinerary.map((d, i) => {
+          const coord = coords[i] || coords[coords.length - 1];
+          const isHov = hovered === i;
+          const { horizontal, vertical } = getTooltipPos(coord);
 
           return (
-            <MapPin
+            <Pin
               key={i}
-              className={isHovered ? "active" : ""}
+              className={isHov ? "active" : ""}
               style={{ left: coord.cx, top: coord.cy }}
-              $delay={`${i * 0.12 + 0.3}s`}
-              onClick={() => openDayModal(i)}
-              onMouseEnter={() => setHoveredDay(i)}
-              onMouseLeave={() => setHoveredDay(null)}
-              onTouchStart={() => handleTouchStart(i)}
-              onTouchEnd={() => handleTouchEnd(i)}
-              onTouchCancel={handleTouchCancel}
+              $d={`${i * 0.12 + 0.3}s`}
+              onClick={() => open(i)}
+              onMouseEnter={() => setHovered(i)}
+              onMouseLeave={() => setHovered(null)}
+              onTouchStart={() => onTouchStart(i)}
+              onTouchEnd={() => onTouchEnd(i)}
+              onTouchCancel={onTouchCancel}
             >
-              <PinLabel>
-                <span className="day-title">{day.title}</span>
-              </PinLabel>
-              <PinDot $delay={`${i * 0.12}s`} />
+              <PinBubble>
+                <span className="num">Day {d.day || i + 1}</span>
+                <span className="name">{d.title}</span>
+              </PinBubble>
+              <Dot $d={`${i * 0.12}s`} />
 
-              {isHovered && (
-                <HoverTooltip>
-                  <TooltipPreview>
-                    {getPreviewText(day.description)}
-                  </TooltipPreview>
-                  <TooltipCTA>
-                    <FaMousePointer />
-                    Click to read full details
-                  </TooltipCTA>
-                </HoverTooltip>
+              {isHov && (
+                <Tooltip data-h={horizontal} data-v={vertical}>
+                  <TipBody>{getPreview(d.description)}</TipBody>
+                  <TipCta><FiArrowRight />Tap for details</TipCta>
+                </Tooltip>
               )}
-            </MapPin>
+            </Pin>
           );
         })}
-      </InlineMapWrapper>
+      </MapWrap>
 
-      {/* ── MODAL POPUP ── */}
-      {selectedDay !== null && currentDay && (
-        <ModalOverlay onClick={closeDayModal}>
-          <ModalContent onClick={(e) => e.stopPropagation()}>
-            <ModalClose onClick={closeDayModal}>
-              <FaTimes />
-            </ModalClose>
+      {/* ── MODAL ── */}
+      {selected !== null && day && (
+        <Overlay onClick={close}>
+          <Modal onClick={(e) => e.stopPropagation()}>
+            <CloseBtn onClick={close}><FaTimes /></CloseBtn>
 
-            <ModalHeader>
-              <ModalDayBadge>
-                {selectedDay === 0 ? (
-                  <FiSun />
-                ) : selectedDay === itinerary.length - 1 ? (
-                  <FiMoon />
-                ) : (
-                  <FaRoute />
+            <MHead>
+              <MBadge>
+                {selected === 0 ? <FiSun /> : selected === itinerary.length - 1 ? <FiMoon /> : <FaRoute />}
+                Day {day.day || selected + 1}
+              </MBadge>
+              <MTitleWrap>
+                <MTitle>{day.title}</MTitle>
+                {(day.duration || day.elevation) && (
+                  <MMeta>
+                    {day.duration && <span><FiClock />{day.duration}</span>}
+                    {day.elevation && <span><FiTrendingUp />{day.elevation}</span>}
+                  </MMeta>
                 )}
-                Day {currentDay.day}
-              </ModalDayBadge>
-              <ModalTitleWrap>
-                <ModalTitle>{currentDay.title}</ModalTitle>
-                {(currentDay.duration || currentDay.elevation) && (
-                  <ModalMeta>
-                    {currentDay.duration && (
-                      <span>
-                        <FiClock /> {currentDay.duration}
-                      </span>
-                    )}
-                    {currentDay.elevation && (
-                      <span>
-                        <FiTrendingUp /> {currentDay.elevation}
-                      </span>
-                    )}
-                  </ModalMeta>
-                )}
-              </ModalTitleWrap>
-            </ModalHeader>
+              </MTitleWrap>
+            </MHead>
 
-            {currentDay.highlights?.length > 0 && (
-              <ModalHighlights>
-                {currentDay.highlights.map((h, idx) => (
-                  <ModalHighlightTag key={idx}>
-                    <FaCheckCircle /> {h}
-                  </ModalHighlightTag>
+            {day.highlights?.length > 0 && (
+              <MHighlights>
+                {day.highlights.map((h, idx) => (
+                  <MTag key={idx}><FaCheckCircle />{h}</MTag>
                 ))}
-              </ModalHighlights>
+              </MHighlights>
             )}
 
-            <ModalDescription>{currentDay.description}</ModalDescription>
+            <MDesc>{day.description}</MDesc>
 
-            {(currentDay.duration ||
-              currentDay.elevation ||
-              currentDay.accommodation ||
-              formatMeals(currentDay.meals)) && (
-              <ModalDetailsGrid>
-                {currentDay.duration && (
-                  <ModalDetailCard>
-                    <ModalDetailIcon>
-                      <FiClock />
-                    </ModalDetailIcon>
-                    <ModalDetailContent>
-                      <ModalDetailLabel>Duration</ModalDetailLabel>
-                      <ModalDetailValue>{currentDay.duration}</ModalDetailValue>
-                    </ModalDetailContent>
-                  </ModalDetailCard>
+            {(day.duration || day.elevation || day.accommodation || formatMeals(day.meals)) && (
+              <MGrid>
+                {day.duration && (
+                  <MCard>
+                    <MIcon><FiClock /></MIcon>
+                    <MInfo>
+                      <MLabel>Duration</MLabel>
+                      <MValue>{day.duration}</MValue>
+                    </MInfo>
+                  </MCard>
                 )}
-                {currentDay.elevation && (
-                  <ModalDetailCard>
-                    <ModalDetailIcon>
-                      <FiTrendingUp />
-                    </ModalDetailIcon>
-                    <ModalDetailContent>
-                      <ModalDetailLabel>Elevation</ModalDetailLabel>
-                      <ModalDetailValue>
-                        {currentDay.elevation}
-                      </ModalDetailValue>
-                    </ModalDetailContent>
-                  </ModalDetailCard>
+                {day.elevation && (
+                  <MCard>
+                    <MIcon><FiTrendingUp /></MIcon>
+                    <MInfo>
+                      <MLabel>Elevation</MLabel>
+                      <MValue>{day.elevation}</MValue>
+                    </MInfo>
+                  </MCard>
                 )}
-                {currentDay.accommodation && (
-                  <ModalDetailCard>
-                    <ModalDetailIcon>
-                      <FaMoon />
-                    </ModalDetailIcon>
-                    <ModalDetailContent>
-                      <ModalDetailLabel>Stay</ModalDetailLabel>
-                      <ModalDetailValue>
-                        {currentDay.accommodation}
-                      </ModalDetailValue>
-                    </ModalDetailContent>
-                  </ModalDetailCard>
+                {day.accommodation && (
+                  <MCard>
+                    <MIcon><FaMoon /></MIcon>
+                    <MInfo>
+                      <MLabel>Stay</MLabel>
+                      <MValue>{day.accommodation}</MValue>
+                    </MInfo>
+                  </MCard>
                 )}
-                {formatMeals(currentDay.meals) && (
-                  <ModalDetailCard>
-                    <ModalDetailIcon>
-                      <FaUtensils />
-                    </ModalDetailIcon>
-                    <ModalDetailContent>
-                      <ModalDetailLabel>Meals</ModalDetailLabel>
-                      <ModalDetailValue>
-                        {formatMeals(currentDay.meals)}
-                      </ModalDetailValue>
-                    </ModalDetailContent>
-                  </ModalDetailCard>
+                {formatMeals(day.meals) && (
+                  <MCard>
+                    <MIcon><FaUtensils /></MIcon>
+                    <MInfo>
+                      <MLabel>Meals</MLabel>
+                      <MValue>{formatMeals(day.meals)}</MValue>
+                    </MInfo>
+                  </MCard>
                 )}
-              </ModalDetailsGrid>
+              </MGrid>
             )}
-          </ModalContent>
-        </ModalOverlay>
+          </Modal>
+        </Overlay>
       )}
     </Wrapper>
   );

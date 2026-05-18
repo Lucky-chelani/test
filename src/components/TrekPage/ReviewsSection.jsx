@@ -128,14 +128,14 @@ const itemVariants = {
 };
 
 // ─── Main Section ─────────────────────────────────────────────────────────────
-const Section = styled(motion.section)`
+const Section = styled.section`
   background: ${tokens.colors.bg};
   padding: 0;
   margin: 3rem 0;
   position: relative;
 `;
 
-const SectionHeader = styled(motion.div)`
+const SectionHeader = styled.div`
   margin-bottom: 3rem;
   text-align: center;
   @media (max-width: 768px) { margin-bottom: 2rem; }
@@ -146,7 +146,7 @@ const SectionBadge = styled.div`
   align-items: center;
   gap: 0.5rem;
   padding: 0.625rem 1.5rem;
-  background: linear-gradient(135deg, ${tokens.colors.primaryGlow}, rgba(249,115,22,0.25));
+  background: ${tokens.colors.primaryGlow};
   border: 1px solid ${tokens.colors.primaryBorder};
   border-radius: ${tokens.radius.pill};
   font-family: "JetBrains Mono", monospace;
@@ -156,8 +156,10 @@ const SectionBadge = styled.div`
   letter-spacing: 0.08em;
   text-transform: uppercase;
   margin-bottom: 1.25rem;
-  animation: ${float} 3s ease-in-out infinite;
-  svg { font-size: 0.875rem; animation: ${pulse} 2s ease-in-out infinite; }
+
+  svg {
+    font-size: 0.875rem;
+  }
 `;
 
 const SectionTitle = styled.h2`
@@ -188,7 +190,7 @@ const SectionSubtitle = styled.p`
 `;
 
 // ─── Overall Rating ───────────────────────────────────────────────────────────
-const OverallRatingBox = styled(motion.div)`
+const OverallRatingBox = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -206,11 +208,11 @@ const OverallRatingBox = styled(motion.div)`
   &::before {
     content: "";
     position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, ${tokens.colors.primary}, ${tokens.colors.primaryLight}, ${tokens.colors.gold});
-    background-size: 200% 100%;
-    animation: ${shimmer} 3s linear infinite;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, ${tokens.colors.primary}, ${tokens.colors.primaryLight});
   }
 
   @media (max-width: 640px) {
@@ -220,7 +222,6 @@ const OverallRatingBox = styled(motion.div)`
     margin: 2rem 0 2.5rem;
   }
 `;
-
 const RatingNumber = styled.div`
   font-family: "Sora", sans-serif;
   font-size: 5rem;
@@ -230,10 +231,12 @@ const RatingNumber = styled.div`
   -webkit-text-fill-color: transparent;
   background-clip: text;
   line-height: 1;
-  animation: ${glow} 3s ease-in-out infinite;
   position: relative;
   z-index: 1;
-  @media (max-width: 640px) { font-size: 3.5rem; }
+
+  @media (max-width: 640px) {
+    font-size: 3.5rem;
+  }
 `;
 
 const RatingMax = styled.span`
@@ -260,9 +263,7 @@ const RatingStars = styled.div`
 const Star = styled.span`
   font-size: 1.375rem;
   color: ${(p) => (p.$filled ? tokens.colors.gold : tokens.colors.border)};
-  transition: ${tokens.transition.spring};
-  text-shadow: ${(p) => (p.$filled ? `0 0 12px ${tokens.colors.goldGlow}` : "none")};
-  &:hover { transform: scale(1.2); animation: ${starPop} 0.3s ease; }
+  text-shadow: ${(p) => (p.$filled ? `0 0 8px ${tokens.colors.goldGlow}` : "none")};
 `;
 
 const RatingText = styled.div`
@@ -295,7 +296,7 @@ const TrustBadge = styled.div`
 `;
 
 // ─── Rating Bars ──────────────────────────────────────────────────────────────
-const RatingBarsSection = styled(motion.div)`
+const RatingBarsSection = styled.div`
   background: linear-gradient(135deg, ${tokens.colors.bgCard}, ${tokens.colors.bgElevated});
   border: 1px solid ${tokens.colors.border};
   border-radius: ${tokens.radius.xl};
@@ -304,16 +305,20 @@ const RatingBarsSection = styled(motion.div)`
   box-shadow: ${tokens.shadows.card};
   position: relative;
   overflow: hidden;
+
   &::before {
     content: "";
     position: absolute;
-    top: 0; left: 0; right: 0;
+    top: 0;
+    left: 0;
+    right: 0;
     height: 2px;
-    background: linear-gradient(90deg, transparent, ${tokens.colors.primary}50, ${tokens.colors.primaryLight}, ${tokens.colors.primary}50, transparent);
-    background-size: 200% 100%;
-    animation: ${shimmer} 3s linear infinite;
+    background: linear-gradient(90deg, ${tokens.colors.primary}, ${tokens.colors.primaryLight});
   }
-  @media (max-width: 768px) { padding: 1.75rem 1.25rem; }
+
+  @media (max-width: 768px) {
+    padding: 1.75rem 1.25rem;
+  }
 `;
 
 const RatingBarsHeader = styled.div`
@@ -383,11 +388,6 @@ const RatingBarIcon = styled.div`
   justify-content: center;
   font-size: 1.125rem;
   flex-shrink: 0;
-  transition: ${tokens.transition.spring};
-  ${RatingBarItem}:hover & {
-    transform: scale(1.1) rotate(-5deg);
-    background: linear-gradient(135deg, ${tokens.colors.primary}, ${tokens.colors.primaryDark});
-  }
 `;
 
 const RatingBarContent = styled.div`
@@ -412,13 +412,13 @@ const RatingBarTrack = styled.div`
   border: 1px solid ${tokens.colors.border};
 `;
 
-const RatingBarFill = styled(motion.div)`
+const RatingBarFill = styled.div`
   height: 100%;
   background: linear-gradient(90deg, ${tokens.colors.primary}, ${tokens.colors.primaryLight});
   border-radius: ${tokens.radius.pill};
-  box-shadow: 0 0 15px ${tokens.colors.primaryGlow};
+  width: ${({ $width }) => $width || '0%'};
+  transition: width 0.8s ease;
 `;
-
 const RatingBarValue = styled.span`
   font-family: "Sora", sans-serif;
   font-size: 0.9375rem;
@@ -427,7 +427,7 @@ const RatingBarValue = styled.span`
 `;
 
 // ─── Reviews Grid ─────────────────────────────────────────────────────────────
-const ReviewsGrid = styled(motion.div)`
+const ReviewsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
@@ -436,7 +436,7 @@ const ReviewsGrid = styled(motion.div)`
   @media (max-width: 640px) { grid-template-columns: 1fr; gap: 1.25rem; }
 `;
 
-const ReviewCard = styled(motion.div)`
+const ReviewCard = styled.div`
   background: ${tokens.colors.bgCard};
   border: 1px solid ${tokens.colors.border};
   border-radius: ${tokens.radius.xl};
@@ -445,16 +445,12 @@ const ReviewCard = styled(motion.div)`
   transition: ${tokens.transition.base};
   overflow: hidden;
 
-  /* NEW review only gets a brief entry animation — no permanent glow */
-  ${({ $isNew }) => $isNew && css`
-    animation: ${newReviewPop} 0.55s cubic-bezier(0.34,1.56,0.64,1) both;
-  `}
-
-  /* Top line — only on hover (same as all other cards) */
   &::before {
     content: "";
     position: absolute;
-    top: 0; left: 0; right: 0;
+    top: 0;
+    left: 0;
+    right: 0;
     height: 3px;
     background: linear-gradient(90deg, ${tokens.colors.primary}, ${tokens.colors.primaryLight});
     transform: scaleX(0);
@@ -462,29 +458,13 @@ const ReviewCard = styled(motion.div)`
     transition: transform 0.4s ease;
   }
 
-  /* Glow background — only on hover */
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at 80% 20%, ${tokens.colors.primaryGlow} 0%, transparent 50%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
-  }
-
-  /* All hover effects — same for ALL cards including new ones */
   &:hover {
     border-color: ${tokens.colors.primaryBorder};
-    transform: translateY(-6px);
-    box-shadow: ${tokens.shadows.cardHover}, ${tokens.shadows.glow};
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
 
     &::before {
       transform: scaleX(1);
-    }
-
-    &::after {
-      opacity: 1;
     }
   }
 
@@ -518,9 +498,7 @@ const QuoteIcon = styled.div`
   right: 1.25rem;
   font-size: 2rem;
   color: ${tokens.colors.primary};
-  opacity: 0.2;
-  transition: ${tokens.transition.base};
-  ${ReviewCard}:hover & { opacity: 0.4; transform: scale(1.1) rotate(-5deg); }
+  opacity: 0.15;
 `;
 
 const ReviewHeader = styled.div`
@@ -546,11 +524,7 @@ const ReviewAvatar = styled.div`
   font-size: 1.25rem;
   font-weight: 700;
   color: white;
-  box-shadow: 0 4px 16px ${tokens.colors.primaryGlow};
   position: relative;
-  transition: ${tokens.transition.spring};
-
-  ${ReviewCard}:hover & { transform: scale(1.1); }
 
   @media (max-width: 480px) {
     width: 44px;
@@ -916,18 +890,12 @@ const HelpfulButton = styled.button`
   font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
-  transition: ${tokens.transition.spring};
-
-  svg {
-    font-size: 0.875rem;
-    ${({ $liked }) => $liked && css`animation: ${heartBeat} 0.6s ease;`}
-  }
+  transition: ${tokens.transition.base};
 
   &:hover {
     background: ${tokens.colors.primaryGlow};
     border-color: ${tokens.colors.primaryBorder};
     color: ${tokens.colors.primary};
-    transform: scale(1.05);
   }
 
   @media (max-width: 480px) {
@@ -942,7 +910,7 @@ const HelpfulCount = styled.span`
 `;
 
 // ─── Misc ─────────────────────────────────────────────────────────────────────
-const ShowMoreButton = styled(motion.button)`
+const ShowMoreButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -956,15 +924,17 @@ const ShowMoreButton = styled(motion.button)`
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: ${tokens.transition.spring};
-  box-shadow: 0 8px 25px rgba(249,115,22,0.4);
+  transition: ${tokens.transition.base};
+  box-shadow: 0 4px 16px rgba(249, 115, 22, 0.3);
+
   &:hover {
-    transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 12px 35px rgba(249,115,22,0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(249, 115, 22, 0.4);
   }
-  &:active { transform: translateY(-1px) scale(0.98); }
-  svg { transition: transform 0.2s ease; }
-  &:hover svg { transform: translateY(3px); }
+
+  &:active {
+    transform: translateY(0);
+  }
 
   @media (max-width: 480px) {
     padding: 0.875rem 2rem;
@@ -1195,15 +1165,10 @@ export default function ReviewsSectionComponent({
 
   const displayedReviews = showAll ? reviews : reviews.slice(0, 6);
 
-  return (
-    <Section
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-100px" }}
-      variants={containerVariants}
-    >
+ return (
+    <Section>
       {/* ── Header ── */}
-      <SectionHeader variants={itemVariants}>
+      <SectionHeader>
         <SectionBadge><FaStar /> Verified Reviews</SectionBadge>
         <SectionTitle>What <span>Trekkers</span> Say</SectionTitle>
         <SectionSubtitle>Real experiences from adventurers who conquered this trail</SectionSubtitle>
@@ -1211,7 +1176,7 @@ export default function ReviewsSectionComponent({
 
       {/* ── Overall Rating ── */}
       {avgRating > 0 && (
-        <OverallRatingBox variants={itemVariants}>
+        <OverallRatingBox>
           <RatingNumber>
             {avgRating.toFixed(1)}<RatingMax>/5</RatingMax>
           </RatingNumber>
@@ -1234,14 +1199,14 @@ export default function ReviewsSectionComponent({
       )}
 
       {/* ── Rating Bars ── */}
-      <RatingBarsSection variants={itemVariants}>
+      <RatingBarsSection>
         <RatingBarsHeader>
           <RatingBarsTitle><FiTrendingUp /> Detailed Ratings</RatingBarsTitle>
           <ExcellentBadge><FaMedal /> Excellent Overall</ExcellentBadge>
         </RatingBarsHeader>
         <RatingBarsGrid>
           {RATING_CATEGORIES.map((cat, index) => (
-            <RatingBarItem key={cat.label} $index={index}>
+            <RatingBarItem key={cat.label}>
               <RatingBarIcon>{cat.icon}</RatingBarIcon>
               <RatingBarContent>
                 <RatingBarLabel>
@@ -1249,12 +1214,7 @@ export default function ReviewsSectionComponent({
                   <RatingBarValue>{cat.value.toFixed(1)}</RatingBarValue>
                 </RatingBarLabel>
                 <RatingBarTrack>
-                  <RatingBarFill
-                    initial={{ width: 0 }}
-                    whileInView={{ width: `${(cat.value / 5) * 100}%` }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 1, delay: index * 0.1, ease: "easeOut" }}
-                  />
+                  <RatingBarFill $width={`${(cat.value / 5) * 100}%`} />
                 </RatingBarTrack>
               </RatingBarContent>
             </RatingBarItem>
@@ -1273,13 +1233,13 @@ export default function ReviewsSectionComponent({
 
       {/* ── Reviews Grid ── */}
       {reviews.length === 0 ? (
-        <EmptyState initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <EmptyState>
           <EmptyIcon>🏔️</EmptyIcon>
           <SectionTitle style={{ fontSize: "1.25rem" }}>No reviews yet</SectionTitle>
           <p>Be the first to share your experience on this trek!</p>
         </EmptyState>
       ) : (
-        <ReviewsGrid variants={containerVariants}>
+        <ReviewsGrid>
           {displayedReviews.map((r, i) => (
             <SingleReviewCard
               key={r.id || i}
@@ -1293,11 +1253,7 @@ export default function ReviewsSectionComponent({
       )}
 
       {reviews.length > 6 && !showAll && (
-        <ShowMoreButton
-          onClick={() => setShowAll(true)}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
+        <ShowMoreButton onClick={() => setShowAll(true)}>
           Show All {reviews.length} Reviews
           <FaChevronDown />
         </ShowMoreButton>

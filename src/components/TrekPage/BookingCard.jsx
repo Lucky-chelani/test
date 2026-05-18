@@ -676,7 +676,7 @@ export default function BookingCardComponent({
           <FaCompass /> Need Help?
         </SideCardTitle>
         <p style={{ fontSize: "0.875rem", color: tokens.colors.textMuted, lineHeight: 1.6, marginBottom: "0.5rem" }}>
-          Have questions about this trek? Chat with {organizerName || "our team"} directly.
+         Chat with our team.
         </p>
         <WhatsAppSideBtn href={whatsappLink} target="_blank" rel="noopener noreferrer">
           <FaWhatsapp /> Chat on WhatsApp
